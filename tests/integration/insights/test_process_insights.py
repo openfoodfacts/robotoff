@@ -30,11 +30,11 @@ _id_count = 0
 def _create_insight(**kwargs):
     data = dict(
         {
-            "data": {"notify": False},  # we do not test notification
+            "data": {},
             "type": "category",
             "value_tag": "en:Salmons",
             "automatic_processing": True,
-            "process_after": datetime.utcnow() - timedelta(minutes=12),
+            "process_after": datetime.now() - timedelta(minutes=12),
             "n_votes": 3,
             "server_type": DEFAULT_SERVER_TYPE.name,
         },
@@ -50,7 +50,7 @@ def test_process_insight_category(mocker, peewee_db):
     )
     mock = mocker.patch("robotoff.off.update_product")
     # a processed insight exists
-    date0 = datetime.utcnow() - timedelta(minutes=10)
+    date0 = datetime.now() - timedelta(minutes=10)
     with peewee_db:
         id0, code0 = _create_insight(type="category", completed_at=date0, annotation=1)
         # an insight to be processed
@@ -63,7 +63,7 @@ def test_process_insight_category(mocker, peewee_db):
         # insight 1 processed
         insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.utcnow()
+    assert insight.completed_at <= datetime.now()
     assert insight.annotation == 1
     # update_product calledfor item 1
     mock.assert_called_once_with(
@@ -93,7 +93,7 @@ def test_process_insight_category_existing(mocker, peewee_db):
     with peewee_db:
         insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.utcnow()
+    assert insight.completed_at <= datetime.now()
     assert insight.annotation == 1
     # but update_product wasn't called
     mock.assert_not_called()
@@ -112,7 +112,7 @@ def test_process_insight_non_existing_product(mocker, peewee_db):
     with peewee_db:
         insight = ProductInsight.get(id=id1)
     assert insight.completed_at is not None
-    assert insight.completed_at <= datetime.utcnow()
+    assert insight.completed_at <= datetime.now()
     assert insight.annotation == 1
     # but update_product wasn't called
     mock.assert_not_called()
@@ -136,9 +136,9 @@ def test_process_insight_update_product_raises(mocker, peewee_db):
         # add another insight that should pass
         id2, code2 = _create_insight(type="category", value_tag="en:Tuna")
     # run process
-    start = datetime.utcnow()
+    start = datetime.now()
     process_insights()
-    end = datetime.utcnow()
+    end = datetime.now()
 
     with peewee_db:
         # insight1 not marked processed
@@ -198,7 +198,7 @@ def test_process_insight_same_product(mocker, peewee_db):
         for id_ in [id1, id2, id3]:
             insight = ProductInsight.get(id=id_)
             assert insight.completed_at is not None
-            assert insight.completed_at <= datetime.utcnow()
+            assert insight.completed_at <= datetime.now()
             assert insight.annotation == 1
     # update_product was called twice
     assert mock.call_count == 2

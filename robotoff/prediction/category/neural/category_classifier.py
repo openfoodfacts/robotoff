@@ -1,7 +1,9 @@
-from typing import Any, Optional
+import logging
+from typing import Any
 
 import numpy as np
 
+from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import get_triton_inference_stub
 from robotoff.types import (
@@ -11,11 +13,10 @@ from robotoff.types import (
     PredictionType,
     ProductIdentifier,
 )
-from robotoff.utils import get_logger
 
 from . import keras_category_classifier_3_0
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def create_prediction(
@@ -66,9 +67,10 @@ class CategoryClassifier:
         product: dict,
         product_id: ProductIdentifier,
         deepest_only: bool = False,
-        threshold: Optional[float] = None,
-        model_name: Optional[NeuralCategoryClassifierModel] = None,
+        threshold: float | None = None,
+        model_name: NeuralCategoryClassifierModel | None = None,
         clear_cache: bool = False,
+        triton_uri: str | None = None,
     ) -> tuple[list[Prediction], JSONType]:
         """Return an unordered list of category predictions for the given
         product and additional debug information.
@@ -122,6 +124,11 @@ class CategoryClassifier:
             default.
         :param clear_cache: if True, clear ingredient processing cache before
             returning results
+        :param triton_uri: URI of the Triton Inference Server, defaults to
+            None. If not provided, the default value from settings is used.
+            Note that we use different default URIs for different models,
+            so you should set this parameter only if you want to use a custom
+            Triton Inference Server URI for all models.
         """
         logger.debug("predicting category with model %s", model_name)
 
@@ -141,9 +148,6 @@ class CategoryClassifier:
                 product, product_id
             )
 
-        # Only generate image embeddings if it's required by the model
-        triton_stub = get_triton_inference_stub()
-
         # We check whether image embeddings were provided as input
         if "image_embeddings" in product:
             if product["image_embeddings"]:
@@ -161,10 +165,16 @@ class CategoryClassifier:
                 image_embeddings = None
         else:
             # Or we generate them (or fetch them from DB cache)
+            triton_stub_clip = get_triton_inference_stub(
+                triton_uri or settings.TRITON_URI_CLIP
+            )
             image_embeddings = keras_category_classifier_3_0.generate_image_embeddings(
-                product, product_id, triton_stub
+                product, product_id, triton_stub_clip
             )
 
+        triton_stub = get_triton_inference_stub(
+            triton_uri or settings.TRITON_URI_CATEGORY_CLASSIFIER
+        )
         raw_predictions, debug = keras_category_classifier_3_0.predict(
             product,
             ocr_texts,

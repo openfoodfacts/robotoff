@@ -26,15 +26,17 @@ All Robotoff services are running on one of the two Docker instances (OVH 200 VM
 see [dev-install](./dev-install.md)
 
 You can then use:
-`docker-compose start [service-name]` or `docker-compose stop [service-name]`
+`docker compose start [service-name]` or `docker compose stop [service-name]`
 
-Or `make up` when you refresh the product (it will re-build and run `docker-compose up -d`).
+Or `make up` when you refresh the product (it will re-build and run `docker compose up -d`).
 
 Take the time to become a bit familiar with docker-compose if it's your first use.
 
 ## Monitor
 
-To display the logs of the container, `docker-compose logs [service-name]`.
+### See logs
+
+To display the logs of the container, `docker compose logs [service-name]`.
 (without service-name, you got all logs).
 
 Two options are often used: `-f` to follow output and `--tail n` to only display last n lines.
@@ -52,6 +54,19 @@ robotoff_worker_low_1     /bin/sh -c /docker-entrypo ...   Up
 robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
 ...                              
 ```
+
+### See number of tasks in queues
+
+If you want to monitor how much job robotoff has to do (how behind it is),
+you can run the `rq` command to get status:
+
+```bash
+docker compose run --rm --no-deps worker_1 rq info
+```
+
+This may help you understand why robotoff insight are not visible immediately on products.
+
+See also [rq monitoring documentation](https://python-rq.org/docs/monitoring/) for more commands and informations.
 
 ## Database backup and restore
 

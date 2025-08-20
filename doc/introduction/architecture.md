@@ -7,17 +7,31 @@ Robotoff is made of several services:
 - the public _API_ service
 - the _scheduler_, responsible for launching recurrent tasks (downloading new dataset, processing insights automatically,...) [^scheduler]
 - the _workers_, responsible for all long-lasting tasks
-- a _redis_ instance
+- a _redis_ instance specific to Robotoff, used to handle locks and messaging queues
+- the _update listener_, responsible for listening to Product Opener events and triggering actions accordingly
+- a _PostgreSQL_ database, where all Robotoff data are stored (predictions, insights,...)
+- a single node _Elasticsearch_ instance, used to index all logos to run ANN search for automatic logo classification [^logos]
+- a _Triton_ instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
 
-Communication between API and workers happens through Redis DB using [rq](https://python-rq.org). [^worker_job]
+[^scheduler]: See `scheduler.run`
+
+[^logos]: see `robotoff.models.ImageAnnotation` `robotoff.logos`
+
+[^robotoff_ml]: see `docker/ml.yml`
+
+Robotoff also depends on external services in production:
+
+- the MongoDB instance of Product Opener, to fetch the latest product version without querying the Product Opener API
+- the redis instance of Product Opener, where all product updates are sent to an event queue (as a [Redis Stream](https://redis.io/docs/data-types/streams/))
+
+Communication between API and workers happens through Robotoff Redis DB using [rq](https://python-rq.org). [^worker_job]
 
 Jobs are sent through rq messaging queues. We currently have two types of queues:
+
 - High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode [^product_specific_queue]. This way, we greatly reduce the risk of concurrent processing for the same product (DB deadlocks or integrity errors).
 - Low priority queue `robotoff-low`, which is used for all lower-priority jobs.
 
-We also have two kind of workers, low and high priority workers: `worker_low` and `worker_high` respectively. All types of workers handle high-priority jobs first. Each worker listens to a single high priority queue. Only low priority workers can handle low-priority jobs. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.
-
-[^scheduler]: See `scheduler.run`
+Each worker listens to a single high priority queue. It handles high-priority jobs first, then low-priority jobs if the high-priority queue it's listening to is empty. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.
 
 [^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
 
@@ -26,7 +40,7 @@ We also have two kind of workers, low and high priority workers: `worker_low` an
 Robotoff allows to predict many information (also called _insights_), mostly from the product images or OCR.
 
 Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).
-We use simple string matching algorithms to find patterns in the OCR text to generate new predictions [^predictions].
+We use simple string matching algorithms to find patterns in the OCR text to generate new predictions [^predictions]. To have a more in-depth understanding of the difference between predictions and insights, see the [predictions](../explanations/predictions.md) page.
 
 We also use a ML model to extract objects from images. [^image_predictions]
 
@@ -57,8 +71,6 @@ Predictions, as well as insights are stored in the PostgreSQL database.
 
 [^insights]: see `robotoff.models.ProductInsight`
 
-[^logos]: see `robotoff.models.ImageAnnotation` `robotoff.logos`
-
 These new insights are then accessible to all annotation tools (Hunger Games, mobile apps,...), that can validate or not the insight. 
 
 If the insight is validated by an authenticated user, it's applied immediately and the product is updated through Product Opener API [^annotate]. If it's reported as invalid, no update is performed, but the insight is marked as annotated so that it is not suggested to another annotator. If the user is not authenticated, a system of votes is used (3 consistent votes trigger the insight application).
@@ -69,15 +81,3 @@ Robotoff is also notified by Product Opener every time a product is updated or d
 
 [^product_update]: see `workers.tasks.product_updated` and `workers.tasks.delete_product_insights_job`
 [^annotate]: see `robotoff.insights.annotate`
-
-
-## Other services
-
-Robotoff also depends on the following services:
-
-- a single node Elasticsearch instance, used to index all logos to run ANN search for automatic logo classification [^logos]
-- a Triton instance, used to serve object detection models (nutriscore, nutrition-table, universal-logo-detector) [^robotoff_ml].
-- MongoDB, to fetch the product latest version without querying Product Opener API.
-
-
-[^robotoff_ml]: see `docker/ml.yml`

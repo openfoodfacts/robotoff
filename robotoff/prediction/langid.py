@@ -5,6 +5,7 @@ model. 176 languages are supported.
 See https://fasttext.cc/docs/en/language-identification.html for more
 information.
 """
+
 import dataclasses
 
 from robotoff import settings

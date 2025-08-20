@@ -1,15 +1,23 @@
 import base64
+import datetime
 import uuid
-from datetime import datetime
 
+import PIL
 import pytest
+import requests
 from falcon import testing
 
 from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
-from robotoff.types import ProductIdentifier, ServerType
+from robotoff.prediction.langid import LanguagePrediction
+from robotoff.prediction.nutrition_extraction import (
+    NutrientPrediction,
+    NutritionEntities,
+    NutritionExtractionPrediction,
+)
+from robotoff.types import InsightType, PredictionType, ProductIdentifier, ServerType
 
 from .models_utils import (
     AnnotationVoteFactory,
@@ -22,7 +30,7 @@ from .models_utils import (
 )
 
 insight_id = "94371643-c2bc-4291-a585-af2cb1a5270a"
-DEFAULT_BARCODE = "1"
+DEFAULT_BARCODE = "00000001"
 DEFAULT_SERVER_TYPE = ServerType.off
 DEFAULT_PRODUCT_ID = ProductIdentifier(DEFAULT_BARCODE, DEFAULT_SERVER_TYPE)
 
@@ -43,6 +51,51 @@ def _set_up_and_tear_down(peewee_db):
 @pytest.fixture()
 def client():
     return testing.TestClient(api)
+
+
+def test_get_insights_filter_by_lc(client, mocker, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        ProductInsightFactory(
+            barcode="1",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["fr"],
+        )
+        ProductInsightFactory(
+            barcode="2",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["fr", "en"],
+        )
+        ProductInsightFactory(
+            barcode="3",
+            type=InsightType.ingredient_detection,
+            data={},
+            lc=["de"],
+        )
+
+    result = client.simulate_get("/api/v1/insights?lc=fr")
+    assert result.status_code == 200
+    data = result.json
+    assert data["count"] == 2
+    assert data["status"] == "found"
+    assert [q["barcode"] for q in data["insights"]] == ["1", "2"]
+
+    result = client.simulate_get("/api/v1/insights?lc=en")
+    data = result.json
+    assert data["count"] == 1
+    assert [q["barcode"] for q in data["insights"]] == ["2"]
+
+    result = client.simulate_get("/api/v1/insights?lc=de")
+    data = result.json
+    assert data["count"] == 1
+    assert [q["barcode"] for q in data["insights"]] == ["3"]
+
+    result = client.simulate_get("/api/v1/insights?lc=it")
+    data = result.json
+    assert data["count"] == 0
+    assert len(data["insights"]) == 0
 
 
 def test_random_question(client, mocker):
@@ -66,7 +119,7 @@ def test_random_question(client, mocker):
         "count": 1,
         "questions": [
             {
-                "barcode": "1",
+                "barcode": "00000001",
                 "type": "add-binary",
                 "value": "Seeds",
                 "value_tag": "en:seeds",
@@ -74,7 +127,7 @@ def test_random_question(client, mocker):
                 "insight_id": insight_id,
                 "insight_type": "category",
                 "server_type": "off",
-                "source_image_url": "https://images.openfoodfacts.net/images/products/1/ingredients_fr.51.400.jpg",
+                "source_image_url": "https://images.openfoodfacts.net/images/products/000/000/000/0001/ingredients_fr.51.400.jpg",
             }
         ],
         "status": "found",
@@ -104,7 +157,7 @@ def test_popular_question(client, mocker):
         "count": 1,
         "questions": [
             {
-                "barcode": "1",
+                "barcode": "00000001",
                 "type": "add-binary",
                 "value": "Seeds",
                 "value_tag": "en:seeds",
@@ -193,7 +246,7 @@ def test_barcode_question(client, mocker):
     assert result.json == {
         "questions": [
             {
-                "barcode": "1",
+                "barcode": "00000001",
                 "type": "add-binary",
                 "value": "Seeds",
                 "value_tag": "en:seeds",
@@ -566,7 +619,7 @@ def test_annotate_insight_anonymous_then_authenticated(client, mocker, peewee_db
     # we still have the vote, but we also have an authenticated validation
     assert insight.items() > {"username": "a", "n_votes": 1, "annotation": 1}.items()
     assert insight.get("completed_at") is not None
-    assert insight.get("completed_at") <= datetime.utcnow()
+    assert insight.get("completed_at") <= datetime.datetime.now()
     # update was done
     add_category.assert_called_once_with(
         DEFAULT_PRODUCT_ID,
@@ -588,15 +641,15 @@ def test_image_collection_no_result(client):
 
 def test_image_collection(client, peewee_db):
     with peewee_db:
-        image_model = ImageModelFactory(barcode="123")
-        ImagePredictionFactory(image__barcode="456")
+        image_model = ImageModelFactory(barcode="00000123")
+        ImagePredictionFactory(image__barcode="00000456")
 
     result = client.simulate_get(
         "/api/v1/images",
         params={
             "count": "25",
             "page": "1",
-            "barcode": "123",
+            "barcode": "00000123",
         },
     )
 
@@ -609,7 +662,7 @@ def test_image_collection(client, peewee_db):
     result = client.simulate_get(
         "/api/v1/images",
         params={
-            "barcode": "456",
+            "barcode": "00000456",
             "with_predictions": True,
         },
     )
@@ -617,7 +670,7 @@ def test_image_collection(client, peewee_db):
     assert result.status_code == 200
     data = result.json
     assert data["count"] == 1
-    assert data["images"][0]["barcode"] == "456"
+    assert data["images"][0]["barcode"] == "00000456"
     assert data["status"] == "found"
 
     result = client.simulate_get(
@@ -631,7 +684,7 @@ def test_image_collection(client, peewee_db):
 
     assert result.status_code == 200
     assert data["count"] == 1
-    assert data["images"][0]["barcode"] == "456"
+    assert data["images"][0]["barcode"] == "00000456"
 
 
 def test_annotation_event(client, monkeypatch, httpserver):
@@ -644,7 +697,7 @@ def test_annotation_event(client, monkeypatch, httpserver):
         "event_type": "question_answered",
         "user_id": "a",
         "device_id": "test-device",
-        "barcode": "1",
+        "barcode": "00000001",
         "server_type": "off",
     }
     httpserver.expect_oneshot_request(
@@ -797,24 +850,34 @@ def test_get_unanswered_questions_api_empty(client, peewee_db):
 def test_get_unanswered_questions_api(client, peewee_db):
     with peewee_db:
         ProductInsight.delete().execute()  # remove default sample
-        ProductInsightFactory(type="category", value_tag="en:apricot", barcode="123")
-        ProductInsightFactory(type="label", value_tag="en:beer", barcode="456")
-        ProductInsightFactory(type="nutrition", value_tag="en:soups", barcode="789")
-        ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="302")
-        ProductInsightFactory(type="nutrition", value_tag="en:salad", barcode="403")
-        ProductInsightFactory(type="category", value_tag="en:soups", barcode="194")
-        ProductInsightFactory(type="category", value_tag="en:soups", barcode="967")
-        ProductInsightFactory(type="label", value_tag="en:beer", barcode="039")
-        ProductInsightFactory(type="category", value_tag="en:apricot", barcode="492")
-        ProductInsightFactory(type="category", value_tag="en:soups", barcode="594")
+        ProductInsightFactory(
+            type="category", value_tag="en:apricot", barcode="00000123"
+        )
+        ProductInsightFactory(type="label", value_tag="en:beer", barcode="00000456")
+        ProductInsightFactory(
+            type="nutrition", value_tag="en:soups", barcode="00000789"
+        )
+        ProductInsightFactory(
+            type="nutrition", value_tag="en:salad", barcode="00000302"
+        )
+        ProductInsightFactory(
+            type="nutrition", value_tag="en:salad", barcode="00000403"
+        )
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="00000194")
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="00000967")
+        ProductInsightFactory(type="label", value_tag="en:beer", barcode="00000039")
+        ProductInsightFactory(
+            type="category", value_tag="en:apricot", barcode="00000492"
+        )
+        ProductInsightFactory(type="category", value_tag="en:soups", barcode="00000594")
         ProductInsightFactory(
             type="category",
             value_tag="en:apricot",
-            barcode="780",
+            barcode="00000780",
             annotation=1,
         )
         ProductInsightFactory(
-            type="category", value_tag="en:apricot", barcode="983", annotation=0
+            type="category", value_tag="en:apricot", barcode="00000983", annotation=0
         )
 
     # test to get all "category" with "annotation=None"
@@ -863,17 +926,20 @@ def test_get_unanswered_questions_api_with_country_filter(client, peewee_db):
         ProductInsight.delete().execute()  # remove default sample
         # test for filter with "country"
         ProductInsightFactory(
-            type="location", value_tag="en:dates", barcode="032", countries=["en:india"]
+            type="location",
+            value_tag="en:dates",
+            barcode="00000032",
+            countries=["en:india"],
         )
         ProductInsightFactory(
             type="location",
             value_tag="en:dates",
-            barcode="033",
+            barcode="00000033",
             countries=["en:france"],
         )
 
     result = client.simulate_get(
-        "/api/v1/questions/unanswered", params={"country": "en:india"}
+        "/api/v1/questions/unanswered", params={"countries": "in"}
     )
     assert result.status_code == 200
     data = result.json
@@ -944,27 +1010,27 @@ def test_image_prediction_collection_empty(client):
 def test_image_prediction_collection(client, peewee_db):
     with peewee_db:
         logo_annotation_category_123 = LogoAnnotationFactory(
-            barcode="123",
-            image_prediction__image__barcode="123",
+            barcode="00000123",
+            image_prediction__image__barcode="00000123",
             image_prediction__type="category",
         )
         prediction_category_123 = logo_annotation_category_123.image_prediction
         logo_annotation_label_789 = LogoAnnotationFactory(
-            barcode="789",
-            image_prediction__image__barcode="789",
+            barcode="00000789",
+            image_prediction__image__barcode="00000789",
             image_prediction__type="label",
         )
         prediction_label_789 = logo_annotation_label_789.image_prediction
 
         prediction_label_789_no_logo = ImagePredictionFactory(
-            image__barcode="789", type="label"
+            image__barcode="00000789", type="label"
         )
 
     # test with "barcode=123" and "with_logo=True"
     result = client.simulate_get(
         "/api/v1/image_predictions",
         params={
-            "barcode": "123",
+            "barcode": "00000123",
             "with_logo": 1,
         },
     )
@@ -973,7 +1039,7 @@ def test_image_prediction_collection(client, peewee_db):
     data = result.json
     assert data["count"] == 1
     assert data["image_predictions"][0]["id"] == prediction_category_123.id
-    assert data["image_predictions"][0]["image"]["barcode"] == "123"
+    assert data["image_predictions"][0]["image"]["barcode"] == "00000123"
 
     # test with "type=label" and "with_logo=True"
     result = client.simulate_get(
@@ -995,7 +1061,7 @@ def test_image_prediction_collection(client, peewee_db):
     result = client.simulate_get(
         "/api/v1/image_predictions",
         params={
-            "barcode": "456",
+            "barcode": "00000456",
             "with_logo": 1,
         },
     )
@@ -1029,38 +1095,38 @@ def test_logo_annotation_collection_api(client, peewee_db):
     with peewee_db:
         LogoAnnotation.delete().execute()  # remove default sample
         annotation_123_1 = LogoAnnotationFactory(
-            barcode="123",
-            image_prediction__image__barcode="123",
+            barcode="00000123",
+            image_prediction__image__barcode="00000123",
             annotation_value_tag="etorki",
             annotation_type="brand",
         )
         annotation_123_2 = LogoAnnotationFactory(
-            barcode="123",
-            image_prediction__image__barcode="123",
+            barcode="00000123",
+            image_prediction__image__barcode="00000123",
             annotation_value_tag="etorki",
             annotation_type="brand",
         )
         annotation_295 = LogoAnnotationFactory(
-            barcode="295",
-            image_prediction__image__barcode="295",
+            barcode="00000295",
+            image_prediction__image__barcode="00000295",
             annotation_value_tag="cheese",
             annotation_type="dairies",
         )
         annotation_789 = LogoAnnotationFactory(
-            barcode="789",
-            image_prediction__image__barcode="789",
+            barcode="00000789",
+            image_prediction__image__barcode="00000789",
             annotation_value_tag="creme",
             annotation_type="dairies",
         )
         annotation_306 = LogoAnnotationFactory(
-            barcode="306",
-            image_prediction__image__barcode="306",
+            barcode="00000306",
+            image_prediction__image__barcode="00000306",
             annotation_value_tag="yoghurt",
             annotation_type="dairies",
         )
         annotation_604 = LogoAnnotationFactory(
-            barcode="604",
-            image_prediction__image__barcode="604",
+            barcode="00000604",
+            image_prediction__image__barcode="00000604",
             annotation_value_tag="meat",
             annotation_type="category",
         )
@@ -1070,7 +1136,7 @@ def test_logo_annotation_collection_api(client, peewee_db):
     result = client.simulate_get(
         "/api/v1/annotation/collection",
         params={
-            "barcode": "123",
+            "barcode": "00000123",
         },
     )
     assert result.status_code == 200
@@ -1079,8 +1145,8 @@ def test_logo_annotation_collection_api(client, peewee_db):
     annotation_data = sorted(data["annotation"], key=lambda d: d["id"])
     assert annotation_data[0]["id"] == annotation_123_1.id
     assert annotation_data[1]["id"] == annotation_123_2.id
-    assert annotation_data[0]["image_prediction"]["image"]["barcode"] == "123"
-    assert annotation_data[1]["image_prediction"]["image"]["barcode"] == "123"
+    assert annotation_data[0]["image_prediction"]["image"]["barcode"] == "00000123"
+    assert annotation_data[1]["image_prediction"]["image"]["barcode"] == "00000123"
     assert annotation_data[0]["annotation_type"] == "brand"
     assert annotation_data[1]["annotation_type"] == "brand"
     assert annotation_data[0]["annotation_value_tag"] == "etorki"
@@ -1096,7 +1162,7 @@ def test_logo_annotation_collection_api(client, peewee_db):
     data = result.json
     assert data["count"] == 1
     assert data["annotation"][0]["id"] == annotation_295.id
-    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "295"
+    assert data["annotation"][0]["image_prediction"]["image"]["barcode"] == "00000295"
     assert data["annotation"][0]["annotation_type"] == "dairies"
     assert data["annotation"][0]["annotation_value_tag"] == "cheese"
 
@@ -1113,13 +1179,13 @@ def test_logo_annotation_collection_api(client, peewee_db):
     assert data["count"] == 4
     annotations = sorted(data["annotation"], key=lambda a: a["id"])
     assert annotations[0]["id"] == annotation_295.id
-    assert annotations[0]["image_prediction"]["image"]["barcode"] == "295"
+    assert annotations[0]["image_prediction"]["image"]["barcode"] == "00000295"
     assert annotations[1]["id"] == annotation_789.id
-    assert annotations[1]["image_prediction"]["image"]["barcode"] == "789"
+    assert annotations[1]["image_prediction"]["image"]["barcode"] == "00000789"
     assert annotations[2]["id"] == annotation_306.id
-    assert annotations[2]["image_prediction"]["image"]["barcode"] == "306"
+    assert annotations[2]["image_prediction"]["image"]["barcode"] == "00000306"
     assert annotations[3]["id"] == annotation_604.id
-    assert annotations[3]["image_prediction"]["image"]["barcode"] == "604"
+    assert annotations[3]["image_prediction"]["image"]["barcode"] == "00000604"
 
 
 def test_logo_annotation_collection_pagination(client, peewee_db):
@@ -1205,3 +1271,235 @@ def test_logo_annotation_collection_pagination(client, peewee_db):
         "truffle cake-00",
         "truffle cake-01",
     ]
+
+
+def test_predict_lang_invalid_params(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        return_value=[],
+    )
+    # no text
+    result = client.simulate_get("/api/v1/predict/lang", params={"k": 2})
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "1 validation error: [{'type': 'missing', 'loc': ('text',), 'msg': 'Field required', 'input': {'k': '2'}}]",
+        "title": "400 Bad Request",
+    }
+
+    # invalid k and threshold parameters
+    result = client.simulate_get(
+        "/api/v1/predict/lang",
+        params={"text": "test", "k": "invalid", "threshold": 1.05},
+    )
+    assert result.status_code == 400
+    assert result.json == {
+        "description": "2 validation errors: [{'type': 'int_parsing', 'loc': ('k',), 'msg': 'Input should be a valid integer, unable to parse string as an integer', 'input': 'invalid'}, {'type': 'less_than_equal', 'loc': ('threshold',), 'msg': 'Input should be less than or equal to 1', 'input': '1.05', 'ctx': {'le': 1.0}}]",
+        "title": "400 Bad Request",
+    }
+
+
+def test_predict_lang(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        return_value=[
+            LanguagePrediction("en", 0.9),
+            LanguagePrediction("fr", 0.1),
+        ],
+    )
+    expected_predictions = [
+        {"lang": "en", "confidence": 0.9},
+        {"lang": "fr", "confidence": 0.1},
+    ]
+    result = client.simulate_get(
+        "/api/v1/predict/lang", params={"text": "hello", "k": 2}
+    )
+    assert result.status_code == 200
+    assert result.json == {"predictions": expected_predictions}
+
+
+def test_predict_lang_http_error(client, mocker):
+    mocker.patch(
+        "robotoff.app.api.predict_lang",
+        side_effect=requests.exceptions.ConnectionError("A connection error occurred"),
+    )
+    result = client.simulate_get(
+        "/api/v1/predict/lang", params={"text": "hello", "k": 2}
+    )
+    assert result.status_code == 500
+    assert result.json == {"title": "500 Internal Server Error"}
+
+
+def test_predict_product_language(client, peewee_db):
+    barcode = "0000123456789"
+    prediction_data_1 = {"count": {"en": 10, "fr": 5, "es": 3, "words": 18}}
+    prediction_data_2 = {"count": {"en": 2, "fr": 3, "words": 5}}
+
+    with peewee_db:
+        PredictionFactory(
+            barcode=barcode,
+            server_type=ServerType.off.name,
+            type=PredictionType.image_lang.name,
+            data=prediction_data_1,
+            source_image="/000/012/345/6789/2.jpg",
+        )
+        PredictionFactory(
+            barcode=barcode,
+            server_type=ServerType.off.name,
+            type=PredictionType.image_lang.name,
+            data=prediction_data_2,
+            source_image="/000/012/345/6789/4.jpg",
+        )
+
+    # Send GET request to the API endpoint
+    result = client.simulate_get(f"/api/v1/predict/lang/product?barcode={barcode}")
+
+    # Assert the response
+    assert result.status_code == 200
+    assert result.json == {
+        "counts": [
+            {"count": 12, "lang": "en"},
+            {"count": 8, "lang": "fr"},
+            {"count": 3, "lang": "es"},
+        ],
+        "percent": [
+            {"percent": 12 * 100 / 23, "lang": "en"},
+            {"percent": 8 * 100 / 23, "lang": "fr"},
+            {"percent": 3 * 100 / 23, "lang": "es"},
+        ],
+        "image_ids": [2, 4],
+    }
+
+
+class TestNutritionPredictorResource:
+    def test_nutrition_predictor_missing_image_url(self, client):
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 400
+        assert result.json == {
+            "description": 'The "image_url" parameter is required.',
+            "title": "Missing parameter",
+        }
+
+    def test_nutrition_predictor_missing_ocr_url(self, client):
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+            },
+        )
+        assert result.status_code == 400
+        assert result.json == {
+            "description": 'The "ocr_url" parameter is required.',
+            "title": "Missing parameter",
+        }
+
+    def test_nutrition_predictor_invalid_image_url(self, client, mocker):
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=None)
+        OCRResultMock = mocker.patch("robotoff.app.api.OCRResult")
+        OCRResultMock.from_url.return_value = None
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "INVALID_URL",
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "error": "download_error",
+            "error_description": "an error occurred while downloading image: INVALID_URL",
+        }
+
+    def test_nutrition_predictor_invalid_ocr_url(self, client, mocker):
+        image = PIL.Image.new("RGB", (100, 100), color="white")
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=image)
+        OCRResultMock = mocker.patch("robotoff.app.api.OCRResult")
+        OCRResultMock.from_url.return_value = None
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+                "ocr_url": "INVALID_OCR_URL",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "error": "download_error",
+            "error_description": "an error occurred while downloading OCR JSON: INVALID_OCR_URL",
+        }
+
+    def test_nutrition_predictor_successful_request(self, client, mocker):
+        image = PIL.Image.new("RGB", (100, 100), color="white")
+        mocker.patch("robotoff.app.api.get_image_from_url", return_value=image)
+        mocker.patch("robotoff.app.api.OCRResult")
+        raw_entity = {
+            "word": "test",
+            "entity": "B-TEST",
+            "score": 0.99,
+            "index": 0,
+            "char_start": 0,
+            "char_end": 4,
+        }
+        fat_nutrient = {
+            "end": 28,
+            "text": "58,6 g",
+            "unit": "g",
+            "score": 0.999219536781311,
+            "start": 26,
+            "value": "58.6",
+            "entity": "fat_100g",
+            "char_end": 176,
+            "char_start": 169,
+        }
+        salt_nutrient = {
+            "end": 37,
+            "text": "4,8 g",
+            "unit": "g",
+            "score": 0.9993608593940735,
+            "start": 35,
+            "value": "4.8",
+            "entity": "salt_100g",
+            "char_end": 209,
+            "char_start": 203,
+        }
+        mocker.patch(
+            "robotoff.prediction.nutrition_extraction.predict",
+            return_value=NutritionExtractionPrediction(
+                nutrients={
+                    "fat_100g": NutrientPrediction(**fat_nutrient),
+                    "salt_100g": NutrientPrediction(**salt_nutrient),
+                },
+                entities=NutritionEntities(
+                    raw=[raw_entity],
+                    aggregated=[raw_entity],
+                    postprocessed=[raw_entity],
+                ),
+            ),
+        )
+        result = client.simulate_get(
+            "/api/v1/predict/nutrition",
+            params={
+                "image_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.jpg",
+                "ocr_url": "https://images.openfoodfacts.org/images/products/541/004/104/0807/3.json",
+            },
+        )
+        assert result.status_code == 200
+        assert result.json == {
+            "predictions": [
+                {
+                    "entities": {
+                        "raw": [raw_entity],
+                        "aggregated": [raw_entity],
+                        "postprocessed": [raw_entity],
+                    },
+                    "nutrients": {
+                        "fat_100g": fat_nutrient,
+                        "salt_100g": salt_nutrient,
+                    },
+                }
+            ],
+        }

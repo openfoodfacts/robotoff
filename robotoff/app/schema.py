@@ -1,3 +1,7 @@
+from typing import Annotated
+
+from pydantic import BaseModel, Field
+
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ServerType
 
 IMAGE_PREDICTION_IMPORTER_SCHEMA: JSONType = {
@@ -172,3 +176,16 @@ ANNOTATE_LOGO_SCHEMA: JSONType = {
     },
     "required": ["annotations"],
 }
+
+
+class LanguagePredictorResourceParams(BaseModel):
+    text: Annotated[
+        str, Field(..., description="the text to predict language of", min_length=1)
+    ]
+    k: Annotated[
+        int, Field(default=10, description="the number of predictions to return", ge=1)
+    ]
+    threshold: Annotated[
+        float,
+        Field(default=0.01, description="the minimum confidence threshold", ge=0, le=1),
+    ]

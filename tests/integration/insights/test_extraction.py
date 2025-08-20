@@ -4,10 +4,7 @@ from PIL import Image
 
 from robotoff.insights.extraction import run_object_detection_model
 from robotoff.models import ImagePrediction
-from robotoff.prediction.object_detection.core import (
-    ObjectDetectionRawResult,
-    RemoteModel,
-)
+from robotoff.prediction.object_detection.core import ObjectDetectionResult, RemoteModel
 from robotoff.types import ObjectDetectionModel
 
 from ..models_utils import ImageModelFactory, clean_db
@@ -22,12 +19,16 @@ def image_model(peewee_db):
 
 
 class FakeNutriscoreModel(RemoteModel):
-    def __init__(self, raw_result: ObjectDetectionRawResult):
+    def __init__(self, raw_result: ObjectDetectionResult):
         self.raw_result = raw_result
 
     def detect_from_image(
-        self, image: Image.Image, output_image: bool = False
-    ) -> ObjectDetectionRawResult:
+        self,
+        image: Image.Image,
+        output_image: bool = False,
+        triton_uri: str | None = None,
+        threshold: float = 0.5,
+    ) -> ObjectDetectionResult:
         return self.raw_result
 
 
@@ -48,7 +49,7 @@ class FakeNutriscoreModel(RemoteModel):
     ],
 )
 def test_run_object_detection_model(mocker, image_model, model_name, label_names):
-    raw_result = ObjectDetectionRawResult(
+    result = ObjectDetectionResult(
         num_detections=1,
         detection_boxes=np.array([[1, 2, 3, 4]]),
         detection_scores=np.array([0.8]),
@@ -57,17 +58,17 @@ def test_run_object_detection_model(mocker, image_model, model_name, label_names
     )
     mocker.patch(
         "robotoff.prediction.object_detection.core.ObjectDetectionModelRegistry.get",
-        return_value=FakeNutriscoreModel(raw_result),
+        return_value=FakeNutriscoreModel(result),
     )
     image_prediction = run_object_detection_model(
-        model_name,
-        None,
+        model_name=model_name,
+        image=None,
         image_model=image_model,
         threshold=0.1,
     )
     assert isinstance(image_prediction, ImagePrediction)
     assert image_prediction.type == "object_detection"
-    assert image_prediction.model_name == model_name.value
+    assert image_prediction.model_name == model_name.name
     assert image_prediction.data == {
         "objects": [
             {"bounding_box": (1, 2, 3, 4), "score": 0.8, "label": label_names[1]}

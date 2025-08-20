@@ -1,12 +1,11 @@
+import logging
 from multiprocessing import Process, SimpleQueue
-from typing import Optional
 
 import requests
 
 from robotoff import settings
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class EventProcessor:
@@ -49,8 +48,8 @@ def send_event(
     event_type: str,
     user_id: str,
     device_id: str,
-    barcode: Optional[str] = None,
-    server_type: Optional[str] = None,
+    barcode: str | None = None,
+    server_type: str | None = None,
 ):
     event = {
         "event_type": event_type,

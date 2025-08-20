@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable, Iterator, Optional
+from typing import Iterable, Iterator
 from urllib.parse import urlparse
 
 from influxdb_client import InfluxDBClient
@@ -12,9 +12,9 @@ from requests.exceptions import JSONDecodeError, SSLError, Timeout
 from robotoff import settings
 from robotoff.models import ProductInsight, with_db
 from robotoff.types import ServerType
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 URL_PATHS: list[str] = [
     "/ingredients-analysis?json=1",
@@ -68,7 +68,7 @@ COUNTRY_TAGS = [
 ]
 
 
-def get_influx_client() -> Optional[InfluxDBClient]:
+def get_influx_client() -> InfluxDBClient | None:
     if not settings.INFLUXDB_HOST:
         return None
     return InfluxDBClient(
@@ -117,33 +117,42 @@ def save_facet_metrics():
     server_type = ServerType.off
     inserts = []
     target_datetime = datetime.datetime.now()
-    product_counts = {
-        country_tag: get_product_count(server_type, country_tag)
-        for country_tag in COUNTRY_TAGS
-    }
 
     for country_tag in COUNTRY_TAGS:
-        count = product_counts[country_tag]
+        try:
+            count = get_product_count(server_type, country_tag)
+        except Exception:
+            logger.exception("Error during product count retrieval for %s", country_tag)
+            count = None
 
         for url_path in URL_PATHS:
+            try:
+                inserts += generate_metrics_from_path(
+                    server_type, country_tag, url_path, target_datetime, count
+                )
+            except Exception:
+                logger.exception()
+
+        try:
             inserts += generate_metrics_from_path(
-                server_type, country_tag, url_path, target_datetime, count
+                server_type,
+                country_tag,
+                "/entry-date/{}/contributors?json=1".format(
+                    # get contribution metrics for the previous day
+                    (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                ),
+                target_datetime,
+                facet="contributors",
             )
+        except Exception:
+            logger.exception()
 
+    try:
         inserts += generate_metrics_from_path(
-            server_type,
-            country_tag,
-            "/entry-date/{}/contributors?json=1".format(
-                # get contribution metrics for the previous day
-                (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-            ),
-            target_datetime,
-            facet="contributors",
+            server_type, "world", "/countries?json=1", target_datetime
         )
-
-    inserts += generate_metrics_from_path(
-        server_type, "world", "/countries?json=1", target_datetime
-    )
+    except Exception:
+        logger.exception()
     client = get_influx_client()
     if client is not None:
         write_client = client.write_api(write_options=SYNCHRONOUS)
@@ -159,8 +168,8 @@ def generate_metrics_from_path(
     country_tag: str,
     path: str,
     target_datetime: datetime.datetime,
-    count: Optional[int] = None,
-    facet: Optional[str] = None,
+    count: int | None = None,
+    facet: str | None = None,
 ) -> list[dict]:
     inserts: list[dict] = []
     url = settings.BaseURLProvider.country(server_type, country_tag + "-en") + path

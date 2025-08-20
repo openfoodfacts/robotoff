@@ -7,7 +7,7 @@ from typing import Iterable
 
 import peewee
 from peewee_migrate import Router
-from playhouse.postgres_ext import BinaryJSONField, PostgresqlExtDatabase
+from playhouse.postgres_ext import ArrayField, BinaryJSONField, PostgresqlExtDatabase
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
@@ -102,8 +102,8 @@ class ProductInsight(BaseModel):
     # above.
     # NOTE: there is no 1:1 mapping between the type and the JSON format
     # provided here, for example for type==label, the data here could be:
-    # {"logo_id":X,"bounding_box":Y}, or {"text":X,"notify":Y}
-    data = BinaryJSONField(index=True, default=dict)
+    # {"logo_id":X,"bounding_box":Y}, or {"text":X}
+    data = BinaryJSONField(default=dict)
 
     # Timestamp is the timestamp of when this insight was imported into the DB.
     timestamp = peewee.DateTimeField(null=True, index=True)
@@ -130,9 +130,9 @@ class ProductInsight(BaseModel):
 
     # If the insight was annotated manually, this field stores the username of
     # the annotator (or first annotator, if multiple votes were cast).
-    username = peewee.TextField(index=True, null=True)
+    username = peewee.TextField(null=True)
 
-    # Stores the list of counties that are associated with the product.
+    # Stores the list of countries that are associated with the product.
     # E.g. possible values are "en:united-states" or "en:france".
     countries = BinaryJSONField(null=True, index=True, default=list)
 
@@ -171,7 +171,7 @@ class ProductInsight(BaseModel):
         null=True,
         max_length=10,
         help_text="project associated with the insight, "
-        "one of 'off', 'obf', 'opff', 'opf'",
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
         index=True,
     )
 
@@ -187,14 +187,14 @@ class ProductInsight(BaseModel):
 
     # Predictor version is used to know what the version of the predictor
     # that generated the prediction. It can be either a digit or a model name
-    predictor_version = peewee.CharField(max_length=100, null=True, index=True)
+    predictor_version = peewee.CharField(max_length=100, null=True)
 
     # annotation campaigns enable contributors to focus their efforts (on
     # Hunger Games) on a subset of products. Each product have 0+ campaign
     # tags
     campaign = BinaryJSONField(null=True, index=True, default=list)
     # Confidence score of the insight, may be null
-    confidence = peewee.FloatField(null=True, index=True)
+    confidence = peewee.FloatField(null=True)
 
     # bounding box corresponding to the area of the image related
     # to the insight that was detected.
@@ -203,7 +203,22 @@ class ProductInsight(BaseModel):
     #   logo
     # - for OCR-based insights, it's the text that triggered the
     #   creation of the insight
-    bounding_box = BinaryJSONField(null=True, default=list)
+    bounding_box = BinaryJSONField(null=True)
+
+    # `lc` refers to the language(s) associated with the insight.
+    # it is useful for insights where language is important for validation,
+    # such as:
+    # - nutrient_extraction
+    # - ingredient_spellcheck
+    # - ingredient_detection
+    # This field is used in the API to filter insights based on the language
+    # code, e.g. to get all insights in English.
+    lc = ArrayField(
+        peewee.CharField,
+        null=True,
+        help_text="language codes of the insight, if any, e.g. 'en', 'fr', 'de'",
+        index=True,
+    )
 
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
@@ -212,11 +227,11 @@ class ProductInsight(BaseModel):
 class Prediction(BaseModel):
     barcode = peewee.CharField(max_length=100, null=False, index=True)
     type = peewee.CharField(max_length=256, index=True)
-    data = BinaryJSONField(index=True)
+    data = BinaryJSONField()
     timestamp = peewee.DateTimeField(index=True)
     value_tag = peewee.TextField(null=True)
     value = peewee.TextField(null=True)
-    source_image = peewee.TextField(null=True, index=True)
+    source_image = peewee.TextField(null=True)
     automatic_processing = peewee.BooleanField(null=True)
     predictor = peewee.CharField(max_length=100, null=True)
     predictor_version = peewee.CharField(max_length=100, null=True)
@@ -224,8 +239,8 @@ class Prediction(BaseModel):
     server_type = peewee.CharField(
         null=False,
         max_length=10,
-        help_text="project associated with the insight, "
-        "one of 'off', 'obf', 'opff', 'opf'",
+        help_text="project associated with the prediction, "
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
         index=True,
         default="off",
     )
@@ -262,8 +277,8 @@ class ImageModel(BaseModel):
     # The complete image path can be constructed with
     # robotoff.settings.OFF_IMAGE_BASE_URL + source_image.
     source_image = peewee.TextField(null=False, index=True)
-    width = peewee.IntegerField(null=False, index=True)
-    height = peewee.IntegerField(null=False, index=True)
+    width = peewee.IntegerField(null=False)
+    height = peewee.IntegerField(null=False)
     deleted = peewee.BooleanField(null=False, index=True, default=False)
     server_type = peewee.CharField(null=True, max_length=10, index=True)
     # Perceptual hash of the image, used to find near-duplicates
@@ -299,12 +314,11 @@ class ImagePrediction(BaseModel):
     type = peewee.CharField(max_length=256)
     model_name = peewee.CharField(max_length=100, null=False, index=True)
     model_version = peewee.CharField(max_length=256, null=False, index=True)
-    data = BinaryJSONField(index=True)
+    data = BinaryJSONField()
     timestamp = peewee.DateTimeField(null=True)
     image = peewee.ForeignKeyField(ImageModel, null=False, backref="predictions")
     max_confidence = peewee.FloatField(
         null=True,
-        index=True,
         help_text="for object detection models, confidence of the highest confident"
         "object detected, null if no object was detected",
     )
@@ -342,6 +356,19 @@ class LogoAnnotation(BaseModel):
     nearest_neighbors = BinaryJSONField(null=True)
     barcode = peewee.CharField(max_length=100, null=True, index=True)
     source_image = peewee.TextField(null=True, index=True)
+    # The logo text extracted from the image using OCR
+    text = peewee.TextField(null=True)
+    # This is the same as ImageModel.server_type, but we store it here to
+    # avoid performing a double join with ImageModel table when we need to
+    # filter logos by server_type
+    # (LogoAnnotation > ImagePrediction > ImageModel)
+    server_type = peewee.CharField(
+        null=True,
+        max_length=10,
+        help_text="project associated with the logo annotation, "
+        "one of 'off', 'obf', 'opff', 'opf', 'off-pro'",
+        index=False,
+    )
 
     class Meta:
         constraints = [peewee.SQL("UNIQUE(image_prediction_id, index)")]
@@ -391,8 +418,8 @@ class ImageEmbedding(BaseModel):
 
 
 class LogoConfidenceThreshold(BaseModel):
-    type = peewee.CharField(null=True, index=True)
-    value = peewee.CharField(null=True, index=True)
+    type = peewee.CharField(null=True)
+    value = peewee.CharField(null=True)
     threshold = peewee.FloatField(null=False)
 
 

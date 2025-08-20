@@ -33,11 +33,13 @@ If you need a call to Product Opener API that is not implemented yet, add it to 
 
 ## Test your predictor
 
-To test your predictor, you can simulate an image import using [POST /api/v1/images/import](https://openfoodfacts.github.io/robotoff/references/api/#tag/Images/paths/~1images~1import/post) endpoint. There is a CLI command that does this for you:
+To test your predictor, you can simulate an image import by adding an event to the Redis Stream. There is a CLI command that does this for you:
 
 ```bash
-make robotoff-cli args='import-image-webhook https://images.openfoodfacts.org/images/products/377/001/626/6048/1.jpg'
+make robotoff-cli args='create-redis-update --barcode 3770016266048 --uploaded-image-id 1'
 ```
+
+This command will create an event in the `product_updates_off` stream with the barcode `3770016266048`, action `updated` and diffs `{"uploaded_images": {"add": ["1"]}}`.
 
 You can check that:
 

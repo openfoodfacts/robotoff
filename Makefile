@@ -3,7 +3,7 @@
 # nice way to have our .env in environment for use in makefile
 # see https://lithic.tech/blog/2020-05/makefile-dot-env
 # Note: this will mask environment variable as opposed to docker-compose priority
-# yet most developper should'nt bump into this
+# yet most developper shouldn't bump into this
 ifneq (,$(wildcard ./.env))
     -include .env
     -include .envrc
@@ -14,13 +14,15 @@ NAME = "robotoff"
 ENV_FILE ?= .env
 MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
-DOCKER_COMPOSE=docker-compose --env-file=${ENV_FILE}
-DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test PO_LOCAL_NET=po_test docker-compose --env-file=${ENV_FILE}
-ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
+DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
+DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
+# Use bash shell for variable substitution
+SHELL := /bin/bash
 
-# mount information for robotoff backup ZFS dataset
-NFS_VOLUMES_ADDRESS_OVH3 ?= 10.0.0.3
-NFS_VOLUMES_BACKUP_BASE_PATH ?= /rpool/backups/robotoff
+# Spellcheck
+SPELLCHECK_IMAGE_NAME = spellcheck-batch-vllm
+SPELLCHECK_TAG = latest
+SPELLCHECK_REGISTRY = europe-west9-docker.pkg.dev/robotoff/gcf-artifacts
 
 .DEFAULT_GOAL := dev
 # avoid target corresponding to file names, to depends on them
@@ -45,7 +47,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello build init-elasticsearch migrate-db up create_external_networks
+dev: hello create-po-default-network build init-elasticsearch migrate-db up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -57,7 +59,6 @@ edit_etc_hosts:
 up:
 # creates a docker network and runs docker-compose
 	@echo "🥫 Building and starting containers …"
-	docker network create po_default || true  
 ifdef service
 	${DOCKER_COMPOSE} up -d ${service} 2>&1
 else
@@ -93,13 +94,13 @@ livecheck:
 
 log:
 	@echo "🥫 Reading logs (docker-compose) …"
-	${DOCKER_COMPOSE} logs -f api scheduler worker_high_1 worker_high_2 worker_low_1 worker_low_2
+	${DOCKER_COMPOSE} logs -f --tail 100 api update-listener scheduler worker_1 worker_2 worker_3 worker_4
 
 #------------#
 # Management #
 #------------#
 
-dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model
+dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model dl-image-clf-models
 	@echo "⏬ Downloading all models …"
 
 dl-langid-model:
@@ -112,12 +113,14 @@ dl-object-detection-models:
 	@echo "⏬ Downloading object detection model files …"
 	mkdir -p models/triton; \
 	cd models/triton; \
-	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
-		do \
-			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
-			mkdir -p $${dir}/1; \
-			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
-	done; \
+	mkdir -p universal_logo_detector/1; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/tf-universal-logo-detector-1.0/model.onnx > universal_logo_detector/1/model.onnx; \
+	mkdir -p nutriscore/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore/1/model.onnx; \
+	mkdir -p nutrition_table/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition_table/1/model.onnx; \
+	mkdir -p price_tag_detection/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/price-tag-detection/resolve/86a8e0f02e0789d6d53226bc3fd3c919680d47c9/weights/model_ir_10_opset_19.onnx > price_tag_detection/1/model.onnx;
 
 dl-category-classifier-model:
 	@echo "⏬ Downloading category classifier model files …"
@@ -138,10 +141,25 @@ dl-ingredient-detection-model:
 	cd models/triton; \
     dir=ingredient-ner/1/model.onnx; \
 	mkdir -p $${dir}; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/pytorch-ingredient-detection-1.0/onnx.tar.gz > $${dir}/onnx.tar.gz; \
+	wget -cO - https://huggingface.co/openfoodfacts/ingredient-detection/resolve/main/onnx.tar.gz > $${dir}/onnx.tar.gz; \
 	cd $${dir}; \
 	tar -xzvf onnx.tar.gz --strip-component=1; \
 	rm onnx.tar.gz
+
+dl-image-clf-models:
+	@echo "⏬ Downloading image classification model files …"
+	mkdir -p models/triton; \
+	cd models/triton; \
+	mkdir -p price_proof_classification/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/price-proof-classification/resolve/03c3bad38f4135d755584c346769f3217231cb36/weights/model_ir_10_opset_19.onnx > price_proof_classification/1/model.onnx; \
+
+
+dl-nutrition-extractor-model:
+	@echo "⏬ Downloading nutrition extractor model files …"
+	mkdir -p models/triton/nutrition_extractor/2; \
+	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/2/; \
+	cd models/triton/nutrition_extractor/2/; \
+	mv onnx model.onnx;
 
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"
@@ -152,10 +170,10 @@ init-elasticsearch:
 
 launch-burst-worker:
 ifdef queues
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker ${queues} --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker ${queues} --burst
 # Only launch burst worker on low priority queue if queue is not specified
 else
-	${DOCKER_COMPOSE} run --rm -d --no-deps worker_high_1 python -m robotoff run-worker robotoff-low --burst
+	${DOCKER_COMPOSE} run --rm -d --no-deps worker_1 python -m robotoff run-worker robotoff-low --burst
 endif
 
 #------------#
@@ -189,7 +207,15 @@ docs:
 	@echo "🥫 Generationg doc…"
 	${DOCKER_COMPOSE} run --rm --no-deps api ./build_mkdocs.sh
 
-checks: toml-check flake8 black-check mypy isort-check docs
+api-lint:
+	@echo "🥫 Linting OpenAPI specification…"
+	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint doc/references/api.yml --format=pretty
+
+api-lint-check:
+	@echo "🥫 Checking OpenAPI specification…"
+	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint doc/references/api.yml --fail-severity=error
+
+checks: create_external_networks toml-check flake8 black-check mypy isort-check docs 
 
 lint: toml-lint isort black
 
@@ -204,26 +230,38 @@ health:
 i18n-compile:
 	@echo "🥫 Compiling translations …"
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
-	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_high_1 -c "cd i18n && . compile.sh"
+	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker_1 -c "cd i18n && . compile.sh"
+
+update_poetry_lock:
+	@echo "🥫  Updating poetry.lock"
+	${DOCKER_COMPOSE} run --rm --no-deps api poetry lock --no-update
 
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest --cov-report xml --cov=robotoff tests/unit ${args}
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	( ${DOCKER_COMPOSE_TEST} down -v || true )
+
+ml-tests: 
+	@echo "🥫 Running ML tests …"
+	${DOCKER_COMPOSE_TEST} up -d triton
+	@echo "Sleeping for 30s, waiting for triton to be ready..."
+	@sleep 30
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest -vv tests/ml ${args}
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
 	@echo "🥫 Running test: ${args} …"
-	${DOCKER_COMPOSE_TEST} run --rm worker_high_1 poetry run pytest ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker_1 poetry run pytest ${args}
 
 #------------#
 # Production #
@@ -232,20 +270,15 @@ pytest: guard-args
 # Create all external volumes needed for production. Using external volumes is useful to prevent data loss (as they are not deleted when performing docker down -v)
 create_external_volumes:
 	@echo "🥫 Creating external volumes (production only) …"
-	docker volume create api-dataset
-	docker volume create postgres-data
-	docker volume create es-data
-# This is an NFS mount from robotoff backup ZFS dataset.
-# Two important notes:
-# - we use `nolock` as there shouldn't be any concurrent writes on the same file, and `soft` to prevent the docker container from freezing if the NFS
-#   connection is lost
-# - we cannot mount directly `${NFS_VOLUMES_BACKUP_BASE_PATH}`, we have to mount a subfolder (`backups`) to prevent permission issues
-	docker volume create --driver local --opt type=nfs --opt o=addr=${NFS_VOLUMES_ADDRESS_OVH3},nolock,soft,rw --opt device=:${NFS_VOLUMES_BACKUP_BASE_PATH}/backups ${COMPOSE_PROJECT_NAME}_backup
+	docker volume create robotoff_postgres-data
+	docker volume create robotoff_es-data
+# In production, robotoff_backup is a NFS mount, this should be created manually in production
+	docker volume create robotoff_backup
 
 
 create_external_networks:
 	@echo "🥫 Creating external networks if needed … (dev only)"
-	( docker network create ${PO_LOCAL_NET} || true )
+	( docker network create ${COMMON_NET_NAME} || true )
 # for tests
 	( docker network create po_test || true )
 
@@ -267,6 +300,10 @@ prune_cache:
 
 clean: goodbye hdown prune prune_cache
 
+# clean tests, remove containers and volume (useful if you changed env variables, etc.)
+clean_tests:
+	${DOCKER_COMPOSE_TEST} down -v --remove-orphans
+
 #-----------#
 # Utilities #
 #-----------#
@@ -285,3 +322,23 @@ robotoff-cli: guard-args
 # apply DB migrations
 migrate-db:
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff migrate-db
+
+create-migration: guard-args
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}
+
+# create network if not exists
+create-po-default-network:
+	docker network create po_default || true 
+
+# Spellcheck
+build-spellcheck:
+	docker build -f batch/spellcheck/Dockerfile -t $(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG) batch/spellcheck
+
+# Push the image to the registry
+push-spellcheck:
+	docker tag $(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG) $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
+	docker push $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
+
+# Build and push in one command
+deploy-spellcheck: 
+	build-spellcheck push-spellcheck

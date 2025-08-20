@@ -1,12 +1,13 @@
 import base64
+import logging
 from typing import List
 
 import orjson
 import requests
 
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run_ocr_on_image_batch(base64_images: List[str], api_key: str) -> requests.Response:
@@ -16,7 +17,12 @@ def run_ocr_on_image_batch(base64_images: List[str], api_key: str) -> requests.R
         json={
             "requests": [
                 {
-                    "features": [{"type": "TEXT_DETECTION"}],
+                    "features": [
+                        {"type": "TEXT_DETECTION"},
+                        {"type": "FACE_DETECTION"},
+                        {"type": "LABEL_DETECTION"},
+                        {"type": "SAFE_SEARCH_DETECTION"},
+                    ],
                     "image": {"content": base64_image},
                 }
                 for base64_image in base64_images

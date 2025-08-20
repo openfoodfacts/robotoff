@@ -1,7 +1,9 @@
 import dataclasses
 import functools
+import logging
+import time
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -9,16 +11,23 @@ from transformers import AutoTokenizer, PreTrainedTokenizerBase
 from tritonclient.grpc import service_pb2
 
 from robotoff import settings
+from robotoff.prediction.ingredient_list.postprocess import detect_additional_mentions
 from robotoff.prediction.langid import LanguagePrediction, predict_lang_batch
-from robotoff.triton import get_triton_inference_stub
+from robotoff.triton import GRPCInferenceServiceStub, get_triton_inference_stub
 from robotoff.utils import http_session
+from robotoff.utils.cache import function_cache_register
 
-from .postprocess import AggregationStrategy, TokenClassificationPipeline
+from .transformers_pipeline import AggregationStrategy, TokenClassificationPipeline
+
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 # The tokenizer assets are stored in the model directory
 INGREDIENT_NER_MODEL_DIR = settings.TRITON_MODELS_DIR / "ingredient-ner/1/model.onnx"
 
 INGREDIENT_ID2LABEL = {0: "O", 1: "B-ING", 2: "I-ING"}
+
+MODEL_NAME = "ingredient_detection"
+MODEL_VERSION = "ingredient-detection-1.1"
 
 
 @dataclasses.dataclass
@@ -27,12 +36,18 @@ class IngredientPredictionAggregatedEntity:
     start: int
     # character end index of the entity
     end: int
+    # character start index of the entity, before postprocessing (i.e.
+    # before adding organic or allergen mentions)
+    raw_end: int
     # confidence score
     score: float
-    # entity text
+    # entity text (without organic or allergen mentions)
     text: str
     # language prediction of the entity text
-    lang: Optional[LanguagePrediction] = None
+    lang: LanguagePrediction | None = None
+    # the bounding box of the entity in absolute coordinates
+    # (y_min, x_min, y_max, x_max), or None if not available
+    bounding_box: tuple[int, int, int, int] | None = None
 
 
 @dataclasses.dataclass
@@ -65,10 +80,11 @@ class IngredientPredictionOutput:
 
 
 def predict_from_ocr(
-    input_ocr: Union[str, OCRResult],
+    input_ocr: str | OCRResult,
     aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
     model_version: str = "1",
+    triton_uri: str | None = None,
 ) -> IngredientPredictionOutput:
     """Predict ingredient lists from an OCR.
 
@@ -79,6 +95,9 @@ def predict_from_ocr(
         `IngredientPredictionAggregatedEntity`. This flag is ignored if
         `aggregation_strategy` is `NONE`.
     :param model_version: version of the model model to use, defaults to "1"
+    :param triton_uri: URI of the Triton Inference Server, defaults to None. If
+        not provided, the default value from settings is used
+        (settings.TRITON_URI_INGREDIENT_NER).
     :return: the `IngredientPredictionOutput`
     """
     ocr_result: OCRResult
@@ -92,10 +111,22 @@ def predict_from_ocr(
     if not text:
         return IngredientPredictionOutput(entities=[], text=text)  # type: ignore
 
-    predictions = predict_batch(
-        [text], aggregation_strategy, predict_lang, model_version
+    triton_stub = get_triton_inference_stub(
+        triton_uri or settings.TRITON_URI_INGREDIENT_NER
     )
-    return predictions[0]
+    predictions = predict_batch(
+        [text], triton_stub, aggregation_strategy, predict_lang, model_version
+    )
+    prediction = predictions[0]
+
+    for entity in prediction.entities:
+        if isinstance(entity, IngredientPredictionAggregatedEntity):
+            # Add the bounding box to the entity
+            entity.bounding_box = ocr_result.get_match_bounding_box(
+                entity.start, entity.end
+            )
+
+    return prediction
 
 
 @functools.cache
@@ -112,6 +143,7 @@ def get_tokenizer(model_dir: Path) -> PreTrainedTokenizerBase:
 
 def predict_batch(
     texts: list[str],
+    triton_stub: GRPCInferenceServiceStub,
     aggregation_strategy: AggregationStrategy = AggregationStrategy.FIRST,
     predict_lang: bool = True,
     model_version: str = "1",
@@ -119,6 +151,7 @@ def predict_batch(
     """Predict ingredient lists from a batch of texts using the NER model.
 
     :param texts: a list of strings
+    :param triton_stub: the Triton gRPC inference service stub
     :param aggregation_strategy: the aggregation strategy to use, defaults to
         AggregationStrategy.FIRST. See the HuggingFace documentation:
         https://huggingface.co/docs/transformers/main_classes/pipelines#transformers.TokenClassificationPipeline
@@ -128,6 +161,7 @@ def predict_batch(
     :param model_version: version of the model model to use, defaults to "1"
     :return: a list of IngredientPredictionOutput (one for each input text)
     """
+    start_time = time.monotonic()
     tokenizer = get_tokenizer(INGREDIENT_NER_MODEL_DIR)
     # The postprocessing pipeline required `offsets_mapping` and
     # `special_tokens_mask``
@@ -139,12 +173,27 @@ def predict_batch(
         return_offsets_mapping=True,
         return_special_tokens_mask=True,
     )
+    ml_metrics_logger.info(
+        "Tokenization time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     logits = send_ner_infer_request(
         batch_encoding.input_ids,
         batch_encoding.attention_mask,
         "ingredient-ner",
+        triton_stub=triton_stub,
         model_version=model_version,
     )
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     pipeline = TokenClassificationPipeline(tokenizer, INGREDIENT_ID2LABEL)
 
     outputs = []
@@ -156,6 +205,7 @@ def predict_batch(
             "input_ids": batch_encoding.input_ids[idx],
             "offset_mapping": batch_encoding.offset_mapping[idx],
             "special_tokens_mask": batch_encoding.special_tokens_mask[idx],
+            "word_ids": batch_encoding.word_ids(idx),
         }
         pipeline_output = pipeline.postprocess(model_outputs, aggregation_strategy)
 
@@ -175,13 +225,16 @@ def predict_batch(
             agg_entities = []
             for output in pipeline_output:
                 start = int(output["start"])
-                end = int(output["end"])
+                raw_end = int(output["end"])
+                end = detect_additional_mentions(sentence, raw_end)
+                text = sentence[start:end]
                 agg_entities.append(
                     IngredientPredictionAggregatedEntity(
                         start=start,
                         end=end,
+                        raw_end=raw_end,
                         score=float(output["score"]),
-                        text=sentence[start:end],
+                        text=text,
                     ),
                 )
             if predict_lang:
@@ -205,6 +258,11 @@ def predict_batch(
                 text=sentence,
             )
         )
+    ml_metrics_logger.info(
+        "Post-processing time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
     return outputs
 
 
@@ -212,6 +270,7 @@ def send_ner_infer_request(
     input_ids: np.ndarray,
     attention_mask: np.ndarray,
     model_name: str,
+    triton_stub: GRPCInferenceServiceStub,
     model_version: str = "1",
 ) -> np.ndarray:
     """Send a NER infer request to the Triton inference server.
@@ -226,9 +285,20 @@ def send_ner_infer_request(
     :param model_version: version of the model model to use, defaults to "1"
     :return: the predicted logits
     """
-    stub = get_triton_inference_stub()
+    start_time = time.monotonic()
     request = build_triton_request(input_ids, attention_mask, model_name, model_version)
-    response = stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Building Triton request time for %s: %ss",
+        model_name,
+        time.monotonic() - start_time,
+    )
+    start_time = time.monotonic()
+    response = triton_stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss",
+        model_name,
+        time.monotonic() - start_time,
+    )
     num_tokens = response.outputs[0].shape[1]
     num_labels = response.outputs[0].shape[2]
     return np.frombuffer(
@@ -270,3 +340,6 @@ def build_triton_request(
     request.raw_input_contents.extend([attention_mask.tobytes()])
 
     return request
+
+
+function_cache_register.register(get_tokenizer)

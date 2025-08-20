@@ -19,7 +19,7 @@ We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create 
 
 If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
 ```
-$ docker-compose run --rm api poetry run python
+$ docker compose run --rm api poetry run python
 ...
 > from tests.integration.models_utils import *
 > PredictionFactory()
@@ -29,7 +29,7 @@ $ docker-compose run --rm api poetry run python
 > If you are on Windows we recommend using [Git bash](https://git-scm.com/downloads) to run commands.
 
 # How to run test cases?
-We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](../../Makefile) to run our commands. 
+We use [pytest](https://docs.pytest.org/en/7.1.x/) to run test cases and [Makefile](https://github.com/openfoodfacts/robotoff/blob/main/Makefile) to run our commands. 
 
 The following command will run all the test cases one by one:
 
@@ -63,8 +63,6 @@ Remember to put quotes especially if you have multiple arguments.
 # When to write your own test cases?
 
 Write test cases every time you write a new feature, to test a feature or to understand the working of an existing function. Automated testing really helps to prevent future bugs as we introduce new features or refactor the code.
-
-There are even cases where automated tests are your only chance to test you code. For example: when you write code to post notifications on Slack channel you can only test them  by writing a unit test case. 
 
 There are instances when Robotoff tries to connect to MongoDB via Open Food Facts server. To disable this
 feature (this is disabled by default on local environments), set `ENABLE_MONGODB_ACCESS=0` in your `.env`.

@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from healthcheck import HealthCheck
 from influxdb_client import InfluxDBClient
@@ -8,11 +10,10 @@ from redis import Redis
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
-from robotoff.utils import get_logger
 
 health = HealthCheck()
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def test_connect_mongodb():
@@ -62,7 +63,7 @@ def test_connect_influxdb():
 def test_connect_robotoff_api():
     logger.debug("health: testing robotoff API status")
     status = requests.get(
-        f"{settings.BaseURLProvider.robotoff()}/api/v1/status"
+        f"{settings.BaseURLProvider.robotoff()}/api/v1/status", timeout=10
     ).json()["status"]
 
     if status != "running":

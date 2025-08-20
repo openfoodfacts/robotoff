@@ -39,3 +39,7 @@ msgstr ""
 msgid "Does the product have this packaging element?"
 msgstr ""
 
+# Question that appears for logged-in users on the Web and Android
+msgid "Is this image rotated with the following orientation?"
+msgstr "So wɔde ɔkwan a edidi so yi na ɛdannan mfonini yi?"
+

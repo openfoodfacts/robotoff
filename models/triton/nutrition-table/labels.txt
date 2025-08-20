@@ -1,4 +1,0 @@
-nutrition-table
-nutrition-table-small
-nutrition-table-small-energy
-nutrition-table-text

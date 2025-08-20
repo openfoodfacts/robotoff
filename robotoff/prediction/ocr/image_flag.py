@@ -1,11 +1,12 @@
 import functools
-from typing import Optional, Union
+from typing import Union
 
 from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
 from robotoff import settings
 from robotoff.types import Prediction, PredictionType
 from robotoff.utils import text_file_iter
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 # Increase version ID when introducing breaking change: changes for which we
@@ -67,7 +68,7 @@ def generate_image_flag_keyword_processor() -> KeywordProcessor:
 
 def extract_image_flag_flashtext(
     processor: KeywordProcessor, text: str
-) -> Optional[Prediction]:
+) -> Prediction | None:
     for (_, key), span_start, span_end in processor.extract_keywords(
         text, span_info=True
     ):
@@ -96,6 +97,7 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
 
     safe_search_annotation = content.get_safe_search_annotation()
     label_annotations = content.get_label_annotations()
+    face_annotations = content.get_face_annotations()
 
     if safe_search_annotation:
         for key in ("adult", "violence"):
@@ -127,8 +129,30 @@ def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
                         "likelihood": label_annotation.score,
                     },
                     predictor_version=PREDICTOR_VERSION,
+                    confidence=label_annotation.score,
                 )
             )
             break
 
+    if face_annotations:
+        face_annotation = max(
+            face_annotations, key=lambda x: getattr(x, "detection_confidence", 0)
+        )
+        if face_annotation.detection_confidence >= 0.6:
+            predictions.append(
+                Prediction(
+                    type=PredictionType.image_flag,
+                    data={
+                        "type": "face_annotation",
+                        "label": "face",
+                        "likelihood": face_annotation.detection_confidence,
+                    },
+                    predictor_version=PREDICTOR_VERSION,
+                    confidence=face_annotation.detection_confidence,
+                )
+            )
+
     return predictions
+
+
+function_cache_register.register(generate_image_flag_keyword_processor)

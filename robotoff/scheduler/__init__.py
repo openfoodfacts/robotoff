@@ -1,8 +1,12 @@
 import datetime
+import logging
 import os
+import shutil
 import uuid
+from pathlib import Path
 from typing import Iterable
 
+import pytz
 import requests.exceptions
 from apscheduler.events import EVENT_JOB_ERROR
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -11,8 +15,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from playhouse.postgres_ext import ServerSide
 from sentry_sdk import capture_exception
 
-from robotoff import settings, slack
-from robotoff.insights.annotate import UPDATED_ANNOTATION_RESULT, annotate
+from robotoff import settings
+from robotoff.insights.annotate import annotate
 from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
 from robotoff.metrics import (
     ensure_influx_database,
@@ -22,18 +26,18 @@ from robotoff.metrics import (
 from robotoff.models import Prediction, ProductInsight, db
 from robotoff.products import (
     Product,
-    fetch_dataset,
+    fetch_jsonl_dataset,
+    fetch_parquet_datasets,
     get_min_product_store,
-    has_dataset_changed,
+    has_jsonl_dataset_changed,
 )
 from robotoff.types import InsightType, ServerType
-from robotoff.utils import get_logger
 
 from .latent import generate_quality_facets
 
 settings.init_sentry()
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 # Note: we do not use with_db, for atomicity is handled in annotator
@@ -46,7 +50,8 @@ def process_insights() -> None:
             .where(
                 ProductInsight.annotation.is_null(),
                 ProductInsight.process_after.is_null(False),
-                ProductInsight.process_after <= datetime.datetime.utcnow(),
+                ProductInsight.process_after
+                <= datetime.datetime.now(datetime.timezone.utc),
             )
             .iterator()
         ):
@@ -54,15 +59,8 @@ def process_insights() -> None:
                 logger.info(
                     "Annotating insight %s (%s)", insight.id, insight.get_product_id()
                 )
-                annotation_result = annotate(insight, 1, update=True)
+                annotate(insight, 1, update=True)
                 processed += 1
-
-                if annotation_result == UPDATED_ANNOTATION_RESULT and insight.data.get(
-                    "notify", False
-                ):
-                    slack.NotifierFactory.get_notifier().notify_automatic_processing(
-                        insight
-                    )
             except Exception as e:
                 # continue to the next one
                 # Note: annotator already rolled-back the transaction
@@ -98,7 +96,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
     # Only OFF is currently supported
     server_type = ServerType.off
 
-    datetime_threshold = datetime.datetime.utcnow().replace(
+    datetime_threshold = datetime.datetime.now(datetime.timezone.utc).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
     dataset_datetime = datetime.datetime.fromtimestamp(
@@ -287,20 +285,50 @@ def update_insight_attributes(product: Product, insight: ProductInsight) -> bool
     return bool(updated_fields)
 
 
-def _download_product_dataset():
-    logger.info("Downloading new version of product dataset")
-
-    if has_dataset_changed():
-        fetch_dataset()
-
-
 # this job does no use database
-def _update_data():
-    """Refreshes the PO product dump data."""
+def _update_data() -> None:
+    """Download the latest version of the Product Opener product JSONL dump."""
+    logger.info("Downloading new version of product dataset")
     try:
-        _download_product_dataset()
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset()
     except requests.exceptions.RequestException:
         logger.exception("Exception during product dataset refresh")
+        return
+
+    try:
+        fetch_parquet_datasets()
+    except requests.exceptions.RequestException:
+        logger.exception("Exception during product dataset refresh (parquet)")
+        return
+
+
+def clean_tmp_files() -> None:
+    """Remove temporary files that are no longer needed."""
+    logger.info("Cleaning temporary files in /tmp older than 2 days")
+    tmp_dir = Path("/tmp")
+    if not os.path.exists(tmp_dir):
+        logger.warning("Temporary directory %s does not exist", tmp_dir)
+        return
+
+    datetime_now = datetime.datetime.now(datetime.timezone.utc)
+    for dir_path in (
+        f for f in tmp_dir.iterdir() if f.is_dir() and f.name.startswith("tmp")
+    ):
+        last_modified = datetime.datetime.fromtimestamp(
+            dir_path.stat().st_mtime, datetime.timezone.utc
+        )
+        # check that the directory is older than 2 day
+        if (datetime_now - last_modified) > datetime.timedelta(days=2):
+            logger.info("Removing temporary directory %s", dir_path)
+            try:
+                shutil.rmtree(dir_path)
+            except OSError as e:
+                logger.error(
+                    "Error while removing temporary directory %s: %s",
+                    dir_path,
+                    e,
+                )
 
 
 def transform_insight_iter(insights_iter: Iterable[dict]):
@@ -325,7 +353,7 @@ def run():
     # ensure influxdb database exists
     ensure_influx_database()
 
-    scheduler = BlockingScheduler()
+    scheduler = BlockingScheduler(timezone=pytz.utc)
     scheduler.add_executor(ThreadPoolExecutor(20))
     scheduler.add_jobstore(MemoryJobStore())
 
@@ -335,12 +363,13 @@ def run():
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
 
+    scheduler.add_job(clean_tmp_files, "cron", day="*", hour=0, max_instances=1)
     # This job exports daily product metrics for monitoring.
     scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
-    scheduler.add_job(_update_data, "cron", day="*", hour="8", max_instances=1)
+    scheduler.add_job(_update_data, "cron", day="*", hour=15, max_instances=1)
 
     # This job updates the product insights state with respect to the latest PO
     # dump by:
@@ -351,7 +380,7 @@ def run():
         refresh_insights,
         "cron",
         day="*",
-        hour="9",
+        hour=19,
         max_instances=1,
     )
 
@@ -359,7 +388,7 @@ def run():
         generate_quality_facets,
         "cron",
         day="*",
-        hour="11",
+        hour=11,
         minute=25,
         max_instances=1,
     )

@@ -29,7 +29,7 @@ jobs:
       #       check-out repo
       #----------------------------------------------
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           lfs: true
 
@@ -38,6 +38,7 @@ jobs:
       #----------------------------------------------
       - name: Configure docker
         run: |
+          set -e
           # ensure a new line for .env file might not have it !
           echo "" >> .env
           # align user id
@@ -53,23 +54,17 @@ jobs:
       #----------------------------------------------
       # Upload test coverage
       #----------------------------------------------
-      - uses: codecov/codecov-action@v3.1.1
+      - uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
           directory: .cov
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   # dev:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out repository
-  #       uses: actions/checkout@v3
+  #       uses: actions/checkout@v4
   #     - name: Run developer workflow
   #       run: make dev

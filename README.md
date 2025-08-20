@@ -1,6 +1,6 @@
 # Robotoff
 
-![Build Status](https://github.com/openfoodfacts/robotoff/workflows/Robotoff%20unit%20tests%20and%20deployments/badge.svg)
+[![Robotoff code quality checks and unit tests](https://github.com/openfoodfacts/robotoff/actions/workflows/quality_check.yml/badge.svg)](https://github.com/openfoodfacts/robotoff/actions/workflows/quality_check.yml)
 [![codecov](https://codecov.io/gh/openfoodfacts/robotoff/branch/main/graph/badge.svg?token=BY2T0KXNO1)](https://codecov.io/gh/openfoodfacts/robotoff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![GitHub language count](https://img.shields.io/github/languages/count/openfoodfacts/robotoff)
@@ -14,8 +14,7 @@
   <img height="48" src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg">
 </picture>
 
-**Robotoff** is a service managing potential Open Food Facts updates (also known as _insights_) and predictions (which can then be combined to generate an insight).
-These insights include a growing set of facts, including:
+**Robotoff** is a service that generates predictions from product data such as images, text, and metadata. These predictions can individually or collectively be refined into actionable suggestions known as insights. Insights serve as potential updates to the Open Food Facts database, either automatically applied when highly confident or validated manually by human annotators. These insights cover a growing set of product facts, including:	
 
 - the product category, weight, brand, packager codes and expiration date
 - some of its labels
@@ -33,11 +32,11 @@ A detailed description of [how predictions and insights work is available here](
 
 Robotoff works together with [Product Opener](https://github.com/openfoodfacts/openfoodfacts-server), the Core server of Open Food Facts (in Perl, which can also be installed locally using Docker) and the [Open Food Facts apps](https://github.com/openfoodfacts/smooth-app) (which can work with your local instance after enabling dev mode)
 
-**Documentation:** <https://openfoodfacts.github.io/robotoff>
+**📚 Documentation:** <https://openfoodfacts.github.io/robotoff>
 
 **Source code:** <https://github.com/openfoodfacts/robotoff>
 
-**Open Food Facts:** <https://world.openfoodfacts.org>
+**🍊 Open Food Facts:** <https://world.openfoodfacts.org>
 
 ## Overview
 
@@ -49,13 +48,42 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
   - a [Python package](https://openfoodfacts.github.io/robotoff/references/package/)
 - If you need to deploy or maintain Robotoff, [Maintenance](https://openfoodfacts.github.io/robotoff/how-to-guides/deployment/maintenance) is the way to go.
 
+## 🔧 Development
+
+### API Specification Linting
+
+Robotoff uses [Spectral](https://stoplight.io/open-source/spectral) to lint the OpenAPI specification file located at `doc/references/api.yml`. This ensures the API documentation follows best practices and remains consistent.
+
+#### Running API Linting
+
+All linting commands use Docker, so you don't need to install Spectral locally:
+
+```bash
+# Lint the API specification with pretty formatting
+make api-lint
+
+# Check the API specification and fail on errors (used in CI)
+make api-lint-check
+```
+
+#### Configuration
+
+The linting rules are configured in `.spectral.yml` at the root of the repository. The configuration extends the standard OpenAPI ruleset with custom rules specific to the Robotoff API.
+
+#### CI Integration
+
+API linting runs automatically on GitHub Actions when:
+- Changes are made to `doc/references/api.yml`
+- Changes are made to `.spectral.yml`
+
+The workflow will fail if there are any linting errors, ensuring the API specification maintains high quality.
+
 **NOTE:** This documentation tries to follow as much as possible the documentation system from [Diátaxis](https://diataxis.fr/).
 
-## Licence
+## 👩‍⚖️ Licence
+- Robotoff is licensed under the AGPLv3.
 
-Robotoff is licensed under the AGPLv3.
-
-## Weekly meetings
+## 📆 Weekly meetings
 - We e-meet every Tuesday at 11:00 Paris Time (10:00 London Time, 15:30 IST, 02:00 AM PT)
 - ![Google Meet](https://img.shields.io/badge/Google%20Meet-00897B?logo=google-meet&logoColor=white) Video call link: https://meet.google.com/qvv-grzm-gzb
 - Join by phone: https://tel.meet/qvv-grzm-gzb?pin=9965177492770

@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 import robotoff.insights.importer
 import robotoff.taxonomy
@@ -23,7 +23,12 @@ def _fake_store(monkeypatch, product_id: ProductIdentifier):
                     "code": product_id.barcode,  # needed to validate brand/label
                     # needed to validate image
                     "images": {
-                        "2": {"rev": 1, "uploaded_t": datetime.utcnow().timestamp()}
+                        "2": {
+                            "rev": 1,
+                            "uploaded_t": datetime.datetime.now(
+                                datetime.timezone.utc
+                            ).timestamp(),
+                        }
                     },
                 }
             )
@@ -55,13 +60,13 @@ def test_generate_insights_from_annotated_logos_job(peewee_db, monkeypatch, mock
             username=username,
         )
 
-    start = datetime.utcnow()
+    start = datetime.datetime.now()
     generate_insights_from_annotated_logos_job(
         [ann.id],
         OFFAuthentication(username=username, password=username),
         server_type=DEFAULT_SERVER_TYPE,
     )
-    end = datetime.utcnow()
+    end = datetime.datetime.now()
     # we generate a prediction
 
     with peewee_db:
@@ -115,4 +120,4 @@ def test_generate_insights_from_annotated_logos_job(peewee_db, monkeypatch, mock
     assert insight.annotation == 1
     assert insight.annotated_result == 2
     assert insight.server_type == DEFAULT_SERVER_TYPE.name
-    assert isinstance(insight.completed_at, datetime)
+    assert isinstance(insight.completed_at, datetime.datetime)

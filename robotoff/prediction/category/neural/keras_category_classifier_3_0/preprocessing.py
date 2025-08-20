@@ -3,13 +3,13 @@ import itertools
 import re
 import string
 from collections import defaultdict
-from typing import Optional
 
 import numpy as np
 
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
 from robotoff.types import JSONType
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .text_utils import fold, get_tag
@@ -46,23 +46,10 @@ def get_ingredient_processor():
     )
 
 
-def clear_ingredient_processing_cache():
-    """Clear all ingredient processing cache:
-
-    - Ingredient processor
-    - Model ingredient taxonomy
-
-    As these resources are memory-hungry, it should be cleared from memory if
-    not used anymore.
-    """
-    get_ingredient_taxonomy.cache_clear()
-    get_ingredient_processor.cache_clear()
-
-
 def generate_inputs_dict(
     product: JSONType,
     ocr_texts: list[str],
-    image_embeddings: Optional[np.ndarray] = None,
+    image_embeddings: np.ndarray | None = None,
 ) -> JSONType:
     """Generate inputs for v3 category predictor model.
 
@@ -150,7 +137,7 @@ def transform_ingredients_input(
     )
 
 
-def transform_nutrition_input(value: Optional[float], nutriment_name: str) -> float:
+def transform_nutrition_input(value: float | None, nutriment_name: str) -> float:
     """Transform nutritional values before model inference.
 
     This function returns:
@@ -339,3 +326,7 @@ def extract_ingredient_from_text(
     """
     text = fold(text.lower())
     return processor.extract_keywords(text, span_info=True)
+
+
+function_cache_register.register(get_ingredient_taxonomy)
+function_cache_register.register(get_ingredient_processor)

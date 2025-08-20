@@ -1,11 +1,12 @@
 import datetime
+import functools
 import itertools
+import logging
 import operator
-from typing import Optional
 
-import cachetools
 import elasticsearch
 import numpy as np
+from cachetools.func import ttl_cache
 from elasticsearch.helpers import bulk as elasticsearch_bulk
 from elasticsearch.helpers import scan as elasticsearch_scan
 from more_itertools import chunked
@@ -23,7 +24,6 @@ from robotoff.models import (
 from robotoff.models import Prediction as PredictionModel
 from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
-from robotoff.slack import NotifierFactory
 from robotoff.types import (
     ElasticSearchIndex,
     InsightImportResult,
@@ -33,10 +33,10 @@ from robotoff.types import (
     PredictionType,
     ServerType,
 )
-from robotoff.utils import get_logger
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import get_tag
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 LOGO_TYPE_MAPPING: dict[str, PredictionType] = {
@@ -106,9 +106,9 @@ def filter_logos(
     return filtered
 
 
-@cachetools.cached(cachetools.LRUCache(maxsize=1))
+@functools.cache
 def get_logo_confidence_thresholds() -> dict[LogoLabelType, float]:
-    logger.info("Loading logo confidence thresholds from DB...")
+    logger.debug("Loading logo confidence thresholds from DB...")
     thresholds = {}
 
     for item in LogoConfidenceThreshold.select().iterator():
@@ -125,6 +125,27 @@ def get_stored_logo_ids(es_client: elasticsearch.Elasticsearch) -> set[int]:
         source=False,
     )
     return set(int(item["_id"]) for item in scan_iter)
+
+
+def delete_ann_logos(
+    es_client: elasticsearch.Elasticsearch, logo_ids: list[int]
+) -> int:
+    """Delete logos from the ANN index.
+
+    :param es_client: Elasticsearch client
+    :param logo_ids: a list of logo ids to delete
+    :return: the number of logos deleted
+    """
+    actions = (
+        {
+            "_op_type": "delete",
+            "_index": ElasticSearchIndex.logo.name,
+            "_id": logo_id,
+        }
+        for logo_id in logo_ids
+    )
+    success, _ = elasticsearch_bulk(es_client, actions)
+    return success
 
 
 def add_logos_to_ann(
@@ -179,7 +200,7 @@ def save_nearest_neighbors(
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             }
             updated.append(logo_embedding.logo)
 
@@ -191,7 +212,7 @@ def knn_search(
     client: elasticsearch.Elasticsearch,
     embedding_bytes: bytes,
     k: int = settings.K_NEAREST_NEIGHBORS,
-    server_type: Optional[ServerType] = None,
+    server_type: ServerType | None = None,
 ) -> list[tuple[int, float]]:
     """Search for k approximate nearest neighbors of `embedding_bytes` in the
     Elasticsearch logos index.
@@ -224,9 +245,10 @@ def knn_search(
     return []
 
 
-@cachetools.cached(cachetools.TTLCache(maxsize=1, ttl=3600))  # 1h
+# ttl: 1h
+@ttl_cache(maxsize=1, ttl=3600)
 def get_logo_annotations() -> dict[int, LogoLabelType]:
-    logger.info("Loading logo annotations from DB...")
+    logger.debug("Loading logo annotations from DB...")
     annotations: dict[int, LogoLabelType] = {}
 
     for logo in (
@@ -247,7 +269,7 @@ def get_logo_annotations() -> dict[int, LogoLabelType]:
     return annotations
 
 
-def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
+def predict_label(logo: LogoAnnotation) -> LogoLabelType | None:
     probs = predict_proba(logo)
 
     if probs is None or not probs:
@@ -258,7 +280,7 @@ def predict_label(logo: LogoAnnotation) -> Optional[LogoLabelType]:
 
 def predict_proba(
     logo: LogoAnnotation, weights: str = "distance"
-) -> Optional[dict[LogoLabelType, float]]:
+) -> dict[LogoLabelType, float] | None:
     if logo.nearest_neighbors is None:
         return None
 
@@ -338,9 +360,23 @@ def import_logo_insights(
     logos: list[LogoAnnotation],
     thresholds: dict[LogoLabelType, float],
     server_type: ServerType,
-    default_threshold: float = 0.1,
-    notify: bool = True,
+    default_threshold: float = 0.2,
 ) -> InsightImportResult:
+    """Generate and import insights from logos.
+
+    Unannotated logos are considered instances of label "UNKNOWN". The
+    majority class is used as prediction, and the "UNKNOWN" prediction is
+    ignored.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param thresholds: a dict of confidence thresholds for each class. If the
+        class is not defined, default threshold is used
+    :param server_type: the server type (project) associated with the logos
+    :param default_threshold: the default confidence threshold to use,
+        defaults to 0.2
+    :return: the result from the insight import
+    """
     selected_logos = []
     logo_probs = []
     for logo in logos:
@@ -380,10 +416,6 @@ def import_logo_insights(
     predictions = predict_logo_predictions(selected_logos, logo_probs, server_type)
     import_result = import_insights(predictions, server_type)
 
-    if notify:
-        for logo, probs in zip(selected_logos, logo_probs):
-            NotifierFactory.get_notifier().send_logo_notification(logo, probs)
-
     return import_result
 
 
@@ -406,9 +438,17 @@ def generate_insights_from_annotated_logos_job(
 def generate_insights_from_annotated_logos(
     logos: list[LogoAnnotation], auth: OFFAuthentication, server_type: ServerType
 ) -> int:
-    """Generate and apply insights from annotated logos."""
+    """Generate and apply insights from annotated logos.
+
+    :param logos: a list of `LogoAnnotation` model instances, used to generate
+        insights
+    :param auth: the authentication credentials to use for the annotation
+    :param server_type: the server type (project) associated with the logos
+    :return: the number of insights annotated
+    """
     predictions = []
     for logo in logos:
+        logger.debug("Generating prediction for logo %s", logo.id)
         prediction = generate_prediction(
             logo_type=logo.annotation_type,
             logo_value=logo.taxonomy_value,
@@ -425,22 +465,26 @@ def generate_insights_from_annotated_logos(
         )
 
         if prediction is None:
+            logger.debug("No prediction generated for logo %s", logo.id)
             continue
 
         prediction.barcode = logo.barcode
         prediction.source_image = logo.source_image
+        logger.debug("Prediction generated for logo %s: %s", logo.id, prediction)
         predictions.append(prediction)
 
     import_result = import_insights(predictions, server_type)
     if import_result.created_predictions_count():
         logger.info(import_result)
+    else:
+        logger.debug("No insight created")
 
     annotated = 0
     for created_id in itertools.chain.from_iterable(
         insight_import_result.insight_created_ids
         for insight_import_result in import_result.product_insight_import_results
     ):
-        insight: Optional[ProductInsight] = ProductInsight.get_or_none(id=created_id)
+        insight: ProductInsight | None = ProductInsight.get_or_none(id=created_id)
         if insight:
             logger.info(
                 "Annotating insight %s (%s)",
@@ -495,13 +539,13 @@ def predict_logo_predictions(
 
 def generate_prediction(
     logo_type: str,
-    logo_value: Optional[str],
+    logo_value: str | None,
     data: dict,
     confidence: float,
     server_type: ServerType,
-    automatic_processing: Optional[bool] = False,
-    model_version: Optional[str] = None,
-) -> Optional[Prediction]:
+    automatic_processing: bool | None = False,
+    model_version: str | None = None,
+) -> Prediction | None:
     """Generate a Prediction from a logo.
 
     The Prediction may either be created after the annotation of the logo by
@@ -580,7 +624,11 @@ def refresh_nearest_neighbors(
             else:
                 logos = [embedding.logo for embedding in logo_embeddings]
                 import_logo_insights(
-                    logos, thresholds=thresholds, server_type=server_type, notify=False
+                    logos, thresholds=thresholds, server_type=server_type
                 )
 
     logger.info("refresh of logo nearest neighbors finished")
+
+
+function_cache_register.register(get_logo_confidence_thresholds)
+function_cache_register.register(get_logo_annotations)

@@ -11,8 +11,6 @@ You should, consider those changes:
 
   You should also run `make dl-models` to download all machine learning models locally.
 
-- if you don't work on Product Opener, you should launch MongoDB by adding `docker/mongodb.yml` to `COMPOSE_FILE`
-
 - change `OFF_UID` and `OFF_GID` to match your own user UID/GID (optional, only if you experience some file permission issue, see [Getting developper uid for docker](https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e))
 
 Note: **beware** not to commit your local changes to `.env` file!
@@ -68,7 +66,7 @@ After cloning the repository:
 5. To debug in a running container, you need to run poetry in the container. For example:
 
     ```
-    docker-compose run --rm api poetry run python
+    docker compose run --rm api poetry run python
     ```
     Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb](https://docs.python.org/3/library/pdb.html) or play with the code. 
 

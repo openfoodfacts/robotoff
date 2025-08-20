@@ -1,5 +1,6 @@
 import functools
-from typing import Optional, Union
+import logging
+from typing import Union
 
 from lark import Discard, Lark, Transformer
 from openfoodfacts.ocr import OCRResult, get_text
@@ -11,10 +12,11 @@ from robotoff.prediction.ocr.grammar import (
 )
 from robotoff.taxonomy import TaxonomyType
 from robotoff.types import PackagingElementProperty, Prediction, PredictionType
-from robotoff.utils import get_logger, load_json
+from robotoff.utils import load_json
+from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import strip_consecutive_spaces
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
@@ -105,13 +107,13 @@ class PackagingFRTransformer(Transformer):
         return items[-1]
 
     def shape_material(self, items: list):
-        shape, *material = items
+        shape, *material_list = items
 
-        if len(material) == 1:
-            material = material[0]
+        if len(material_list) == 1:
+            material = material_list[0]
         else:
             # 2 items, "plastique PET", only keep the last one
-            material = material[1]
+            material = material_list[1]
         return {**shape, **material}
 
     def WS(self, token):
@@ -153,7 +155,7 @@ class PackagingFRTransformer(Transformer):
     def junk(self, items):
         return Discard
 
-    def _match_tag(self, type_: str, value: str) -> Optional[str]:
+    def _match_tag(self, type_: str, value: str) -> str | None:
         taxonomy_map = self.taxonomy_maps[type_]
         value_tags = taxonomy_map.get(value, [])
         if not value_tags:
@@ -237,3 +239,7 @@ def find_packaging(content: Union[OCRResult, str]) -> list[Prediction]:
         return predictions
 
     return []
+
+
+function_cache_register.register(load_grammar)
+function_cache_register.register(load_taxonomy_map)

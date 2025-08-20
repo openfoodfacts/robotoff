@@ -1,12 +1,10 @@
+import logging
 from enum import Enum
-from typing import Optional
 
 import cv2
 import numpy as np
 
-from robotoff.utils import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class UPCImageType(Enum):
@@ -44,7 +42,7 @@ def get_polygon_area(box: np.ndarray) -> float:
 
 def get_is_upc_image_from_image(
     image: np.ndarray,
-) -> tuple[float, UPCImageType, Optional[list[list[float]]]]:
+) -> tuple[float, UPCImageType, list[list[float]] | None]:
     """This method determines if an image is a UPC_Image or not.
 
     A UPC_Image is defined as an image that has a UPC (=barcode) with a high
@@ -65,7 +63,8 @@ def get_is_upc_image_from_image(
     # box other return values in order are a bool of whether the barcode was
     # detected, any strings found in the region as a tuple, and the type of
     # barcode (EAN_13, etc)
-    _, _, _, polygon = bd.detectAndDecode(image)
+    # retval, points, straight_code
+    _, polygon, _ = bd.detectAndDecode(image)
 
     if polygon is not None:
         # means we have detected a UPC
@@ -87,7 +86,7 @@ def get_is_upc_image_from_image(
 
 def find_image_is_upc(
     image: np.ndarray,
-) -> tuple[float, UPCImageType, Optional[list[list[float]]]]:
+) -> tuple[float, UPCImageType, list[list[float]] | None]:
     """This function determines if an image is a UPC_Image or not.
     A UPC_Image is defined as an image that has a UPC (=barcode) with a high
     percentage area in the image and thus it is a poor selected photo.

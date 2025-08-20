@@ -1,28 +1,37 @@
-version: "3.9"
-
 x-robotoff-base-volumes:
   &robotoff-base-volumes
   - ./data:/opt/robotoff/data
+  - ./cache:/opt/robotoff/cache
   - ./datasets:/opt/robotoff/datasets
-  - ./tf_models:/opt/robotoff/tf_models
   - ./models:/opt/robotoff/models
+  - robotoff_tmp:/tmp
+  - home_cache:/home/off/.cache
 
 x-robotoff-base:
   &robotoff-base
   restart: $RESTART_POLICY
+  # this image is built with target=runtime, so it won't have the dev dependencies
   image: ghcr.io/openfoodfacts/robotoff:${TAG}
   volumes: *robotoff-base-volumes
+  networks:
+    - default
+    - common_net
 
 x-robotoff-base-env:
   &robotoff-base-env
   LOG_LEVEL:
+  LOG_ML_METRICS_ENABLED:
   ROBOTOFF_INSTANCE:
   ROBOTOFF_TLD:
   ROBOTOFF_SCHEME:
   STATIC_DOMAIN:
+  GUNICORN_PRELOAD_APP:
   GUNICORN_NUM_WORKERS:
   ROBOTOFF_UPDATED_PRODUCT_WAIT:
   REDIS_HOST:
+  REDIS_UPDATE_HOST:
+  REDIS_UPDATE_PORT:
+  REDIS_STREAM_NAME:
   POSTGRES_HOST:
   POSTGRES_DB:
   POSTGRES_USER:
@@ -34,18 +43,31 @@ x-robotoff-base-env:
   INFLUXDB_PORT:
   INFLUXDB_BUCKET:
   INFLUXDB_AUTH_TOKEN:
-  SLACK_TOKEN:
   SENTRY_DSN:
   ELASTIC_HOST:
   ELASTIC_PASSWORD:
   ELASTIC_USER:
-  TRITON_HOST:
+  DEFAULT_TRITON_URI:
+  TRITON_URI_CLIP:
+  TRITON_URI_NUTRISCORE:
+  TRITON_URI_NUTRITION_TABLE:
+  TRITON_URI_UNIVERSAL_LOGO_DETECTOR:
+  TRITON_URI_CATEGORY_CLASSIFIER:
+  TRITON_URI_INGREDIENT_NER:
+  TRITON_URI_NUTRITION_EXTRACTOR:
   FASTTEXT_HOST:
   FASTTEXT_PORT:
   ENABLE_MONGODB_ACCESS:
   IN_DOCKER_CONTAINER:
+  IMAGE_MODERATION_SERVICE_URL:
+  AUTH_BEARER_TOKEN_NUTRIPATROL:
+  CROP_ALLOWED_DOMAINS:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
-
+  # Used by Google SDK to know where to find the credentials
+  GOOGLE_APPLICATION_CREDENTIALS: /opt/robotoff/credentials/google/credentials.json
+  GOOGLE_CREDENTIALS: # JSON credentials pasted as environment variable
+  BATCH_JOB_KEY: # Secure Batch job import with a token key 
+  
 x-robotoff-worker-base:
   &robotoff-worker
   restart: $RESTART_POLICY
@@ -56,48 +78,62 @@ x-robotoff-worker-base:
     - postgres
     - redis
   mem_limit: 8g
+  networks:
+    - default
+    - common_net
+
 services:
   api:
     <<: *robotoff-base
     environment: *robotoff-base-env
-    mem_limit: 4g
+    mem_limit: 6g
     ports:
       - "${ROBOTOFF_EXPOSE:-5500}:5500"
     depends_on:
       - postgres
       - redis
+      - elasticsearch
 
-  worker_high_1:
-    <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_1
-    command: python -m robotoff run-worker robotoff-high-1
+  update-listener:
+    <<: *robotoff-base
+    environment: *robotoff-base-env
+    mem_limit: 1g
+    depends_on:
+      - redis
+    command: python -m robotoff run-update-listener
 
-  worker_high_2:
+  worker_1:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_high_2
-    command: python -m robotoff run-worker robotoff-high-2
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_1
+    # Each worker listens to a single high priority queue and to the low priority queue.
+    # As the low priority queue comes last, it will only be processed if there are no high
+    # priority tasks.
+    command: python -m robotoff run-worker robotoff-high-1 robotoff-low
 
-  worker_low_1:
+  worker_2:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_1
-    # Each worker (whether it's a high or low priority worker) listens to a
-    # single high priority queue
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_2
+    command: python -m robotoff run-worker robotoff-high-2 robotoff-low
+
+  worker_3:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_3
     command: python -m robotoff run-worker robotoff-high-3 robotoff-low
 
-  worker_low_2:
+  worker_4:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_low_2
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_4
     command: python -m robotoff run-worker robotoff-high-4 robotoff-low
 
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env
     command: python -m robotoff run-scheduler
-    mem_limit: 4g
+    mem_limit: 6g
 
   postgres:
     restart: $RESTART_POLICY
-    image: postgres:11.2-alpine
+    image: postgres:16.3-alpine
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -106,11 +142,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - backup:/opt/robotoff-backups
       - ./scripts/backup_postgres.sh:/opt/backup_postgres.sh
-    command: postgres -c shared_buffers=1024MB -c work_mem=64MB
-    mem_limit: 4g
+    command: postgres -c shared_buffers=${ROBOTOFF_POSTGRES_SHARED_BUFFERS} -c work_mem=${ROBOTOFF_POSTGRES_WORK_MEM}
+    mem_limit: 20g
     shm_size: 1g
     ports:
-      - "${POSTGRES_EXPOSE:-127.0.0.1:5432}:5432"
+      - "${POSTGRES_EXPOSE:-127.0.0.1:5501}:5432"
 
   redis:
     restart: $RESTART_POLICY
@@ -121,7 +157,7 @@ services:
       REDIS_ARGS: --save 60 1000 --appendonly yes
     mem_limit: 4g
     ports:
-      - "${REDIS_EXPOSE:-127.0.0.1:6379}:6379"
+      - "${REDIS_EXPOSE:-127.0.0.1:5502}:6379"
 
   elasticsearch:
     restart: $RESTART_POLICY
@@ -142,15 +178,34 @@ services:
     mem_limit: 15g
     volumes:
       - es-data:/usr/share/elasticsearch/data
+      - es-logs:/usr/share/elasticsearch/logs
+      - elasticsearch_tmp:/tmp
 
 volumes:
   postgres-data:
-  backup:
-    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
   es-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
+  es-logs:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-logs
   redis-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_redis-data
+  backup:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
+  # Volume mount on /tmp on API and workers, to prevent
+  # large docker layer overlay
+  robotoff_tmp:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_tmp
+  home_cache:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_home_cache
+  elasticsearch_tmp:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_elasticsearch_tmp
+
 
 networks:
   default:
+
+  # this is the network shared with product opener, it's only used in staging (and locally)
+  common_net:
+    name: ${COMMON_NET_NAME}
+    external: true

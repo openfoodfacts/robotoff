@@ -1,5 +1,6 @@
 import datetime
-from typing import Iterable, Optional
+import logging
+from typing import Iterable
 
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
@@ -8,7 +9,7 @@ from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
 from robotoff.prediction import ocr
 from robotoff.prediction.object_detection import (
-    OBJECT_DETECTION_MODEL_VERSION,
+    MODELS_CONFIG,
     ObjectDetectionModelRegistry,
 )
 from robotoff.types import (
@@ -17,9 +18,9 @@ from robotoff.types import (
     PredictionType,
     ProductIdentifier,
 )
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_OCR_PREDICTION_TYPES: list[PredictionType] = [
@@ -52,7 +53,8 @@ def run_object_detection_model(
     image_model: ImageModel,
     threshold: float = 0.1,
     return_null_if_exist: bool = True,
-) -> Optional[ImagePrediction]:
+    triton_uri: str | None = None,
+) -> ImagePrediction | None:
     """Run a model detection model and save the results in the
     `image_prediction` table.
 
@@ -67,30 +69,33 @@ def run_object_detection_model(
       `image` table)
     :param threshold: the minimum object score above which we keep the object
         data
-
+    :param return_null_if_exist: if True, return None if the image prediction
+        already exists in DB
+    :param triton_uri: URI of the Triton Inference Server, defaults to
+        None. If not provided, the default value from settings is used.
     :return: return None if the image does not exist in DB, or the created
       `ImagePrediction` otherwise
     """
     if (
         existing_image_prediction := ImagePrediction.get_or_none(
-            image=image_model, model_name=model_name.value
+            image=image_model, model_name=model_name.name
         )
     ) is not None:
         if return_null_if_exist:
             return None
         return existing_image_prediction
 
-    timestamp = datetime.datetime.utcnow()
-    results = ObjectDetectionModelRegistry.get(model_name.value).detect_from_image(
-        image, output_image=False
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
+    results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
+        image, output_image=False, triton_uri=triton_uri, threshold=threshold
     )
-    data = results.to_json(threshold=threshold)
+    data = results.to_list()
     max_confidence = max((item["score"] for item in data), default=None)
     return ImagePrediction.create(
         image=image_model,
         type="object_detection",
-        model_name=model_name.value,
-        model_version=OBJECT_DETECTION_MODEL_VERSION[model_name],
+        model_name=model_name.name,
+        model_version=MODELS_CONFIG[model_name].model_version,
         data={"objects": data},
         timestamp=timestamp,
         max_confidence=max_confidence,

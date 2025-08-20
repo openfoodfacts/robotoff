@@ -6,16 +6,20 @@ import hashlib
 import io
 import re
 import tempfile
+import urllib
 import uuid
-from typing import Literal, Optional
+from collections import defaultdict
+from pathlib import Path
+from typing import Literal, cast
 
 import falcon
 import orjson
 import peewee
 import requests
 from falcon.media.validators import jsonschema
-from falcon_cors import CORS
-from falcon_multipart.middleware import MultipartMiddleware
+from openfoodfacts import OCRResult
+from openfoodfacts.barcode import normalize_barcode
+from openfoodfacts.images import extract_barcode_from_url
 from openfoodfacts.ocr import OCRParsingException, OCRResultGenerationException
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from PIL import Image
@@ -23,7 +27,7 @@ from sentry_sdk.integrations.falcon import FalconIntegration
 
 from robotoff import settings
 from robotoff.app import schema
-from robotoff.app.auth import BasicAuthDecodeError, basic_decode
+from robotoff.app.auth import BasicAuthDecodeError, basic_decode, validate_token
 from robotoff.app.core import (
     SkipVotedOn,
     SkipVotedType,
@@ -35,8 +39,10 @@ from robotoff.app.core import (
     get_predictions,
     save_annotation,
     update_logo_annotations,
+    validate_params,
 )
-from robotoff.app.middleware import DBConnectionMiddleware
+from robotoff.app.middleware import CacheClearMiddleware, DBConnectionMiddleware
+from robotoff.batch import import_batch_predictions
 from robotoff.elasticsearch import get_es_client
 from robotoff.insights.extraction import (
     DEFAULT_OCR_PREDICTION_TYPES,
@@ -58,21 +64,20 @@ from robotoff.models import (
     batch_insert,
     db,
 )
-from robotoff.off import (
-    OFFAuthentication,
-    generate_image_path,
-    generate_json_ocr_url,
-    get_barcode_from_url,
-)
-from robotoff.prediction import ingredient_list
+from robotoff.off import OFFAuthentication, generate_image_path
+from robotoff.prediction import image_classifier, ingredient_list, nutrition_extraction
 from robotoff.prediction.category import predict_category
+from robotoff.prediction.langid import predict_lang
 from robotoff.prediction.object_detection import ObjectDetectionModelRegistry
-from robotoff.products import get_image_id, get_product, get_product_dataset_etag
+from robotoff.products import get_product, get_product_dataset_etag
 from robotoff.taxonomy import is_prefixed_value, match_taxonomized_value
 from robotoff.types import (
+    BatchJobType,
+    ImageClassificationModel,
     InsightType,
     JSONType,
     NeuralCategoryClassifierModel,
+    ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
     ServerType,
@@ -80,24 +85,12 @@ from robotoff.types import (
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
 from robotoff.utils.text import get_tag
-from robotoff.workers.queues import (
-    enqueue_in_job,
-    enqueue_job,
-    get_high_queue,
-    low_queue,
-)
-from robotoff.workers.tasks import (
-    delete_product_insights_job,
-    download_product_dataset_job,
-    run_import_image_job,
-    update_insights_job,
-)
+from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
+from robotoff.workers.tasks import download_product_dataset_job
 
 logger = get_logger()
 
 settings.init_sentry(integrations=[FalconIntegration()])
-
-es_client = get_es_client()
 
 TRANSLATION_STORE = TranslationStore()
 TRANSLATION_STORE.load()
@@ -108,8 +101,9 @@ def get_server_type_from_req(
 ) -> ServerType:
     """Get `ServerType` value from POST x-www-form-urlencoded or GET
     requests."""
-    if req.media and "server_type" in req.media:
-        server_type_str = req.media["server_type"]
+    media = req.get_media(default_when_empty=None)
+    if media is not None and "server_type" in media:
+        server_type_str = media["server_type"]
     else:
         server_type_str = req.get_param("server_type")
 
@@ -125,48 +119,45 @@ def get_server_type_from_req(
 COUNTRY_NAME_TO_ENUM = {COUNTRY_CODE_TO_NAME[item]: item for item in Country}
 
 
-def get_countries_from_req(req: falcon.Request) -> Optional[list[Country]]:
+def get_countries_from_req(req: falcon.Request) -> list[Country] | None:
     """Parse `countries` query string from request."""
-    countries_str: Optional[list[str]] = req.get_param_as_list("countries")
-    countries: Optional[list[Country]] = None
-
+    countries_str: list[str] | None = req.get_param_as_list("countries")
     if countries_str is None:
-        # `country` parameter is deprecated, we check here if it's provided
-        # when `countries` is not provided.
-        # It's assumed to be a single country tag (ex: `en:spain`)
-        country: Optional[str] = req.get_param("country")
+        return None
 
-        if country:
-            if country in COUNTRY_NAME_TO_ENUM:
-                country = COUNTRY_NAME_TO_ENUM[country]
-                countries = [country]
-            else:
-                countries = None
-    else:
-        # countries_str is a list of 2-letter country codes
-        try:
-            countries = [Country[country_str] for country_str in countries_str]
-        except KeyError:
-            raise falcon.HTTPBadRequest(
-                description=f"invalid `countries` value: {countries_str}"
-            )
-
-    return countries
+    # countries_str is a list of 2-letter country codes
+    try:
+        return [Country[country_str] for country_str in countries_str]
+    except KeyError:
+        raise falcon.HTTPBadRequest(
+            description=f"invalid `countries` value: {countries_str}"
+        )
 
 
-def _get_skip_voted_on(
-    auth: Optional[OFFAuthentication], device_id: str
-) -> SkipVotedOn:
-    """Helper function for constructing SkipVotedOn objects based on request
-    params."""
+def _get_skip_voted_on(auth: OFFAuthentication | None, device_id: str) -> SkipVotedOn:
+    """Create a SkipVotedOn object based on request params.
+    This object is used to determine if the user has already voted on the insight.
+
+    If the user is not authenticated, the device_id (either an ID sent by the client or
+    the IP address as fallback) is used.
+
+    If the user is authenticated, the username is used.
+    """
     if not auth:
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
-    username: Optional[str] = auth.get_username()
+    username: str | None = auth.get_username()
     if not username:
         return SkipVotedOn(SkipVotedType.DEVICE_ID, device_id)
 
     return SkipVotedOn(SkipVotedType.USERNAME, username)
+
+
+def normalize_req_barcode(barcode: str | None) -> str | None:
+    """Normalize the `barcode` parameter provided in the Falcon request."""
+    if not barcode:
+        return None
+    return normalize_barcode(barcode)
 
 
 ###########
@@ -177,6 +168,7 @@ def _get_skip_voted_on(
 
 class ProductInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
+        barcode = normalize_barcode(barcode)
         response: JSONType = {}
         server_type = get_server_type_from_req(req)
         insights = [
@@ -210,17 +202,25 @@ class InsightCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        keep_types: Optional[list[str]] = req.get_param_as_list(
+        keep_types: list[str] | None = req.get_param_as_list(
             "insight_types", required=False
         )
-        barcode: Optional[str] = req.get_param("barcode")
-        annotated: Optional[bool] = req.get_param_as_bool("annotated")
-        annotation: Optional[int] = req.get_param_as_int("annotation")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        annotated: bool | None = req.get_param_as_bool("annotated")
+        annotation: int | None = req.get_param_as_int("annotation")
         value_tag: str = req.get_param("value_tag")
         brands = req.get_param_as_list("brands") or None
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
-        countries: Optional[list[str]] = get_countries_from_req(req)
+        countries: list[Country] | None = get_countries_from_req(req)
+        order_by: str | None = req.get_param("order_by")
+        campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
+        lc: list[str] | None = req.get_param_as_list("lc") or None
+
+        if order_by not in ("random", "popularity", None):
+            raise falcon.HTTPBadRequest(
+                description=f"invalid `order_by` value: {order_by}"
+            )
 
         if keep_types:
             # Limit the number of types to prevent slow SQL queries
@@ -230,6 +230,12 @@ class InsightCollection:
             # Limit the number of brands to prevent slow SQL queries
             brands = brands[:10]
 
+        device_id = device_id_from_request(req)
+        auth: OFFAuthentication | None = parse_auth(req)
+        avoid_voted_on = _get_skip_voted_on(auth, device_id)
+        # Counting the number of insights that match the vote
+        # criteria can be very costly, so we limit the count to 100
+        max_count = 100
         get_insights_ = functools.partial(
             get_insights,
             server_type=server_type,
@@ -241,6 +247,11 @@ class InsightCollection:
             annotation=annotation,
             barcode=barcode,
             predictor=predictor,
+            order_by=order_by,
+            campaigns=campaigns,
+            avoid_voted_on=avoid_voted_on,
+            max_count=max_count,
+            lc=lc,
         )
 
         offset: int = (page - 1) * count
@@ -261,12 +272,12 @@ class RandomInsightResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
 
-        insight_type: Optional[str] = req.get_param("type")
-        value_tag: Optional[str] = req.get_param("value_tag")
+        insight_type: str | None = req.get_param("type")
+        value_tag: str | None = req.get_param("value_tag")
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         predictor = req.get_param("predictor")
         server_type = get_server_type_from_req(req)
-        countries: Optional[list[str]] = get_countries_from_req(req)
+        countries = get_countries_from_req(req)
 
         keep_types = [insight_type] if insight_type else None
         get_insights_ = functools.partial(
@@ -292,7 +303,7 @@ class RandomInsightResource:
         resp.media = response
 
 
-def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
+def parse_auth(req: falcon.Request) -> OFFAuthentication | None:
     session_cookie = req.get_cookie_values("session")
 
     if session_cookie:
@@ -316,6 +327,32 @@ def parse_auth(req: falcon.Request) -> Optional[OFFAuthentication]:
     return OFFAuthentication(
         session_cookie=session_cookie, username=username, password=password
     )
+
+
+def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
+    """Parse and validate authentification token from request.
+
+    :param req: Request.
+    :type req: falcon.Request
+    :param ref_token_name: Secret environment variable name.
+    :type ref_token_name: str
+    :return: Token valid or not.
+    """
+    auth_header = req.get_header("Authorization", required=True)
+
+    try:
+        scheme, token = auth_header.strip().split()
+        if scheme.lower() != "bearer":
+            raise falcon.HTTPUnauthorized(
+                "Invalid authentication scheme: 'Bearer Token' expected."
+            )
+        is_token_valid = validate_token(token, ref_token_name)
+        if not is_token_valid:
+            raise falcon.HTTPUnauthorized("Invalid token.")
+        else:
+            return True
+    except ValueError:
+        raise falcon.HTTPUnauthorized("Invalid authentication scheme.")
 
 
 def device_id_from_request(req: falcon.Request) -> str:
@@ -394,128 +431,47 @@ class AnnotateInsightResource:
 
 class NutritionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        # we transform image IDs to int to be sure to have "raw" image IDs as
-        # input
-        image_ids = req.get_param_as_list("image_ids", required=False, transform=int)
+        image_url = req.get_param("image_url", required=True)
+        ocr_url = req.get_param("ocr_url", required=True)
 
-        if image_ids is not None:
-            # convert image IDs back to string
-            image_ids = set(str(x) for x in image_ids)
-
-        server_type = get_server_type_from_req(req)
-
-        if server_type not in (ServerType.off, ServerType.off_pro):
-            raise falcon.HTTPBadRequest(f"invalid server type: {server_type}")
-
-        product_id = ProductIdentifier(barcode, server_type)
-        product = get_product(product_id, ["images"])
-
-        if product is None:
-            raise falcon.HTTPBadRequest(f"product not found: {barcode}")
-
-        errors = []
-        existing_image_ids: set[str] = set(x for x in product["images"] if x.isdigit())
-        # We only keep image IDs that actually exist for this product
-        if image_ids:
-            target_image_ids = existing_image_ids & image_ids
-            if missing_image_ids := image_ids - existing_image_ids:
-                for missing_image_id in missing_image_ids:
-                    errors.append(
-                        {
-                            "error": "unknown_image",
-                            "error_description": f"the image {missing_image_id} for product "
-                            f"{product_id} does not exist",
-                        }
-                    )
-        else:
-            target_image_ids = existing_image_ids
-
-        # We only keep the 10 most recent images (a higher image ID means that
-        # the image is more recent)
-        target_image_ids = sorted(target_image_ids, key=lambda x: int(x), reverse=True)[
-            :10
-        ]
-        predictions: list[JSONType] = []
-
-        # Fetch existing predictions in DB to avoid recomputing them
-        existing_predictions = list(
-            Prediction.select(
-                Prediction.data["nutrients"].as_json().alias("nutrients"),
-                Prediction.source_image,
-                Prediction.predictor,
-                Prediction.predictor_version,
-            )
-            .where(
-                Prediction.barcode == barcode,
-                Prediction.server_type == server_type.name,
-                Prediction.type == PredictionType.nutrient.name,
-                Prediction.source_image.in_(
-                    [
-                        generate_image_path(product_id, image_id)
-                        for image_id in target_image_ids
-                    ]
-                ),
-            )
-            .dicts()
+        image = get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=False
         )
-        predictions += existing_predictions
 
-        # Remove predictions of image IDs that were fetched from DB
-        remaining_image_ids = set(target_image_ids) - set(
-            get_image_id(p["source_image"]) for p in existing_predictions
-        )
-        for image_id in remaining_image_ids:
-            # Perform detection on remaining images
-            ocr_url = generate_json_ocr_url(product_id, image_id)
-            try:
-                predictions += [
-                    {
-                        # Only keep relevant fields for nutrition information
-                        "nutrients": p.data["nutrients"],
-                        "source_image": p.source_image,
-                        "predictor": p.predictor,
-                        "predictor_version": p.predictor_version,
-                    }
-                    for p in extract_ocr_predictions(
-                        product_id,
-                        ocr_url,
-                        [PredictionType.nutrient],
-                    )
-                ]
+        if image is None:
+            logger.info("Error while downloading image %s", image_url)
+            resp.media = {
+                "error": "download_error",
+                "error_description": f"an error occurred while downloading image: {image_url}",
+            }
+            return
 
-            except requests.exceptions.RequestException:
-                errors.append(
-                    {
-                        "error": "download_error",
-                        "error_description": f"an error occurred during OCR JSON download: {ocr_url}",
-                    }
-                )
+        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
-            except OCRParsingException as e:
-                logger.error(e)
-                errors.append(
-                    {
-                        "error": "invalid_ocr",
-                        "error_description": f"an error occurred during OCR parsing: {ocr_url}",
-                    }
-                )
+        if ocr_result is None:
+            logger.info("Error while downloading OCR JSON %s", ocr_url)
+            resp.media = {
+                "error": "download_error",
+                "error_description": f"an error occurred while downloading OCR JSON: {ocr_url}",
+            }
+            return
 
-        # Sort predictions to have most recent images (higher image ID) first
-        predictions = sorted(
-            predictions,
-            key=lambda x: int(get_image_id(x["source_image"])),  # type: ignore
-            reverse=True,
-        )
-        response = {
+        output = nutrition_extraction.predict(image, ocr_result)
+
+        predictions = []
+        if output is not None:
+            prediction = {
+                "nutrients": {
+                    entity: dataclasses.asdict(nutrient)
+                    for entity, nutrient in output.nutrients.items()
+                },
+                "entities": dataclasses.asdict(output.entities),
+            }
+            predictions.append(prediction)
+
+        resp.media = {
             "predictions": predictions,
-            "image_ids": target_image_ids,
         }
-
-        if errors:
-            response["errors"] = errors
-
-        resp.media = response
 
 
 def transform_to_prediction_type(value: str) -> PredictionType:
@@ -534,7 +490,7 @@ class OCRPredictionPredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         ocr_url = req.get_param("ocr_url", required=True)
         server_type = get_server_type_from_req(req)
-        barcode = get_barcode_from_url(ocr_url)
+        barcode = extract_barcode_from_url(ocr_url)
         prediction_types = req.get_param_as_list(
             "prediction_types",
             default=DEFAULT_OCR_PREDICTION_TYPES,
@@ -575,26 +531,27 @@ class CategoryPredictorResource:
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         """Predict categories using neural categorizer and matching algorithm
         for a specific product."""
-        server_type: ServerType = ServerType[req.media.get("server_type", "off")]
+        server_type = get_server_type_from_req(req)
 
         if server_type != ServerType.off:
             raise falcon.HTTPBadRequest(
                 f"category predictor is only available for 'off' server type (here: '{server_type.name}')"
             )
 
+        media = req.get_media()
         neural_model_name = None
-        if (neural_model_name_str := req.media.get("neural_model_name")) is not None:
+        if (neural_model_name_str := media.get("neural_model_name")) is not None:
             neural_model_name = NeuralCategoryClassifierModel[neural_model_name_str]
 
-        if "barcode" in req.media:
+        if "barcode" in media:
             # Fetch product from DB
-            barcode: str = req.media["barcode"]
+            barcode: str = normalize_barcode(media["barcode"])
             product = get_product(ProductIdentifier(barcode, server_type)) or {}
             if not product:
                 raise falcon.HTTPNotFound(description=f"product {barcode} not found")
             product_id = ProductIdentifier(barcode, server_type)
         else:
-            product = req.media["product"]
+            product = media["product"]
             product_id = ProductIdentifier("NULL", server_type)
 
             if (ingredient_tags := product.pop("ingredients_tags", None)) is not None:
@@ -604,8 +561,8 @@ class CategoryPredictorResource:
         resp.media = predict_category(
             product,
             product_id,
-            deepest_only=req.media.get("deepest_only", False),
-            threshold=req.media.get("threshold"),
+            deepest_only=media.get("deepest_only", False),
+            threshold=media.get("threshold"),
             neural_model_name=neural_model_name,
             clear_cache=True,  # clear resource cache to save memory
         )
@@ -627,16 +584,8 @@ class IngredientListPredictorResource:
             )
 
         ocr_url = req.get_param("ocr_url", required=True)
-        aggregation_strategy = req.get_param("aggregation_strategy", default="FIRST")
-        model_version = req.get_param("model_version", default="1")
         try:
-            output = ingredient_list.predict_from_ocr(
-                ocr_url,
-                aggregation_strategy=ingredient_list.AggregationStrategy[
-                    aggregation_strategy
-                ],
-                model_version=model_version,
-            )
+            ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=True)
         except OCRResultGenerationException as e:
             error_message, _ = e.args
             resp.media = {
@@ -644,7 +593,90 @@ class IngredientListPredictorResource:
                 "description": error_message,
             }
             return
+
+        ocr_result = cast(OCRResult, ocr_result)
+        aggregation_strategy = req.get_param("aggregation_strategy", default="FIRST")
+        model_version = req.get_param("model_version", default="1")
+        output = ingredient_list.predict_from_ocr(
+            ocr_result,
+            aggregation_strategy=ingredient_list.AggregationStrategy[
+                aggregation_strategy
+            ],
+            model_version=model_version,
+        )
         resp.media = dataclasses.asdict(output)
+
+
+class LanguagePredictorResource:
+    def _on_get_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text.
+
+        This method is used by both GET and POST endpoints.
+        """
+        params = validate_params(
+            {
+                "text": req.get_param("text"),
+                "k": req.get_param("k"),
+                "threshold": req.get_param("threshold"),
+            },
+            schema.LanguagePredictorResourceParams,
+        )
+        params = cast(schema.LanguagePredictorResourceParams, params)
+        language_predictions = predict_lang(params.text, params.k, params.threshold)
+        resp.media = {
+            "predictions": [
+                dataclasses.asdict(prediction) for prediction in language_predictions
+            ]
+        }
+
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text."""
+        self._on_get_post(req, resp)
+
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        """Predict language of a text.
+
+        For long text, use POST instead of GET, as the length of the query
+        string is limited.
+        """
+        self._on_get_post(req, resp)
+
+
+class ProductLanguagePredictorResource:
+    def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Predict the languages displayed on the product images, using
+        `image_lang` predictions as input."""
+        barcode = normalize_barcode(req.get_param("barcode", required=True))
+        server_type = get_server_type_from_req(req)
+        counts: dict[str, int] = defaultdict(int)
+        image_ids: list[int] = []
+
+        for prediction_data, source_image in (
+            Prediction.select(Prediction.data, Prediction.source_image)
+            .where(
+                Prediction.barcode == barcode,
+                Prediction.server_type == server_type.name,
+                Prediction.type == PredictionType.image_lang.name,
+            )
+            .tuples()
+            .iterator()
+        ):
+            image_ids.append(int(Path(source_image).stem))
+            for lang, lang_count in prediction_data["count"].items():
+                counts[lang] += lang_count
+
+        words_n = counts.pop("words")
+        sorted_counts = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+        counts_list = [{"count": count, "lang": lang} for lang, count in sorted_counts]
+        percent_list = [
+            {"percent": (count * 100 / words_n), "lang": lang}
+            for lang, count in sorted_counts
+        ]
+        resp.media = {
+            "counts": counts_list,
+            "percent": percent_list,
+            "image_ids": sorted(image_ids),
+        }
 
 
 class UpdateDatasetResource:
@@ -665,30 +697,6 @@ class UpdateDatasetResource:
         }
 
 
-class ImageImporterResource:
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        image_url = req.get_param("image_url", required=True)
-        ocr_url = req.get_param("ocr_url", required=True)
-        server_domain: str = req.get_param(
-            "server_domain", default="api.openfoodfacts.org"
-        )
-        check_server_domain(server_domain)
-        server_type = ServerType.get_from_server_domain(server_domain)
-        product_id = ProductIdentifier(barcode, server_type)
-        enqueue_job(
-            run_import_image_job,
-            get_high_queue(product_id),
-            job_kwargs={"result_ttl": 0},
-            product_id=product_id,
-            image_url=image_url,
-            ocr_url=ocr_url,
-        )
-        resp.media = {
-            "status": "scheduled",
-        }
-
-
 class ImageCropResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
@@ -696,6 +704,11 @@ class ImageCropResource:
         x_min = req.get_param_as_float("x_min", required=True)
         y_max = req.get_param_as_float("y_max", required=True)
         x_max = req.get_param_as_float("x_max", required=True)
+
+        parsed_img_url = urllib.parse.urlparse(image_url)
+        if parsed_img_url.hostname not in settings.CROP_ALLOWED_DOMAINS:
+            raise falcon.HTTPBadRequest("Domain not allowed!")
+
         # Get image from cache, as Hunger Games can requests many crops
         # from the same image
         image = get_image_from_url(
@@ -719,10 +732,11 @@ class ImagePredictionImporterResource:
     @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_type = get_server_type_from_req(req)
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         inserts = []
+        media = req.get_media()
 
-        for prediction in req.media["predictions"]:
+        for prediction in media["predictions"]:
             product_id = ProductIdentifier(prediction["barcode"], server_type)
             source_image = generate_image_path(product_id, prediction.pop("image_id"))
             inserts.append(
@@ -741,18 +755,20 @@ class ImagePredictionResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
-        model_name: Optional[str] = req.get_param("model_name")
-        type_: Optional[str] = req.get_param("type")
-        model_version: Optional[str] = req.get_param("model_version")
-        barcode: Optional[str] = req.get_param("barcode")
-        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        with_logo: bool | None = req.get_param_as_bool("with_logo", default=None)
+        model_name: str | None = req.get_param("model_name")
+        type_: str | None = req.get_param("type")
+        model_version: str | None = req.get_param("model_version")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        image_id: str | None = req.get_param("image_id")
+        min_confidence: float | None = req.get_param_as_float("min_confidence")
         server_type = get_server_type_from_req(req)
 
         get_image_predictions_ = functools.partial(
             get_image_predictions,
             with_logo=with_logo,
             barcode=barcode,
+            image_id=image_id,
             type=type_,
             server_type=server_type,
             model_name=model_name,
@@ -780,15 +796,19 @@ class ImagePredictorResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         image_url = req.get_param("image_url", required=True)
         models: list[str] = req.get_param_as_list("models", required=True)
+        threshold: float = req.get_param_as_float("threshold", default=0.5)
 
-        available_models = ObjectDetectionModelRegistry.get_available_models()
+        available_object_detection_models = list(
+            ObjectDetectionModel.__members__.keys()
+        )
+        available_clf_models = list(ImageClassificationModel.__members__.keys())
+        available_models = available_object_detection_models + available_clf_models
 
         for model_name in models:
             if model_name not in available_models:
                 raise falcon.HTTPBadRequest(
                     "invalid_model",
-                    "unknown model {}, available models: {}"
-                    "".format(model_name, ", ".join(available_models)),
+                    f"unknown model {model_name}, available models: {', '.join(available_models)}",
                 )
 
         output_image = req.get_param_as_bool("output_image")
@@ -796,12 +816,18 @@ class ImagePredictorResource:
         if output_image is None:
             output_image = False
 
-        if output_image and len(models) != 1:
-            raise falcon.HTTPBadRequest(
-                "invalid_request",
-                "a single model must be specified with the `models` parameter "
-                "when `output_image` is True",
-            )
+        if output_image:
+            if len(models) != 1:
+                raise falcon.HTTPBadRequest(
+                    "invalid_request",
+                    "a single model must be specified with the `models` parameter "
+                    "when `output_image` is True",
+                )
+            if models[0] not in available_object_detection_models:
+                raise falcon.HTTPBadRequest(
+                    "invalid_request",
+                    f"model {models[0]} does not support image output",
+                )
 
         image = get_image_from_url(
             image_url, session=http_session, error_raise=False, use_cache=True
@@ -813,14 +839,29 @@ class ImagePredictorResource:
         predictions = {}
 
         for model_name in models:
-            model = ObjectDetectionModelRegistry.get(model_name)
-            result = model.detect_from_image(image, output_image=output_image)
+            if model_name in available_object_detection_models:
+                model = ObjectDetectionModelRegistry.get(
+                    ObjectDetectionModel[model_name]
+                )
+                result = model.detect_from_image(
+                    image, output_image=output_image, threshold=threshold
+                )
 
-            if output_image:
-                image_response(result.boxed_image, resp)
-                return
+                if output_image:
+                    boxed_image = cast(Image.Image, result.boxed_image)
+                    image_response(boxed_image, resp)
+                    return
+                else:
+                    predictions[model_name] = result.to_list()
             else:
-                predictions[model_name] = result.to_json()
+                model_enum = ImageClassificationModel[model_name]
+                classifier = image_classifier.ImageClassifier(
+                    image_classifier.MODELS_CONFIG[model_enum]
+                )
+                predictions[model_name] = [
+                    {"label": label, "score": score}
+                    for label, score in classifier.predict(image)
+                ]
 
         resp.media = {"predictions": predictions}
 
@@ -828,23 +869,37 @@ class ImagePredictorResource:
 def image_response(image: Image.Image, resp: falcon.Response) -> None:
     resp.content_type = "image/jpeg"
     fp = io.BytesIO()
+    # JPEG doesn't support RGBA, so we convert to RGB if needed
+    if image.mode != "RGB":
+        image = image.convert("RGB")
     image.save(fp, "JPEG")
-    resp.stream_len = fp.tell()
+    stream_len = fp.tell()
     fp.seek(0)
-    resp.stream = fp
+    resp.set_stream(fp, stream_len)
 
 
 class ImageLogoResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
+        """Return details about requested logos."""
         logo_ids: list[str] = req.get_param_as_list(
             "logo_ids", transform=int, required=True
         )
+
+        if len(logo_ids) > 500:
+            raise falcon.HTTPBadRequest(
+                description="too many logos requested, max: 500"
+            )
+
         logos = []
         for logo in (
             LogoAnnotation.select()
             .join(ImagePrediction)
             .join(ImageModel)
-            .where(LogoAnnotation.id.in_(logo_ids))
+            .where(
+                LogoAnnotation.id.in_(logo_ids),
+                # Don't include logos from deleted images
+                ImageModel.deleted == False,  # noqa
+            )  # noqa
             .iterator()
         ):
             logo_dict = logo.to_dict()
@@ -861,13 +916,13 @@ class ImageLogoSearchResource:
         count: int = req.get_param_as_int(
             "count", min_value=1, max_value=2000, default=25
         )
-        type_: Optional[str] = req.get_param("type")
-        barcode: Optional[str] = req.get_param("barcode")
-        value: Optional[str] = req.get_param("value")
-        taxonomy_value: Optional[str] = req.get_param("taxonomy_value")
-        min_confidence: Optional[float] = req.get_param_as_float("min_confidence")
+        type_: str | None = req.get_param("type")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        value: str | None = req.get_param("value")
+        taxonomy_value: str | None = req.get_param("taxonomy_value")
+        min_confidence: float | None = req.get_param_as_float("min_confidence")
         random: bool = req.get_param_as_bool("random", default=False)
-        annotated: Optional[bool] = req.get_param_as_bool("annotated")
+        annotated: bool | None = req.get_param_as_bool("annotated")
 
         if type_ is None and (value is not None or taxonomy_value is not None):
             raise falcon.HTTPBadRequest(
@@ -885,7 +940,11 @@ class ImageLogoSearchResource:
                 "for label type"
             )
 
-        where_clauses = [ImageModel.server_type == server_type.name]
+        where_clauses = [
+            ImageModel.server_type == server_type.name,
+            # Don't include logos from deleted images
+            ImageModel.deleted == False,  # noqa
+        ]
         if annotated is not None:
             where_clauses.append(LogoAnnotation.annotation_value.is_null(not annotated))
 
@@ -926,7 +985,14 @@ class ImageLogoSearchResource:
         resp.media = {"logos": items, "count": query_count}
 
 
-def check_logo_annotation(type_: str, value: Optional[str] = None):
+def check_logo_annotation(type_: str, value: str | None = None) -> None:
+    """Check if the log annotation type and value are valid, and raise an
+    exception if not.
+
+    :param type_: the annotation type (brand, category, label, store)
+    :param value: the annotation value, if any
+    :raises falcon.HTTPBadRequest: if the annotation type or value is invalid
+    """
     if value is not None:
         if type_ == "label" and not is_prefixed_value(value):
             raise falcon.HTTPBadRequest(
@@ -952,26 +1018,32 @@ class ImageLogoDetailResource:
     @jsonschema.validate(schema.UPDATE_LOGO_SCHEMA)
     def on_put(self, req: falcon.Request, resp: falcon.Response, logo_id: int):
         auth = parse_auth(req)
+        logger.info(
+            "Received logo annotation update request for logo %s (user: %s)",
+            logo_id,
+            auth.get_username() if auth else "unknown",
+        )
+        media = req.get_media()
         if auth is None:
             raise falcon.HTTPForbidden(
                 description="authentication is required to annotate logos"
             )
 
         with db.atomic():
-            logo: Optional[LogoAnnotation] = LogoAnnotation.get_or_none(id=logo_id)
+            logo: LogoAnnotation | None = LogoAnnotation.get_or_none(id=logo_id)
             if logo is None:
                 resp.status = falcon.HTTP_404
                 return
 
-            type_ = req.media["type"]
-            value = req.media.get("value") or None
+            type_ = media["type"]
+            value = media.get("value") or None
             check_logo_annotation(type_, value)
 
             if type_ != logo.annotation_type or value != logo.annotation_value:
                 annotated_logos = update_logo_annotations(
                     [(type_, value, logo)],
                     username=auth.get_username() or "unknown",
-                    completed_at=datetime.datetime.utcnow(),
+                    completed_at=datetime.datetime.now(datetime.timezone.utc),
                 )
                 server_type = ServerType[logo.image_prediction.image.server_type]
                 generate_insights_from_annotated_logos(
@@ -1013,11 +1085,14 @@ class ImageLogoResetResource:
                 insights_deleted = (
                     ProductInsight.delete()
                     .where(
+                        # Speed-up filtering by providing additional filters
                         ProductInsight.barcode == logo.barcode,
                         ProductInsight.type == annotation_type,
                         # never delete annotated insights
                         ProductInsight.annotation.is_null(),
                         ProductInsight.predictor == "universal-logo-detector",
+                        # We don't have an index on data, but the number of
+                        # rows should be small enough to not be a problem
                         ProductInsight.data["logo_id"] == str(logo_id),
                     )
                     .execute()
@@ -1035,13 +1110,14 @@ class ImageLogoAnnotateResource:
     @jsonschema.validate(schema.ANNOTATE_LOGO_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         auth = parse_auth(req)
+        media = req.get_media()
         if auth is None:
             raise falcon.HTTPForbidden(
                 description="authentication is required to annotate logos"
             )
-        server_type: ServerType = ServerType[req.media.get("server_type", "off")]
-        annotations = req.media["annotations"]
-        completed_at = datetime.datetime.utcnow()
+        server_type = get_server_type_from_req(req)
+        annotations = media["annotations"]
+        completed_at = datetime.datetime.now(datetime.timezone.utc)
         annotation_logos = []
 
         with db.atomic():
@@ -1099,7 +1175,7 @@ class ImageLogoUpdateResource:
 
         auth = parse_auth(req)
         username = None if auth is None else auth.get_username()
-        completed_at = datetime.datetime.utcnow()
+        completed_at = datetime.datetime.now(datetime.timezone.utc)
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)
@@ -1124,7 +1200,7 @@ class ImageLogoUpdateResource:
 
 class ANNResource:
     def on_get(
-        self, req: falcon.Request, resp: falcon.Response, logo_id: Optional[int] = None
+        self, req: falcon.Request, resp: falcon.Response, logo_id: int | None = None
     ):
         """Search for nearest neighbors of:
         - a random logo (if logo_id not provided)
@@ -1132,30 +1208,42 @@ class ANNResource:
         """
         count = req.get_param_as_int("count", min_value=1, max_value=500, default=100)
         server_type = get_server_type_from_req(req)
+        es_client = get_es_client()
 
         if logo_id is None:
-            logo_embeddings = list(
-                LogoEmbedding.select().order_by(peewee.fn.Random()).limit(1)
-            )
+            # To fetch a random logo that has an embedding, we use
+            # TABLESAMPLE SYSTEM. The parameter in parentheses is the
+            # percentage of rows to sample.
+            # Here, we sample 20% of the rows in the logo_embedding table.
+            # See https://www.postgresql.org/docs/current/sql-select.html
+            # for more information.
+            result = db.execute_sql(
+                """
+                SELECT logo_id, embedding
+                FROM embedding.logo_embedding as t1 TABLESAMPLE SYSTEM (20)
+                JOIN logo_annotation AS t2 ON t1.logo_id = t2.id
+                WHERE t2.server_type = %s
+                LIMIT 1;
+                """,
+                (server_type.name,),
+            ).fetchone()
 
-            if not logo_embeddings:
+            if not result:
                 resp.media = {"results": [], "count": 0, "query_logo_id": None}
                 return
 
-            logo_embedding = logo_embeddings[0]
-            logo_id = logo_embedding.logo_id
+            logo_id, embedding = result
         else:
             logo_embedding = LogoEmbedding.get_or_none(logo_id=logo_id)
 
             if logo_embedding is None:
                 resp.status = falcon.HTTP_404
                 return
+            embedding = logo_embedding.embedding
 
         raw_results = [
             item
-            for item in knn_search(
-                es_client, logo_embedding.embedding, count, server_type=server_type
-            )
+            for item in knn_search(es_client, embedding, count, server_type=server_type)
             if item[0] != logo_id
         ][:count]
         results = [{"logo_id": item[0], "distance": item[1]} for item in raw_results]
@@ -1181,61 +1269,6 @@ def check_server_domain(server_domain: str):
         raise falcon.HTTPBadRequest(
             f"invalid `server_domain`, expected '{instance_tld}' tld, got '{tld}'"
         )
-
-
-class WebhookProductResource:
-    """This handles requests from product opener
-    that act as webhooks on product update or deletion.
-    """
-
-    def on_post(self, req: falcon.Request, resp: falcon.Response):
-        barcode = req.get_param("barcode", required=True)
-        action = req.get_param("action", required=True)
-        server_domain: str = req.get_param("server_domain", required=True)
-        # `diffs` is a JSON containing what fields were created/deleted/updated
-        diffs: dict = req.get_param_as_json("diffs", required=True)
-        check_server_domain(server_domain)
-        logger.info(
-            "New webhook event received for product %s (action: %s, domain: %s, diffs: %s)",
-            barcode,
-            action,
-            server_domain,
-            diffs,
-        )
-        if action not in ("updated", "deleted"):
-            raise falcon.HTTPBadRequest(
-                title="invalid_action",
-                description="action must be one of " "`deleted`, `updated`",
-            )
-        if not barcode:
-            raise falcon.HTTPBadRequest(
-                title="invalid_barcode",
-                description="barcode should not be empty",
-            )
-
-        server_type = ServerType.get_from_server_domain(server_domain)
-        product_id = ProductIdentifier(barcode, server_type)
-
-        if action == "updated":
-            enqueue_in_job(
-                update_insights_job,
-                get_high_queue(product_id),
-                settings.UPDATED_PRODUCT_WAIT,
-                job_kwargs={"result_ttl": 0},
-                product_id=product_id,
-                diffs=diffs,
-            )
-        elif action == "deleted":
-            enqueue_job(
-                delete_product_insights_job,
-                get_high_queue(product_id),
-                job_kwargs={"result_ttl": 0},
-                product_id=product_id,
-            )
-
-        resp.media = {
-            "status": "scheduled",
-        }
 
 
 def question_insight_type_sort_func(insight: ProductInsight) -> int:
@@ -1268,6 +1301,7 @@ class ProductQuestionsResource:
     """
 
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):
+        barcode = normalize_barcode(barcode)
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         lang: str = req.get_param("lang", default="en")
@@ -1276,9 +1310,9 @@ class ProductQuestionsResource:
         # hash of the IPs as a backup.
         device_id = device_id_from_request(req)
 
-        auth: Optional[OFFAuthentication] = parse_auth(req)
+        auth: OFFAuthentication | None = parse_auth(req)
 
-        keep_types: Optional[list[str]] = req.get_param_as_list(
+        keep_types: list[str] | None = req.get_param_as_list(
             "insight_types", required=False
         )
         keep_types = filter_question_insight_types(keep_types)
@@ -1344,23 +1378,23 @@ def get_questions_resource_on_get(
     page: int = req.get_param_as_int("page", min_value=1, default=1)
     count: int = req.get_param_as_int("count", min_value=1, default=25)
     lang: str = req.get_param("lang", default="en")
-    keep_types: Optional[list[str]] = req.get_param_as_list(
+    keep_types: list[str] | None = req.get_param_as_list(
         "insight_types", required=False
     )
     keep_types = filter_question_insight_types(keep_types)
     value_tag: str = req.get_param("value_tag")
     brands = req.get_param_as_list("brands") or None
-    reserved_barcode: Optional[bool] = req.get_param_as_bool(
+    reserved_barcode: bool | None = req.get_param_as_bool(
         "reserved_barcode", default=False
     )
     server_type = get_server_type_from_req(req)
-    countries: Optional[list[str]] = get_countries_from_req(req)
+    countries = get_countries_from_req(req)
     # filter by annotation campaigns
-    campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+    campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
 
     if campaigns is None:
         # `campaign` is a deprecated field, use campaigns now instead
-        campaign: Optional[str] = req.get_param("campaign")
+        campaign: str | None = req.get_param("campaign")
         campaigns = [campaign] if campaign is not None else None
 
     predictor = req.get_param("predictor")
@@ -1369,7 +1403,7 @@ def get_questions_resource_on_get(
     # hash of the IPs as a backup.
     device_id = device_id_from_request(req)
 
-    auth: Optional[OFFAuthentication] = parse_auth(req)
+    auth: OFFAuthentication | None = parse_auth(req)
 
     if reserved_barcode:
         # Include all results, including non reserved barcodes
@@ -1379,6 +1413,10 @@ def get_questions_resource_on_get(
         # Limit the number of brands to prevent slow SQL queries
         brands = brands[:10]
 
+    avoid_voted_on = _get_skip_voted_on(auth, device_id)
+    # Counting the number of insights that match the vote
+    # criteria can be very costly, so we limit the count to 100
+    max_count = 100
     get_insights_ = functools.partial(
         get_insights,
         server_type=server_type,
@@ -1388,7 +1426,8 @@ def get_questions_resource_on_get(
         brands=brands,
         order_by=order_by,
         reserved_barcode=reserved_barcode,
-        avoid_voted_on=_get_skip_voted_on(auth, device_id),
+        avoid_voted_on=avoid_voted_on,
+        max_count=max_count,
         automatically_processable=False,
         campaigns=campaigns,
         predictor=predictor,
@@ -1445,7 +1484,7 @@ class DumpResource:
         keep_types: list[str] = req.get_param_as_list(
             "insight_types", required=False, default=[]
         )[:10]
-        barcode = req.get_param("barcode")
+        barcode = normalize_req_barcode(req.get_param("barcode"))
         annotated = req.get_param_as_bool("annotated", blank_as_true=False)
         value_tag = req.get_param("value_tag")
         count = req.get_param_as_int("count", min_value=0, max_value=10_000)
@@ -1502,10 +1541,10 @@ class ImageCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_predictions: Optional[bool] = req.get_param_as_bool(
+        with_predictions: bool | None = req.get_param_as_bool(
             "with_predictions", default=False
         )
-        barcode: Optional[str] = req.get_param("barcode")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         server_type = get_server_type_from_req(req)
 
         get_images_ = functools.partial(
@@ -1533,9 +1572,9 @@ class PredictionCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
-        barcode: Optional[str] = req.get_param("barcode")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         value_tag: str = req.get_param("value_tag")
-        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
+        keep_types: list[str] | None = req.get_param_as_list("types", required=False)
         server_type = get_server_type_from_req(req)
 
         if keep_types:
@@ -1573,16 +1612,16 @@ class UnansweredQuestionCollection:
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         insight_type: str = req.get_param("type")
-        countries: Optional[list[str]] = get_countries_from_req(req)
-        reserved_barcode: Optional[bool] = req.get_param_as_bool(
+        countries = get_countries_from_req(req)
+        reserved_barcode: bool | None = req.get_param_as_bool(
             "reserved_barcode", default=False
         )
         server_type = get_server_type_from_req(req)
         # filter by annotation campaigns
-        campaigns: Optional[list[str]] = req.get_param_as_list("campaigns") or None
+        campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
         if campaigns is None:
             # `campaign` is a deprecated field, use campaigns now instead
-            campaign: Optional[str] = req.get_param("campaign")
+            campaign: str | None = req.get_param("campaign")
             campaigns = [campaign] if campaign is not None else None
 
         predictor = req.get_param("predictor")
@@ -1620,9 +1659,9 @@ class ImagePredictionCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: Optional[bool] = req.get_param_as_bool("with_logo", default=False)
-        barcode: Optional[str] = req.get_param("barcode")
-        type: Optional[str] = req.get_param("type")
+        with_logo: bool | None = req.get_param_as_bool("with_logo", default=False)
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
+        type: str | None = req.get_param("type")
         server_type = get_server_type_from_req(req)
 
         query_parameters = {
@@ -1655,9 +1694,9 @@ class ImagePredictionCollection:
 class LogoAnnotationCollection:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         response: JSONType = {}
-        barcode: Optional[str] = req.get_param("barcode")
+        barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         server_type = get_server_type_from_req(req)
-        keep_types: Optional[list[str]] = req.get_param_as_list("types", required=False)
+        keep_types: list[str] | None = req.get_param_as_list("types", required=False)
         value_tag: str = req.get_param("value_tag")
         page: int = req.get_param_as_int("page", min_value=1, default=1)
         count: int = req.get_param_as_int("count", min_value=1, default=25)
@@ -1689,6 +1728,32 @@ class LogoAnnotationCollection:
         resp.media = response
 
 
+class BatchJobImportResource:
+    def on_post(self, req: falcon.Request, resp: falcon.Response):
+        job_type_str: str = req.get_param("job_type", required=True)
+        batch_dir: str = req.get_param("batch_dir", required=True)
+
+        try:
+            job_type = BatchJobType[job_type_str]
+        except KeyError:
+            raise falcon.HTTPBadRequest(
+                description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
+            )
+        # We secure the endpoint.
+        if parse_valid_token(req, "batch_job_key"):
+            enqueue_job(
+                import_batch_predictions,
+                job_type=job_type,
+                batch_dir=batch_dir,
+                queue=low_queue,
+                job_kwargs={"timeout": "8h"},
+            )
+        logger.info("Batch import %s has been queued.", job_type)
+
+        resp.media = {"status": "Request successful. Importing processed data."}
+        resp.status = falcon.HTTP_200
+
+
 class RobotsTxtResource:
     def on_get(self, req: falcon.Request, resp: falcon.Response):
         # Disallow completely indexation: otherwise web crawlers send millions
@@ -1698,16 +1763,21 @@ class RobotsTxtResource:
         resp.status = falcon.HTTP_200
 
 
-cors = CORS(
-    allow_all_origins=True,
-    allow_all_headers=True,
-    allow_all_methods=True,
-    allow_credentials_all_origins=True,
-    max_age=600,
-)
+def custom_handle_uncaught_exception(
+    req: falcon.Request, resp: falcon.Response, ex: Exception, params
+):
+    """Handle uncaught exceptions and log them. Return a 500 error to the
+    client."""
+    raise falcon.HTTPInternalServerError(description=str(ex))
 
-api = falcon.API(
-    middleware=[cors.middleware, MultipartMiddleware(), DBConnectionMiddleware()]
+
+api = falcon.App(
+    middleware=[
+        falcon.CORSMiddleware(allow_origins="*", allow_credentials="*"),
+        DBConnectionMiddleware(),
+        # Clear cache after the request, to keep RAM usage low
+        CacheClearMiddleware(),
+    ],
 )
 
 json_handler = falcon.media.JSONHandler(dumps=orjson.dumps, loads=orjson.loads)
@@ -1715,6 +1785,7 @@ extra_handlers = {
     "application/json": json_handler,
 }
 
+api.req_options.media_handlers.update(extra_handlers)
 api.resp_options.media_handlers.update(extra_handlers)
 
 # Parse form parameters
@@ -1732,10 +1803,10 @@ api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
 api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
+api.add_route("/api/v1/predict/lang", LanguagePredictorResource())
+api.add_route("/api/v1/predict/lang/product", ProductLanguagePredictorResource())
 api.add_route("/api/v1/products/dataset", UpdateDatasetResource())
-api.add_route("/api/v1/webhook/product", WebhookProductResource())
 api.add_route("/api/v1/images", ImageCollection())
-api.add_route("/api/v1/images/import", ImageImporterResource())
 api.add_route("/api/v1/images/crop", ImageCropResource())
 api.add_route("/api/v1/image_predictions", ImagePredictionResource())
 api.add_route("/api/v1/image_predictions/import", ImagePredictionImporterResource())
@@ -1746,8 +1817,6 @@ api.add_route("/api/v1/images/logos/{logo_id:int}", ImageLogoDetailResource())
 api.add_route("/api/v1/images/logos/{logo_id:int}/reset", ImageLogoResetResource())
 api.add_route("/api/v1/images/logos/annotate", ImageLogoAnnotateResource())
 api.add_route("/api/v1/images/logos/update", ImageLogoUpdateResource())
-api.add_route("/api/v1/ann/{logo_id:int}", ANNResource())
-api.add_route("/api/v1/ann", ANNResource())
 api.add_route("/api/v1/ann/search/{logo_id:int}", ANNResource())
 api.add_route("/api/v1/ann/search", ANNResource())
 api.add_route("/api/v1/questions/{barcode}", ProductQuestionsResource())
@@ -1760,4 +1829,5 @@ api.add_route("/api/v1/health", HealthResource())
 api.add_route("/api/v1/users/statistics/{username}", UserStatisticsResource())
 api.add_route("/api/v1/predictions", PredictionCollection())
 api.add_route("/api/v1/annotation/collection", LogoAnnotationCollection())
+api.add_route("/api/v1/batch/import", BatchJobImportResource())
 api.add_route("/robots.txt", RobotsTxtResource())

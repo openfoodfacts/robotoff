@@ -1,11 +1,11 @@
+import logging
 from pathlib import Path
-from typing import Optional
 
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
-from robotoff.utils import dump_json, get_logger
+from robotoff.utils import dump_json
 from robotoff.utils.text import strip_accents_v2
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def normalize_string(text: str, lowercase: bool, strip_accent: bool) -> str:
@@ -76,12 +76,12 @@ def generate_terminal_symbols_file(
     lang: str,
     terminal_name: str,
     taxonomy_type: TaxonomyType,
-    terminal_priority: Optional[int] = None,
+    terminal_priority: int | None = None,
     lowercase: bool = True,
     strip_accent: bool = True,
     add_synonyms: bool = True,
     add_xx: bool = True,
-    ignore_ids: Optional[set[str]] = None,
+    ignore_ids: set[str] | None = None,
     raises: bool = True,
 ):
     """Generate lark terminal symbol file from a taxonomy."""
@@ -110,12 +110,12 @@ def generate_terminal_symbols_text(
     lang: str,
     terminal_name: str,
     taxonomy_type: TaxonomyType,
-    terminal_priority: Optional[int] = None,
+    terminal_priority: int | None = None,
     lowercase: bool = True,
     strip_accent: bool = True,
     add_synonyms: bool = True,
     add_xx: bool = True,
-    ignore_ids: Optional[set[str]] = None,
+    ignore_ids: set[str] | None = None,
     raises: bool = True,
 ) -> tuple[str, dict[str, list[str]]]:
     """Generate the text of a lark terminal symbol file from a taxonomy.
@@ -131,7 +131,7 @@ def generate_terminal_symbols_text(
     """
     ignore_ids = ignore_ids or set()
     texts = []
-    taxonomy = get_taxonomy(taxonomy_type.name, offline=True)
+    taxonomy = get_taxonomy(taxonomy_type.name, offline=False)
     seen_set: dict[str, str] = {}
 
     node_id_names = extract_taxonomy_names(

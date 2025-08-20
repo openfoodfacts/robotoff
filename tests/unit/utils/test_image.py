@@ -1,44 +1,27 @@
-from unittest.mock import patch
-
 import pytest
-import requests
 
-from robotoff.utils.image import ImageLoadingException, _get_image_from_url
+from robotoff.utils.image import convert_bounding_box_absolute_to_relative
 
 
-@patch("robotoff.utils.image.requests.get")
-def test__get_image_from_url(mock_get):
-    # Mock the response from requests.get
-    mock_response = mock_get.return_value
-    mock_response.content = b"fake image content"
-    mock_response.status_code = 200
-
-    # Call the function with an image URL
-    url = "https://example.com/image.jpg"
-    result = _get_image_from_url(url)
-
-    # Check that requests.get was called with the correct URL
-    mock_get.assert_called_once_with(url, auth=None)
-
-    # Check that the content of the response is the same as the mock content
-    assert result.content == b"fake image content"
-
-    # Check that the status code of the response is the same as the mock
-    # status code
-    assert result.status_code == 200
-
-    # Test when r.ok returns False
-    mock_response.status_code = 404
-    mock_response.content = b""
-    mock_response.ok = False
-    with pytest.raises(ImageLoadingException):
-        _get_image_from_url(url)
-
-    # Test when there is an error during HTTP request
-    mock_get.side_effect = requests.exceptions.SSLError
-    with pytest.raises(ImageLoadingException):
-        _get_image_from_url(url)
-
-    # Check that the function returns None when error_raise is False
-    image = _get_image_from_url(url, error_raise=False)
-    assert image is None
+@pytest.mark.parametrize(
+    "bbox,width,height,expected",
+    [
+        # Normal case
+        ((10, 20, 50, 60), 200, 100, (0.1, 0.1, 0.5, 0.3)),
+        # Bounding box at origin
+        ((0, 0, 50, 100), 100, 100, (0.0, 0.0, 0.5, 1.0)),
+        # Bounding box exceeds image size (should be clipped to 1.0)
+        ((0, 0, 200, 300), 100, 100, (0.0, 0.0, 1.0, 1.0)),
+        # Negative coordinates (should be clipped to 0.0)
+        ((-10, -20, 50, 100), 100, 100, (0.0, 0.0, 0.5, 1.0)),
+        # Zero width/height bounding box
+        ((0, 0, 0, 0), 100, 100, (0.0, 0.0, 0.0, 0.0)),
+        # Bounding box is the whole image
+        ((0, 0, 100, 100), 100, 100, (0.0, 0.0, 1.0, 1.0)),
+        # Non-square image
+        ((10, 5, 90, 45), 50, 100, (0.1, 0.1, 0.9, 0.9)),
+    ],
+)
+def test_convert_bounding_box_absolute_to_relative(bbox, width, height, expected):
+    result = convert_bounding_box_absolute_to_relative(bbox, width, height)
+    assert pytest.approx(result) == expected

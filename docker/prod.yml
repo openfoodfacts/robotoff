@@ -1,12 +1,16 @@
-version: "3.9"
-
 volumes:
+  postgres-data:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data
+  es-data:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data
   backup:
     external: true
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_backup
 
-  postgres-data:
+
+networks:
+  common_net:
+    name: ${COMMON_NET_NAME}
     external: true
-  es-data:
-    external: true
-    name: ${COMPOSE_PROJECT_NAME:-robotoff}_es-data

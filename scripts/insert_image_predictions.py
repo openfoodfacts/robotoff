@@ -13,7 +13,7 @@ logger = get_logger()
 
 
 DATA_PATH = settings.DATASET_DIR / "logos-paperspace.jsonl.gz"
-MODEL_NAME = "universal-logo-detector"
+MODEL_NAME = "universal_logo_detector"
 MODEL_VERSION = "tf-universal-logo-detector-1.0"
 TYPE = "object_detection"
 SERVER_TYPE = ServerType.off
@@ -38,7 +38,7 @@ def insert_batch(
     model_version: str,
     server_type: ServerType,
 ) -> int:
-    timestamp = datetime.datetime.utcnow()
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
     logger.info("Loading seen set...")
     seen_set = get_seen_set(server_type)
     logger.info("Seen set loaded")
@@ -85,6 +85,7 @@ def insert_batch(
                     bounding_box=item["bounding_box"],
                     barcode=image_instance.barcode,
                     source_image=image_instance.source_image,
+                    server_type=server_type.name,
                 )
         seen_set.add(key)
 

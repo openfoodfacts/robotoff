@@ -1,15 +1,17 @@
+import logging
+
 from elasticsearch import Elasticsearch
 
 from robotoff import settings
 from robotoff.types import ElasticSearchIndex
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_es_client() -> Elasticsearch:
     return Elasticsearch(
-        f"http://{settings.ELASTIC_USER}:{settings.ELASTIC_PASSWORD}@{settings.ELASTIC_HOST}:9200"
+        f"http://{settings.ELASTIC_USER}:{settings.ELASTIC_PASSWORD}@{settings.ELASTIC_HOST}:9200",
+        request_timeout=20,  # we might have long running queries
     )
 
 

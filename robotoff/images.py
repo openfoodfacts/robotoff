@@ -1,26 +1,35 @@
 import datetime
+import logging
 from pathlib import Path
-from typing import Optional
 
 import imagehash
 import numpy as np
 from PIL import Image
 
-from robotoff.models import ImageModel, Prediction, ProductInsight
+from robotoff.elasticsearch import get_es_client
+from robotoff.logos import delete_ann_logos
+from robotoff.models import (
+    ImageModel,
+    ImagePrediction,
+    LogoAnnotation,
+    LogoEmbedding,
+    Prediction,
+    ProductInsight,
+)
 from robotoff.off import generate_image_path, generate_image_url
 from robotoff.types import JSONType, ProductIdentifier
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_image_from_url, http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def save_image(
     product_id: ProductIdentifier,
     source_image: str,
     image_url: str,
-    images: Optional[JSONType],
+    images: JSONType | None,
     use_cache: bool = False,
-) -> Optional[ImageModel]:
+) -> ImageModel | None:
     """Save imported image details in DB.
 
     :param product_id: identifier of the product
@@ -76,7 +85,9 @@ def save_image(
             uploaded_t = int(uploaded_t)
 
         if uploaded_t is not None:
-            uploaded_at = datetime.datetime.utcfromtimestamp(uploaded_t)
+            uploaded_at = datetime.datetime.fromtimestamp(
+                uploaded_t, datetime.timezone.utc
+            )
     else:
         uploaded_at = None
         # DB product check is disabled which means we shouldn't rely on having
@@ -137,11 +148,16 @@ def refresh_images_in_db(product_id: ProductIdentifier, images: JSONType):
         save_image(product_id, source_image, image_url, images, use_cache=True)
 
 
-def add_image_fingerprint(image_model: ImageModel):
+def add_image_fingerprint(image_model: ImageModel, overwrite: bool = False) -> None:
     """Update image in DB to add the image fingerprint.
 
     :param image_model: the image model to update
+    :param overwrite: whether to overwrite the existing fingerprint
     """
+    if not overwrite and image_model.fingerprint is not None:
+        logger.debug("image %s already has a fingerprint, skipping", image_model.id)
+        return
+
     image_url = image_model.get_image_url()
     image = get_image_from_url(
         image_url, error_raise=False, session=http_session, use_cache=True
@@ -189,10 +205,18 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
     :param image_ids: a list of image IDs to delete.
       Each image ID must be a digit.
     """
+
+    if not product_id.is_valid():
+        logger.warning("Could not delete images, invalid product identifier")
+        return
+
     server_type = product_id.server_type.name
     # Perform batching as we don't know the number of images to delete
     updated_models = []
     source_images = []
+    deleted_embeddings_total = 0
+    deleted_logos_total = 0
+    es_client = get_es_client()
     for image_id in image_ids:
         source_image = generate_image_path(product_id, image_id)
         image_model = ImageModel.get_or_none(
@@ -212,14 +236,48 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
         updated_models.append(image_model)
         source_images.append(source_image)
 
-    updated_image_models: int = ImageModel.bulk_update(
-        updated_models, fields=["deleted"]
+        # Fetch all logos associated with the image to delete
+        logos = list(
+            LogoAnnotation.select(LogoAnnotation.id)
+            .join(ImagePrediction)
+            .where(ImagePrediction.image == image_model)
+        )
+        # Delete the logos from ES
+        logo_ids = [logo.id for logo in logos]
+        delete_ann_logos(es_client, logo_ids)
+        # delete the embeddings associated with the logos in DB
+        deleted_embeddings_total += (
+            LogoEmbedding.delete().where(LogoEmbedding.logo_id.in_(logo_ids)).execute()
+        )
+        deleted_logos = (
+            LogoAnnotation.delete()
+            .where(
+                LogoAnnotation.id.in_(logo_ids),
+                # Only delete logos that are not annotated
+                LogoAnnotation.completed_at.is_null(True),
+            )
+            .execute()
+        )
+        deleted_logos_total += deleted_logos
+
+        if deleted_logos == len(logo_ids):
+            # All logos were deleted, delete the image prediction
+            ImagePrediction.delete().where(
+                ImagePrediction.image == image_model
+            ).execute()
+
+    updated_image_models: int = (
+        ImageModel.bulk_update(updated_models, fields=["deleted"])
+        if updated_models
+        else 0
     )
     deleted_predictions: int = (
         Prediction.delete()
         .where(
             Prediction.source_image.in_(source_images),
             Prediction.server_type == server_type,
+            # Add barcode filter to speed up the query
+            Prediction.barcode == product_id.barcode,
         )
         .execute()
     )
@@ -229,13 +287,18 @@ def delete_images(product_id: ProductIdentifier, image_ids: list[str]):
             ProductInsight.source_image.in_(source_images),
             ProductInsight.server_type == server_type,
             ProductInsight.annotation.is_null(),
+            # Add barcode filter to speed up the query
+            ProductInsight.barcode == product_id.barcode,
         )
         .execute()
     )
 
     logger.info(
-        "deleted %s image in DB, %s deleted predictions, %s deleted insights",
+        "deleted %s image in DB, %s deleted predictions, %s deleted insights, "
+        "%s deleted embeddings, %s deleted logos",
         updated_image_models,
         deleted_predictions,
         deleted_insights,
+        deleted_embeddings_total,
+        deleted_logos_total,
     )

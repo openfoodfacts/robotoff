@@ -1,7 +1,8 @@
 import functools
+import logging
 import math
 import re
-from typing import Optional, Union
+from typing import Union
 
 import pint
 from openfoodfacts.ocr import (
@@ -13,9 +14,8 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.types import Prediction, PredictionType
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
@@ -94,7 +94,23 @@ def is_valid_weight(weight_value: str) -> bool:
     return True
 
 
-def is_extreme_weight(normalized_value: float, unit: str) -> bool:
+def is_extreme_weight(
+    normalized_value: float, unit: str, count: int | None = None
+) -> bool:
+    """Return True if the weight is extreme, i.e is likely wrongly detected.
+
+    If considered extreme, a prediction won't be generated.
+
+    :param normalized_value: the normalized weight value
+    :param unit: the normalized weight unit
+    :param count: the number of items in the pack, if any
+    :return: True if the weight is extreme, False otherwise
+    """
+    if count is not None and int(count) > 20:
+        # More than 20 items in a pack is quite unlikely for
+        # a consumer product
+        return True
+
     if unit == "g":
         # weights above 10 kg
         return normalized_value >= 10000 or normalized_value <= 10
@@ -125,7 +141,7 @@ def process_product_weight(
     prompt: bool,
     automatic_processing: bool,
     ending_prompt: bool = False,
-) -> Optional[dict]:
+) -> dict | None:
     raw = match.group()
 
     if prompt:
@@ -182,7 +198,7 @@ def process_product_weight(
     return result
 
 
-def process_multi_packaging(match) -> Optional[dict]:
+def process_multi_packaging(match) -> dict | None:
     raw = match.group()
 
     count = match.group(1)
@@ -198,6 +214,11 @@ def process_multi_packaging(match) -> Optional[dict]:
         return None
 
     normalized_value, normalized_unit = normalize_weight(value, unit)
+
+    # Check that the weight is not extreme
+    if is_extreme_weight(normalized_value, normalized_unit, count):
+        return None
+
     text = f"{count} x {value} {unit}"
     result = {
         "text": text,
@@ -285,7 +306,6 @@ def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
 
             data["matcher_type"] = type_
             data["priority"] = ocr_regex.priority
-            data["notify"] = ocr_regex.notify
             value = data.pop("text")
 
             if (

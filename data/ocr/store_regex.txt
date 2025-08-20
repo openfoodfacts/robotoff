@@ -30,7 +30,6 @@ Aldi||Barissimo
 Aldi||Millville
 Alimerka
 Alnatura
-Alteza
 Amazon Fresh
 Auchan
 Asda
@@ -51,9 +50,12 @@ Booths
 Biocoop
 bonÀrea||bonarea
 Bonpreu
+Bunnpris
 Coop||betty bossi
 Coop||coop naturaplan
 Coop||naturaplan
+Coop Obs!
+Coop Extra
 Carrefour
 Carrefour||grand jury
 Casino
@@ -91,7 +93,6 @@ Franprix
 Fred Meyer
 Froiz
 Giant Eagle
-Hacendado
 Haggen
 Harris Teeter
 Harrods
@@ -268,6 +269,7 @@ Magasins U||u saveurs
 Makro
 Marks & Spencer
 Market Basket
+Meny
 Mercadona||hacendado
 Mercator
 Mega Image
@@ -283,6 +285,7 @@ Netto||quallio
 Netto||rajski sad
 Netto||sztuka mięsa
 Netto||toremo
+Narvesen
 Ocado
 Penny||Penny Market
 Penny||Penny Markt

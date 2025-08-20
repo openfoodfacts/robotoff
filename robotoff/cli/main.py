@@ -1,10 +1,13 @@
+import datetime
 from pathlib import Path
 from typing import Optional
 
 import typer
 
+from robotoff.cli.triton import app as triton_app
+from robotoff.products import fetch_parquet_datasets
 from robotoff.types import (
-    NeuralCategoryClassifierModel,
+    ImportImageFlag,
     ObjectDetectionModel,
     PredictionType,
     ProductIdentifier,
@@ -36,6 +39,95 @@ def run_worker(
     from robotoff.workers.main import run
 
     run(queues=queues, burst=burst)
+
+
+@app.command()
+def run_update_listener():
+    """Launch a process that listens to product updates published on Redis
+    stream."""
+    from robotoff import settings
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import run_update_listener
+
+    get_logger()
+    settings.init_sentry()
+    run_update_listener()
+
+
+@app.command()
+def process_updates_since(
+    since: datetime.datetime = typer.Argument(
+        ..., help="Datetime to start processing updates from"
+    )
+):
+    """Process all updates since a given datetime."""
+    from robotoff import settings
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import UpdateListener, get_redis_client
+
+    logger = get_logger()
+    logger.info("Processing Redis updates since %s", since)
+    redis_client = get_redis_client()
+    update_listener = UpdateListener(
+        redis_client=redis_client,
+        redis_stream_name=settings.REDIS_STREAM_NAME,
+        redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
+    )
+    update_listener.process_updates_since(since)
+
+
+@app.command()
+def create_redis_update(
+    barcode: str = typer.Option(default="3274080005003", help="barcode of the product"),
+    flavor: str = typer.Option(default="off", help="flavor of the product"),
+    user_id: str = typer.Option(default="app-user", help="user id"),
+    action: str = typer.Option(default="updated", help="user action"),
+    comment: Optional[str] = typer.Option(
+        default="modification: ", help="user comment"
+    ),
+    uploaded_image_id: Optional[int] = typer.Option(
+        default=None, help="ID of the uploaded image"
+    ),
+):
+    """Create a new product update event in Redis.
+
+    This command is meant for **local development only**. It creates a new
+    product update event in the Redis stream.
+    """
+    import json
+
+    from openfoodfacts.types import JSONType
+
+    from robotoff import settings
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import get_redis_client
+
+    get_logger()
+    client = get_redis_client()
+    flavor_to_product_type = {
+        "off": "food",
+        "obf": "beauty",
+        "opff": "petfood",
+        "opf": "product",
+    }
+    event = {
+        "code": barcode,
+        "flavor": flavor,
+        "user_id": user_id,
+        "action": action,
+        "comment": comment,
+        "product_type": flavor_to_product_type[flavor],
+    }
+
+    diffs: JSONType
+    if uploaded_image_id is not None:
+        diffs = {"uploaded_images": {"add": [uploaded_image_id]}}
+    else:
+        diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
+
+    event["diffs"] = json.dumps(diffs)
+    client.xadd(settings.REDIS_STREAM_NAME, event)
+    typer.echo(f"Event added to Redis stream {settings.REDIS_STREAM_NAME}: {event}")
 
 
 @app.command()
@@ -114,15 +206,26 @@ def generate_ocr_predictions(
 
 
 @app.command()
-def download_dataset(minify: bool = False) -> None:
+def download_dataset(
+    download_jsonl: bool = True,
+    download_parquet: bool = True,
+    minify_jsonl: bool = False,
+) -> None:
     """Download Open Food Facts dataset and save it in `datasets` directory."""
-    from robotoff.products import fetch_dataset, has_dataset_changed
+    from robotoff.products import fetch_jsonl_dataset, has_jsonl_dataset_changed
     from robotoff.utils import get_logger
 
-    get_logger()
+    logger = get_logger()
 
-    if has_dataset_changed():
-        fetch_dataset(minify)
+    if download_jsonl:
+        if has_jsonl_dataset_changed():
+            fetch_jsonl_dataset(minify_jsonl)
+        else:
+            logger.info("JSONL dataset is up to date, skipping download.")
+
+    if download_parquet:
+        logger.info("Fetching parquet datasets...")
+        fetch_parquet_datasets()
 
 
 @app.command()
@@ -132,11 +235,11 @@ def categorize(
         ServerType.off, help="Server type of the product"
     ),
     deepest_only: bool = False,
-    model_name: NeuralCategoryClassifierModel = typer.Option(
-        NeuralCategoryClassifierModel.keras_image_embeddings_3_0,
-        help="name of the model to use",
-    ),
     threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton server to use. If not provided, the default value from settings is used.",
+    ),
 ) -> None:
     """Predict product categories based on the neural category classifier.
 
@@ -164,7 +267,11 @@ def categorize(
     predictions, _ = CategoryClassifier(
         get_taxonomy(TaxonomyType.category.name, offline=True)
     ).predict(
-        product, product_id, deepest_only, threshold=threshold, model_name=model_name
+        product,
+        product_id,
+        deepest_only,
+        threshold=threshold,
+        triton_uri=triton_uri,
     )
 
     if predictions:
@@ -235,6 +342,11 @@ def refresh_insights(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
+    prediction_type: Optional[PredictionType] = typer.Option(
+        None,
+        help="Type of the prediction to refresh, if any. This option is only "
+        "used when --barcode is not used.",
+    ),
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
     ),
@@ -269,12 +381,15 @@ def refresh_insights(
     else:
         logger.info("Launching insight refresh on full database")
         with db:
+            where_clauses = [PredictionModel.server_type == server_type.name]
+            if prediction_type is not None:
+                where_clauses.append(PredictionModel.type == prediction_type.name)
             product_ids = [
                 ProductIdentifier(barcode, server_type)
-                for (barcode, server_type) in PredictionModel.select(
+                for (barcode,) in PredictionModel.select(
                     fn.Distinct(PredictionModel.barcode)
                 )
-                .where(PredictionModel.server_type == server_type.name)
+                .where(*where_clauses)
                 .tuples()
             ]
 
@@ -358,6 +473,70 @@ def import_images_in_db(
 
 
 @app.command()
+def run_category_prediction(
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
+    limit: Optional[int] = typer.Option(
+        None, help="Maximum numbers of job to launch (default: all)"
+    ),
+):
+    """Launch category prediction jobs on all products without categories in
+    DB."""
+    import tqdm
+    from openfoodfacts.dataset import ProductDataset
+
+    from robotoff.models import Prediction, db
+    from robotoff.settings import DATASET_DIR
+    from robotoff.utils import get_logger
+    from robotoff.workers.queues import enqueue_job, low_queue
+    from robotoff.workers.tasks.common import add_category_insight_job
+
+    logger = get_logger()
+    # Download the latest dump of the dataset, cache it in DATASET_DIR
+    ds = ProductDataset(force_download=True, download_newer=True, cache_dir=DATASET_DIR)
+
+    # The category detector only works for food products
+    server_type = ServerType.off
+
+    logger.info("Fetching products without categories in DB...")
+    with db:
+        barcode_with_categories = set(
+            barcode
+            for (barcode,) in Prediction.select(Prediction.barcode)
+            .distinct()
+            .where(
+                Prediction.server_type == server_type.name,
+                Prediction.type == PredictionType.category.name,
+            )
+            .tuples()
+            .limit(limit)
+        )
+    logger.info(
+        "%d products with categories already in DB", len(barcode_with_categories)
+    )
+    seen: set[str] = set()
+    added = 0
+    for product in tqdm.tqdm(ds, desc="products"):
+        barcode = product.get("code")
+        if not barcode or barcode in seen or barcode in barcode_with_categories:
+            continue
+        seen.add(barcode)
+        # Enqueue a job to predict category for this product
+        enqueue_job(
+            add_category_insight_job,
+            low_queue,
+            job_kwargs={"result_ttl": 0},
+            product_id=ProductIdentifier(barcode, server_type),
+            triton_uri=triton_uri,
+        )
+        added += 1
+
+    logger.info("%d jobs added", added)
+
+
+@app.command()
 def run_object_detection_model(
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
@@ -375,6 +554,10 @@ def run_object_detection_model(
         "for the specified model.",
     ),
     limit: Optional[int] = typer.Option(None, help="Maximum numbers of job to launch"),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
 ):
     """Launch object detection model jobs on all missing images (images
     without an ImagePrediction item for this model) in DB."""
@@ -382,10 +565,11 @@ def run_object_detection_model(
     from urllib.parse import urlparse
 
     import tqdm
+    from openfoodfacts.images import extract_barcode_from_url
     from peewee import JOIN
 
     from robotoff.models import ImageModel, ImagePrediction, db
-    from robotoff.off import generate_image_url, get_barcode_from_url
+    from robotoff.off import generate_image_url
     from robotoff.utils import text_file_iter
     from robotoff.workers.queues import enqueue_job, low_queue
     from robotoff.workers.tasks.import_image import (
@@ -398,8 +582,10 @@ def run_object_detection_model(
         func: Callable = run_logo_object_detection
     elif model_name == ObjectDetectionModel.nutrition_table:
         func = run_nutrition_table_object_detection
-    else:
+    elif model_name == ObjectDetectionModel.nutriscore:
         func = run_nutriscore_object_detection
+    else:
+        raise ValueError(f"unsupported model: {model_name}")
 
     if input_path:
         image_urls = list(text_file_iter(input_path))
@@ -415,18 +601,17 @@ def run_object_detection_model(
     else:
         with db:
             query = (
-                ImageModel.select(ImageModel.barcode, ImageModel.id)
+                ImageModel.select(ImageModel.barcode, ImageModel.image_id)
                 .join(
                     ImagePrediction,
                     JOIN.LEFT_OUTER,
                     on=(
                         (ImagePrediction.image_id == ImageModel.id)
-                        & (ImagePrediction.model_name == model_name.value)
+                        & (ImagePrediction.model_name == model_name.name)
                     ),
                 )
                 .where(
-                    ImageModel.server_type
-                    == server_type.name
+                    (ImageModel.server_type == server_type.name)
                     & ImagePrediction.model_name.is_null()
                     & (ImageModel.deleted == False),  # noqa: E712
                 )
@@ -442,7 +627,7 @@ def run_object_detection_model(
 
     if typer.confirm(f"{len(image_urls)} jobs are going to be launched, confirm?"):
         for image_url in tqdm.tqdm(image_urls, desc="image"):
-            barcode = get_barcode_from_url(image_url)
+            barcode = extract_barcode_from_url(image_url)
             if barcode is None:
                 raise RuntimeError()
             enqueue_job(
@@ -451,7 +636,87 @@ def run_object_detection_model(
                 job_kwargs={"result_ttl": 0},
                 product_id=ProductIdentifier(barcode, server_type),
                 image_url=image_url,
+                triton_uri=triton_uri,
             )
+
+
+@app.command()
+def rerun_import_all_images(
+    server_type: Optional[ServerType] = typer.Option(
+        None, help="Server type of the product"
+    ),
+    limit: Optional[int] = typer.Option(
+        None, help="the maximum number of images to process, defaults to None (all)"
+    ),
+    flags: list[ImportImageFlag] = typer.Option(
+        None, help="Flags to use for image import"
+    ),
+):
+    """Rerun full image import on all images in DB.
+
+    This includes launching all ML models and insight extraction from the image and
+    associated OCR. To control which tasks are rerun, use the --flags option.
+    """
+    from robotoff.workers.tasks.import_image import (
+        rerun_import_all_images as _rerun_import_all_images,
+    )
+
+    flags_ = flags or None
+    count = _rerun_import_all_images(
+        limit=limit, server_type=server_type, flags=flags_, return_count=True
+    )
+    message = (
+        f"rerunning full image import on {count} images, confirm?"
+        if flags_ is None
+        else f"running following tasks ({', '.join(flag.name for flag in flags_)}) on {count} images, confirm?"
+    )
+    if typer.confirm(message):
+        _rerun_import_all_images(limit=limit, server_type=server_type, flags=flags_)
+    typer.echo("The task was successfully scheduled.")
+
+
+@app.command()
+def run_nutrition_extraction(
+    image_url: str = typer.Argument(
+        ..., help="URL of the image to run nutrition extraction on"
+    ),
+    triton_uri: Optional[str] = typer.Option(
+        None,
+        help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
+    ),
+    model_version: Optional[str] = typer.Option(
+        None, help="Version of the model to use, defaults to the latest"
+    ),
+) -> None:
+    """Run nutrition extraction on a product image.
+
+    The image URL should be an Open Food Facts image URL, e.g.
+    https://images.openfoodfacts.org/images/products/327/408/000/5003/3.jpg
+
+    The OCR JSON is expected to be available at the same URL with a `.json`
+    extension, e.g.
+    https://images.openfoodfacts.org/images/products/327/408/000/5003/3.json
+
+    Prediction is printed to stdout.
+    """
+    from typing import cast
+
+    from openfoodfacts.ocr import OCRResult
+    from PIL import Image
+    from rich import print as pprint
+
+    from robotoff.images import get_image_from_url
+    from robotoff.prediction.nutrition_extraction import predict
+
+    image = cast(Image.Image, get_image_from_url(image_url))
+    ocr_result = cast(OCRResult, OCRResult.from_url(image_url.replace(".jpg", ".json")))
+    prediction = predict(
+        image, ocr_result, model_version=model_version, triton_uri=triton_uri
+    )
+    if prediction is not None:
+        pprint(prediction)
+    else:
+        pprint("No prediction")
 
 
 @app.command()
@@ -507,6 +772,7 @@ def add_logo_to_ann(
         seen = set(int(x) for x in text_file_iter(existing_ids_path))
     else:
         seen = get_stored_logo_ids(es_client)
+    logger.info("Number of existing logos: %d", len(seen))
 
     added = 0
 
@@ -686,7 +952,7 @@ def import_logos(
     """
     from robotoff.cli import logos
     from robotoff.models import db
-    from robotoff.prediction.object_detection import OBJECT_DETECTION_MODEL_VERSION
+    from robotoff.prediction.object_detection import MODELS_CONFIG
     from robotoff.utils import get_logger
 
     logger = get_logger()
@@ -696,9 +962,7 @@ def import_logos(
         imported = logos.import_logos(
             data_path,
             ObjectDetectionModel.universal_logo_detector.value,
-            OBJECT_DETECTION_MODEL_VERSION[
-                ObjectDetectionModel.universal_logo_detector
-            ],
+            MODELS_CONFIG[ObjectDetectionModel.universal_logo_detector].model_version,
             batch_size,
             server_type,
         )
@@ -734,53 +998,6 @@ def export_logos(
             LogoAnnotation.barcode,
         )
         dump_jsonl(output, query.dicts().iterator())
-
-
-@app.command()
-def import_image_webhook(
-    image_url: str = typer.Argument(
-        ...,
-        help="URL of the image to import to the output file, can either have .jsonl or .jsonl.gz as "
-        "extension",
-    ),
-    server_domain: str = typer.Option(
-        "api.openfoodfacts.net", help="Server domain to use for image import"
-    ),
-) -> None:
-    """Import an image in Robotoff by calling POST /api/v1/images/import.
-
-    The OCR URL will be generated automatically from the image URL. This is a
-    helper CLI command created for debugging/local developpement only.
-    """
-    import os
-
-    from robotoff.off import get_barcode_from_url
-    from robotoff.utils import get_logger, http_session
-
-    logger = get_logger()
-    ocr_url = image_url.replace(".jpg", ".json")
-    barcode = get_barcode_from_url(image_url)
-
-    # Use `api` alias instead of localhost if we're running in a docker
-    # container
-    domain = (
-        "http://localhost:5500"
-        if bool(os.environ.get("IN_DOCKER_CONTAINER", False))
-        else "http://api:5500"
-    )
-    r = http_session.post(
-        f"{domain}/api/v1/images/import",
-        data={
-            "barcode": barcode,
-            "image_url": image_url,
-            "ocr_url": ocr_url,
-            "server_domain": server_domain,
-        },
-    )
-    if not r.ok:
-        logger.info("HTTP error (%s) during image import: %s", r.status_code, r.text)
-    else:
-        logger.info("Robotoff response: %s", r.json())
 
 
 @app.command()
@@ -828,6 +1045,9 @@ def generate_ocr_result(
         dir_okay=True,
         help="Directory where the OCR JSON should be saved",
     ),
+    overwrite: bool = typer.Option(
+        False, help="Overwrite the output file if it already exists"
+    ),
 ) -> None:
     import os
 
@@ -846,6 +1066,10 @@ def generate_ocr_result(
         str(source_image_path.parent).replace("/", "_")[1:]
         + f"_{source_image_path.stem}.json"
     )
+    if output_file.is_file() and not overwrite:
+        logger.info("Skipping %s, file already exists", output_file)
+        return
+
     logger.info("Downloading image %s", image_url)
     r = http_session.get(image_url)
     r.raise_for_status()
@@ -888,6 +1112,179 @@ def create_migration(
     with db.connection_context():
         router = Router(db, migrate_dir=settings.MIGRATE_DIR)
         router.create(name, auto=auto)
+
+
+@app.command()
+def launch_spellcheck_batch_job(
+    min_fraction_unknown: float = 0,
+    max_fraction_unknown: float = 0.4,
+    limit: int = 10_000,
+) -> None:
+    """Launch a spellcheck batch job."""
+
+    from robotoff.batch import (
+        launch_spellcheck_batch_job as _launch_spellcheck_batch_job,
+    )
+    from robotoff.utils import get_logger
+
+    get_logger()
+    _launch_spellcheck_batch_job(
+        min_fraction_unknown=min_fraction_unknown,
+        max_fraction_unknown=max_fraction_unknown,
+        limit=limit,
+    )
+
+
+@app.command()
+def import_batch_job_predictions(batch_dir: str) -> None:
+    """Import predictions from batch job.
+
+    Currently, only ingredients spellcheck predictions are supported.
+    """
+    from robotoff.batch import BatchJobType, import_batch_predictions
+    from robotoff.utils.logger import get_logger
+
+    get_logger()
+
+    import_batch_predictions(BatchJobType.ingredients_spellcheck, batch_dir)
+
+
+@app.command()
+def launch_normalize_barcode_job(
+    batch_size: int = 100_000,
+    launch_prediction: bool = True,
+    launch_insight: bool = True,
+    launch_image: bool = True,
+) -> None:
+    from openfoodfacts.barcode import normalize_barcode
+    from openfoodfacts.images import generate_image_path
+    from peewee import fn
+
+    from robotoff.models import ImageModel, Prediction, ProductInsight, db
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    logger.info("Starting barcode normalization job")
+
+    with db.connection_context():
+        if launch_prediction:
+            updated = 0
+            min_id = 0
+            max_id = Prediction.select(fn.MAX(Prediction.id)).scalar()
+            with db.atomic() as tsx:
+                while min_id < max_id:
+                    prediction = None
+                    for prediction in (
+                        Prediction.select()
+                        .where(Prediction.id >= min_id)
+                        .order_by(Prediction.id.asc())
+                        .limit(batch_size)
+                    ):
+                        barcode = normalize_barcode(prediction.barcode)
+                        source_image = (
+                            generate_image_path(
+                                prediction.barcode, Path(prediction.source_image).stem
+                            )
+                            if prediction.source_image
+                            else None
+                        )
+                        is_updated = (barcode != prediction.barcode) or (
+                            source_image != prediction.source_image
+                        )
+                        if is_updated:
+                            prediction.barcode = barcode
+                            prediction.source_image = source_image
+                            prediction.save()
+                            updated += 1
+
+                    tsx.commit()
+                    logger.info(
+                        "Current ID: %s, Updated %d predictions", min_id, updated
+                    )
+                    if prediction is not None:
+                        min_id = prediction.id
+                    else:
+                        break
+                logger.info("Updated %d predictions", updated)
+
+        if launch_insight:
+            updated = 0
+            min_id = ProductInsight.select(fn.MIN(ProductInsight.timestamp)).scalar()
+            max_id = ProductInsight.select(fn.MAX(ProductInsight.timestamp)).scalar()
+            with db.atomic() as tsx:
+                while min_id < max_id:
+                    insight = None
+                    for insight in (
+                        ProductInsight.select()
+                        .where(ProductInsight.timestamp >= min_id)
+                        .order_by(ProductInsight.timestamp.asc())
+                        .limit(batch_size)
+                    ):
+                        barcode = normalize_barcode(insight.barcode)
+                        source_image = (
+                            generate_image_path(
+                                insight.barcode, Path(insight.source_image).stem
+                            )
+                            if insight.source_image
+                            else None
+                        )
+                        is_updated = (barcode != insight.barcode) or (
+                            source_image != insight.source_image
+                        )
+                        if is_updated:
+                            insight.barcode = barcode
+                            insight.source_image = source_image
+                            insight.save()
+                            updated += 1
+
+                    tsx.commit()
+                    logger.info("Current ID: %s, Updated %d insights", min_id, updated)
+                    if insight is not None:
+                        min_id = insight.timestamp
+                    else:
+                        break
+                logger.info("Updated %d insights", updated)
+
+        if launch_image:
+            updated = 0
+            min_id = ImageModel.select(fn.MIN(ImageModel.id)).scalar()
+            max_id = ImageModel.select(fn.MAX(ImageModel.id)).scalar()
+            with db.atomic() as tsx:
+                while min_id < max_id:
+                    image = None
+                    for image in (
+                        ImageModel.select()
+                        .where(ImageModel.id >= min_id)
+                        .order_by(ImageModel.id.asc())
+                        .limit(batch_size)
+                    ):
+                        barcode = normalize_barcode(image.barcode)
+                        source_image = (
+                            generate_image_path(
+                                image.barcode, Path(image.source_image).stem
+                            )
+                            if image.source_image
+                            else None
+                        )
+                        is_updated = (barcode != image.barcode) or (
+                            source_image != image.source_image
+                        )
+                        if is_updated:
+                            image.barcode = barcode
+                            image.source_image = source_image
+                            image.save()
+                            updated += 1
+
+                    tsx.commit()
+                    logger.info("Current ID: %s, Updated %d images", min_id, updated)
+                    if image is not None:
+                        min_id = image.id
+                    else:
+                        break
+                logger.info("Updated %d images", updated)
+
+
+app.add_typer(triton_app, name="triton")
 
 
 def main() -> None:

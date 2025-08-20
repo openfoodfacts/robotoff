@@ -1,94 +1,133 @@
 # Please see https://github.com/actions/labeler for reference
 
-github_actions:
-- .github/**/*
+GitHub Actions:
+- changed-files:
+  - any-glob-to-any-file: '.github/**/*'
 
-crowdin:
-- crowdin.yml
+Crowdin:
+- changed-files:
+  - any-glob-to-any-file: 'crowdin.yml'
 
-documentation:
-- any: ['*.MD']
+🧪 tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/**/*'
 
-tests:
-- tests/**/*
+🐋 Docker:
+- changed-files:
+  - any-glob-to-any-file: 'docker/**/*'
 
-integration tests:
-- tests/integration/**/*
-- tests/integration/insights/**/*
+🧪 integration tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/integration/**/*'
+  - any-glob-to-any-file: 'tests/integration/insights/**/*'
 
-unit tests:
-- tests/unit/**/*
-- tests/unit/insights/**/*
-- tests/unit/cli/**/*
-- tests/unit/utils/**/*
-- tests/unit/prediction/**/*
-- tests/unit/elasticsearch/**/*
-- tests/unit/prediction/category/**/*
-- tests/unit/prediction/category/neural/**/*
+🧪 unit tests:
+- changed-files:
+  - any-glob-to-any-file: 'tests/unit/**/*'
+  - any-glob-to-any-file: 'tests/unit/insights/**/*'
+  - any-glob-to-any-file: 'tests/unit/cli/**/*'
+  - any-glob-to-any-file: 'tests/unit/utils/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
 
-robotoff app:
-- robotoff/app/**/*
+Robotoff - App:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/app/**/*'
 
-robotoff-cli:
-- robotoff/cli/**/*
-- tests/unit/cli/**/*
+Robotoff - CLI:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/cli/**/*'
+  - any-glob-to-any-file: 'tests/unit/cli/**/*'
 
 utils:
-- robotoff/utils/**/*
-- tests/unit/utils/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/utils/**/*'
+  - any-glob-to-any-file: 'tests/unit/utils/**/*'
 
 workers:
-- robotoff/workers/**/*
-- robotoff/workers/tasks/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/workers/**/*'
+  - any-glob-to-any-file: 'robotoff/workers/tasks/**/*'
 
 insights:
-- robotoff/insights/**/*
-- tests/integration/insights/**/*
-- tests/unit/insights/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/insights/**/*'
+  - any-glob-to-any-file: 'tests/integration/insights/**/*'
+  - any-glob-to-any-file: 'tests/unit/insights/**/*'
 
 scheduler:
-- robotoff/scheduler/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/scheduler/**/*'
 
 predictions:
-- robotoff/prediction/**/*
-- tests/unit/prediction/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/**/*'
 
-ocr prediction:
-- robotoff/prediction/ocr/**/*
-- tests/unit/prediction/ocr/**/*
-- legacy/ocr_category/prediction_from_ocr/**/*
+OCR prediction:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/ocr/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/ocr/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
 
 elasticsearch:
-- robotoff/elasticsearch/**/*
-- tests/unit/elasticsearch/**/*
-- robotoff/elasticsearch/product/**/*
-- robotoff/elasticsearch/category/**/*
-- tests/unit/elasticsearch/category/**/*
-- tests/unit/elasticsearch/**/*
-- robotoff/elasticsearch/category/**/*
-- tests/unit/elasticsearch/category/**/*
-- robotoff/elasticsearch/product/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/elasticsearch/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/product/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/product/**/*'
 
 object detection:
-- robotoff/prediction/object_detection/utils/**/*
-- robotoff/prediction/object_detection/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/object_detection/utils/**/*'
+  - any-glob-to-any-file: 'robotoff/prediction/object_detection/**/*'
 
 category prediction:
-- robotoff/prediction/category/**/*
-- tests/unit/prediction/category/**/*
-- tests/unit/elasticsearch/category/**/*
-- robotoff/elasticsearch/category/**/*
-- tests/unit/elasticsearch/category/**/*
-- tests/unit/prediction/category/**/*
-- legacy/ocr_category/prediction_from_ocr/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'robotoff/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/elasticsearch/category/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
 
 neural category prediction:
-- robotoff/prediction/category/neural/**/*
-- tests/unit/prediction/category/neural/**/*
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/category/neural/**/*'
+  - any-glob-to-any-file: 'tests/unit/prediction/category/neural/**/*'
 
-stores:
-- data/ocr/store_regex.txt
+🏪 Stores:
+- changed-files:
+  - any-glob-to-any-file: 'data/ocr/store_regex.txt'
 
 legacy:
-- legacy/**/*
-- legacy/ocr_category/prediction_from_ocr/**/*
+- changed-files:
+  - any-glob-to-any-file: 'legacy/**/*'
+  - any-glob-to-any-file: 'legacy/ocr_category/prediction_from_ocr/**/*'
+
+📚 Documentation:
+- changed-files:
+  - any-glob-to-any-file: ['*.md']
+
+spellcheck:
+- changed-files:
+  - any-glob-to-any-file: 'batch/​spellcheck'
+  - any-glob-to-any-file: 'batch/​spellcheck/​main.py'
+  - any-glob-to-any-file: 'batch/​spellcheck/​README.md'
+  - any-glob-to-any-file: 'batch/​spellcheck/​Dockerfile'
+  - any-glob-to-any-file: 'batch/​spellcheck/​requirements.txt'
+  - any-glob-to-any-file: 'robotoff/​batch/​configs/​job_configs/​spellcheck.yaml'
+  - any-glob-to-any-file: 'doc/​references/​ingredients-spellcheck.md'
+
+nutrition prediction:
+- changed-files:
+  - any-glob-to-any-file: 'robotoff/prediction/nutrition_extraction.py'
+  - any-glob-to-any-file: 'tests/unit/prediction/test_nutrition_extraction.py'

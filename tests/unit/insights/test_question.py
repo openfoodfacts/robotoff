@@ -1,11 +1,11 @@
 import json
-from typing import Optional
 
 import pytest
 from openfoodfacts.images import split_barcode
 
 from robotoff.insights.question import (
     CategoryQuestionFormatter,
+    ImageOrientationQuestionFormatter,
     LabelQuestionFormatter,
     Question,
     generate_selected_images,
@@ -13,7 +13,7 @@ from robotoff.insights.question import (
 )
 from robotoff.models import ProductInsight
 from robotoff.settings import TEST_DATA_DIR
-from robotoff.types import InsightType, ProductIdentifier, ServerType
+from robotoff.types import InsightType, JSONType, ProductIdentifier, ServerType
 from robotoff.utils.i18n import TranslationStore
 
 
@@ -93,20 +93,23 @@ def test_generate_selected_images():
 
 def generate_insight(
     insight_type: str,
-    value: Optional[str] = None,
-    value_tag: Optional[str] = None,
+    value: str | None = None,
+    value_tag: str | None = None,
     add_source_image: bool = False,
     server_type: ServerType = ServerType.off,
+    data: JSONType | None = None,
 ) -> ProductInsight:
     barcode = "1111111111"
+    data = data or {}
     return ProductInsight(
         type=insight_type,
         value=value,
         value_tag=value_tag,
         barcode=barcode,
-        source_image=f"/{'/'.join(split_barcode(barcode))}/1.jpg"
-        if add_source_image
-        else None,
+        source_image=(
+            f"/{'/'.join(split_barcode(barcode))}/1.jpg" if add_source_image else None
+        ),
+        data=data,
         server_type=server_type.name,
     )
 
@@ -144,7 +147,7 @@ def translation_store():
 def test_category_question_formatter(
     lang: str,
     value: str,
-    value_tag: Optional[str],
+    value_tag: str | None,
     expected_question_str: str,
     translation_store: TranslationStore,
     mocker,
@@ -169,7 +172,7 @@ def test_category_question_formatter(
         "insight_id": str(insight.id),
         "insight_type": InsightType.category.name,
         "server_type": ServerType.off.name,
-        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/front_fr.10.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.10.400.jpg",
     }
 
 
@@ -181,14 +184,14 @@ def test_category_question_formatter(
             "Bio européen",
             "en:eu-organic",
             "Le produit a-t-il ce label ?",
-            "https://static.openfoodfacts.net/images/lang/en/labels/eu-organic.135x90.svg",
+            "https://static.openfoodfacts.org/images/lang/en/labels/eu-organic.135x90.svg",
         ),
         (
             "en",
             "Nutriscore Grade A",
             "en:nutriscore-grade-a",
             "Does the product have this label?",
-            "https://static.openfoodfacts.org/images/attributes/nutriscore-a.svg",
+            "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg",
         ),
         (
             "en",
@@ -204,7 +207,7 @@ def test_label_question_formatter(
     value: str,
     value_tag: str,
     expected_question_str: str,
-    ref_image_url: Optional[str],
+    ref_image_url: str | None,
     translation_store: TranslationStore,
 ):
     insight = generate_insight(
@@ -221,9 +224,34 @@ def test_label_question_formatter(
         "insight_id": str(insight.id),
         "insight_type": InsightType.label.name,
         "server_type": ServerType.off.name,
-        "source_image_url": "https://images.openfoodfacts.net/images/products/111/111/111/1/1.400.jpg",
+        "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/1.400.jpg",
     }
 
     if ref_image_url is not None:
         expected_dict["ref_image_url"] = ref_image_url
     assert question.serialize() == expected_dict
+
+
+class TestImageOrientationQuestionFormatter:
+    def test_format_question(self, mocker, translation_store):
+        insight = generate_insight(
+            insight_type=InsightType.image_orientation.name,
+            value_tag="right",
+            add_source_image=True,
+            server_type=ServerType.off,
+            data={"image_key": "front_fr", "image_rev": "10"},
+        )
+        question = ImageOrientationQuestionFormatter(translation_store).format_question(
+            insight, "en"
+        )
+        assert isinstance(question, Question)
+        assert question.serialize() == {
+            "barcode": insight.barcode,
+            "type": "add-binary",
+            "value": "right",
+            "question": "Is this image rotated with the following orientation?",
+            "insight_id": str(insight.id),
+            "insight_type": InsightType.image_orientation.name,
+            "server_type": ServerType.off.name,
+            "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.10.400.jpg",
+        }

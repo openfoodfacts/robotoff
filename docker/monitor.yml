@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   api:
     command:
@@ -11,6 +10,7 @@ services:
     depends_on:
       - statsd
   statsd:
+    restart: $RESTART_POLICY
     image: prom/statsd-exporter:v0.22.2
     volumes:
       - ./statsd.conf:/statsd/statsd.conf
@@ -19,6 +19,7 @@ services:
     ports:
       - ${STATSD_EXPOSE:-9102}:9102
   postgres_exporter:
+    restart: $RESTART_POLICY
     image: prometheuscommunity/postgres-exporter:v0.11.1
     environment:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable

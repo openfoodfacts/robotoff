@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-robotoff-dev: &robotoff-dev
     image: openfoodfacts/robotoff:dev
     build:
@@ -16,6 +14,7 @@ x-robotoff-dev: &robotoff-dev
       - ./pyproject.toml:/opt/robotoff/pyproject.toml
       - ./poetry.toml:/opt/robotoff/poetry.toml
       - ./poetry.lock:/opt/robotoff/poetry.lock
+      - ./.flake8:/opt/robotoff/.flake8
       # make tests available
       - ./tests:/opt/robotoff/tests
       - ./.cov:/opt/robotoff/.cov
@@ -23,6 +22,7 @@ x-robotoff-dev: &robotoff-dev
       - ./i18n:/opt/robotoff/i18n
       # make data available
       - ./data:/opt/robotoff/data
+      - ./cache:/opt/robotoff/cache
       # make migration files available
       - ./migrations:/opt/robotoff/migrations
       # make doc generation available
@@ -35,16 +35,19 @@ x-robotoff-dev: &robotoff-dev
 services:
   api:
     <<: *robotoff-dev
-  worker_high_1:
+  worker_1:
     <<: *robotoff-dev
-  worker_high_2:
+  worker_2:
     <<: *robotoff-dev
-  worker_low_1:
+  worker_3:
     <<: *robotoff-dev
-  worker_low_2:
+  worker_4:
     <<: *robotoff-dev
 
   scheduler:
+    <<: *robotoff-dev
+
+  update-listener:
     <<: *robotoff-dev
 
   elasticsearch:

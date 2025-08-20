@@ -1,21 +1,15 @@
 import functools
+import logging
 import operator
-from typing import Optional
 
 from robotoff import settings
 from robotoff.products import ProductDataset
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import ServerType
-from robotoff.utils import (
-    dump_json,
-    dump_text,
-    get_logger,
-    http_session,
-    load_json,
-    text_file_iter,
-)
+from robotoff.utils import dump_json, dump_text, http_session, load_json, text_file_iter
+from robotoff.utils.cache import function_cache_register
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @functools.cache
@@ -25,7 +19,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
     Each tuple has the format (brand_tag, prefix) where prefix is a digit with
     13 elements (EAN-13).
     """
-    logger.info("Loading brand prefix...")
+    logger.debug("Loading brand prefix...")
     return set(tuple(x) for x in load_json(settings.BRAND_PREFIX_PATH, compressed=True))  # type: ignore
 
 
@@ -33,7 +27,7 @@ def get_brand_prefix() -> set[tuple[str, str]]:
 def get_brand_blacklist() -> set[str]:
     """Return the list of brands we want to exclude from automatic detection
     through the 'taxonomy' predictor."""
-    logger.info("Loading brand blacklist...")
+    logger.debug("Loading brand blacklist...")
     return set(text_file_iter(settings.OCR_TAXONOMY_BRANDS_BLACKLIST_PATH))
 
 
@@ -46,7 +40,7 @@ def generate_barcode_prefix(barcode: str) -> str:
 
 
 def compute_brand_prefix(
-    product_dataset: ProductDataset, threshold: Optional[int] = None
+    product_dataset: ProductDataset, threshold: int | None = None
 ) -> dict[tuple[str, str], int]:
     count: dict[tuple[str, str], int] = {}
 
@@ -84,8 +78,8 @@ def save_brand_prefix(count_threshold: int = 5):
 def keep_brand_from_taxonomy(
     brand_tag: str,
     brand: str,
-    min_length: Optional[int] = None,
-    blacklisted_brands: Optional[set[str]] = None,
+    min_length: int | None = None,
+    blacklisted_brands: set[str] | None = None,
 ) -> bool:
     if brand.isdigit():
         return False
@@ -102,8 +96,8 @@ def keep_brand_from_taxonomy(
 def generate_brand_list(
     threshold: int,
     server_type: ServerType,
-    min_length: Optional[int] = None,
-    blacklisted_brands: Optional[set[str]] = None,
+    min_length: int | None = None,
+    blacklisted_brands: set[str] | None = None,
 ) -> list[tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
@@ -131,8 +125,8 @@ def generate_brand_list(
 
 def dump_taxonomy_brands(
     threshold: int,
-    min_length: Optional[int] = None,
-    blacklisted_brands: Optional[set[str]] = None,
+    min_length: int | None = None,
+    blacklisted_brands: set[str] | None = None,
 ):
     # Only support OFF for now
     server_type = ServerType.off
@@ -165,6 +159,9 @@ def load_resources():
     get_brand_prefix()
     get_brand_blacklist()
 
+
+function_cache_register.register(get_brand_prefix)
+function_cache_register.register(get_brand_blacklist)
 
 if __name__ == "__main__":
     blacklisted_brands = get_brand_blacklist()

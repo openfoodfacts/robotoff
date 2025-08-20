@@ -1,11 +1,14 @@
 import datetime
 import functools
+import logging
 from enum import Enum
-from typing import Iterable, Literal, NamedTuple, Optional, Union
+from typing import Iterable, Literal, NamedTuple, Union
 
+import falcon
 import peewee
 from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from peewee import JOIN, SQL, fn
+from pydantic import BaseModel, ValidationError
 
 from robotoff.app import events
 from robotoff.insights.annotate import (
@@ -27,11 +30,10 @@ from robotoff.models import (
 )
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
-from robotoff.types import InsightAnnotation, ServerType
-from robotoff.utils import get_logger
+from robotoff.types import InsightAnnotation, JSONType, ServerType
 from robotoff.utils.text import get_tag
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SkipVotedType(Enum):
@@ -47,12 +49,9 @@ class SkipVotedOn(NamedTuple):
     id: str
 
 
-def _add_vote_exclusions(
-    query: peewee.Query, exclusion: Optional[SkipVotedOn]
-) -> peewee.Query:
-    if not exclusion:
-        return query
-
+def _add_vote_exclusion_clause(exclusion: SkipVotedOn) -> peewee.Expression:
+    """Return a peewee expression to exclude insights that have been voted on
+    by the user."""
     if exclusion.by == SkipVotedType.DEVICE_ID:
         criteria = AnnotationVote.device_id == exclusion.id
     elif exclusion.by == SkipVotedType.USERNAME:
@@ -60,33 +59,33 @@ def _add_vote_exclusions(
     else:
         raise ValueError(f"Unknown SkipVoteType: {exclusion.by}")
 
-    return query.join(
-        AnnotationVote,
-        join_type=peewee.JOIN.LEFT_OUTER,
-        on=((AnnotationVote.insight_id == ProductInsight.id) & (criteria)),
-    ).where(AnnotationVote.id.is_null())
+    return ProductInsight.id.not_in(
+        AnnotationVote.select(AnnotationVote.insight_id).where(criteria)
+    )
 
 
 def get_insights(
-    barcode: Optional[str] = None,
+    barcode: str | None = None,
     server_type: ServerType = ServerType.off,
-    keep_types: Optional[list[str]] = None,
-    countries: Optional[list[Country]] = None,
-    brands: Optional[list[str]] = None,
-    annotated: Optional[bool] = False,
-    annotation: Optional[int] = None,
-    order_by: Optional[Literal["random", "popularity", "n_votes", "confidence"]] = None,
-    value_tag: Optional[str] = None,
-    reserved_barcode: Optional[bool] = None,
+    keep_types: list[str] | None = None,
+    countries: list[Country] | None = None,
+    brands: list[str] | None = None,
+    annotated: bool | None = False,
+    annotation: int | None = None,
+    order_by: Literal["random", "popularity", "n_votes", "confidence"] | None = None,
+    value_tag: str | None = None,
+    reserved_barcode: bool | None = None,
     as_dict: bool = False,
-    limit: Optional[int] = 25,
-    offset: Optional[int] = None,
+    limit: int | None = 25,
+    offset: int | None = None,
     count: bool = False,
-    avoid_voted_on: Optional[SkipVotedOn] = None,
-    group_by_value_tag: Optional[bool] = False,
-    automatically_processable: Optional[bool] = None,
-    campaigns: Optional[list[str]] = None,
-    predictor: Optional[str] = None,
+    max_count: int | None = None,
+    avoid_voted_on: SkipVotedOn | None = None,
+    group_by_value_tag: bool | None = False,
+    automatically_processable: bool | None = None,
+    campaigns: list[str] | None = None,
+    predictor: str | None = None,
+    lc: list[str] | None = None,
 ) -> Iterable[ProductInsight]:
     """Fetch insights that meet the criteria passed as parameters.
 
@@ -119,6 +118,12 @@ def get_insights(
     :param offset: query offset (used for pagination), defaults to None
     :param count: if True, return the number of results instead of the
         results, defaults to False
+    :param count_max: an upper bound on the number of insights to count,
+        defaults to None. If provided, the count will be limited to this
+        value. It allows to dramatically speed up the count query.
+        If not provided, an exact count will be returned.
+    :param max_count: an upper bound on the number of insights to return when
+        asking for the count (`count=True`), defaults to None (no limit).
     :param avoid_voted_on: a SkipVotedOn used to remove results insights the
         user previously ignored, defaults to None
     :param group_by_value_tag: if True, group results by value_tag, defaults
@@ -129,6 +134,9 @@ def get_insights(
         defaults to None
     :param predictor: only keep insights that have this predictor, defaults
         to None
+    :param lc: only keep insights that have any `insight.lc` in this
+        list of language codes, defaults to None
+        It is used to filter lang of ingredient_spellcheck
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
@@ -176,12 +184,19 @@ def get_insights(
     if predictor is not None:
         where_clauses.append(ProductInsight.predictor == predictor)
 
-    query = _add_vote_exclusions(ProductInsight.select(), avoid_voted_on)
+    if lc is not None:
+        where_clauses.append(ProductInsight.lc.contains_any(*lc))
 
+    if avoid_voted_on:
+        where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
+
+    query = ProductInsight.select()
     if where_clauses:
         query = query.where(*where_clauses)
 
     if count:
+        if max_count is not None:
+            query = query.limit(max_count)
         return query.count()
 
     if limit is not None:
@@ -222,11 +237,11 @@ def get_insights(
 
 def get_images(
     server_type: ServerType,
-    with_predictions: Optional[bool] = False,
-    barcode: Optional[str] = None,
-    offset: Optional[int] = None,
+    with_predictions: bool | None = False,
+    barcode: str | None = None,
+    offset: int | None = None,
     count: bool = False,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ) -> Iterable[ImageModel]:
     where_clauses = [ImageModel.server_type == server_type.name]
 
@@ -258,11 +273,11 @@ def get_images(
 
 def get_predictions(
     server_type: ServerType,
-    barcode: Optional[str] = None,
-    keep_types: Optional[list[str]] = None,
-    value_tag: Optional[str] = None,
-    limit: Optional[int] = None,
-    offset: Optional[int] = None,
+    barcode: str | None = None,
+    keep_types: list[str] | None = None,
+    value_tag: str | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
     count: bool = False,
 ) -> Iterable[Prediction]:
     where_clauses = [Prediction.server_type == server_type.name]
@@ -295,20 +310,24 @@ def get_predictions(
 
 def get_image_predictions(
     server_type: ServerType,
-    with_logo: Optional[bool] = False,
-    barcode: Optional[str] = None,
-    type: Optional[str] = None,
-    model_name: Optional[str] = None,
-    model_version: Optional[str] = None,
-    min_confidence: Optional[float] = None,
-    offset: Optional[int] = None,
+    with_logo: bool | None = False,
+    barcode: str | None = None,
+    type: str | None = None,
+    model_name: str | None = None,
+    model_version: str | None = None,
+    min_confidence: float | None = None,
+    image_id: str | None = None,
+    offset: int | None = None,
     count: bool = False,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ) -> Iterable[ImagePrediction]:
     query = ImagePrediction.select()
 
     query = query.switch(ImagePrediction).join(ImageModel)
     where_clauses = [ImagePrediction.image.server_type == server_type.name]
+
+    if image_id is not None:
+        where_clauses.append(ImagePrediction.image.image_id == image_id)
 
     if barcode is not None:
         where_clauses.append(ImagePrediction.image.barcode == barcode)
@@ -355,8 +374,8 @@ def save_annotation(
     annotation: InsightAnnotation,
     device_id: str,
     update: bool = True,
-    data: Optional[dict] = None,
-    auth: Optional[OFFAuthentication] = None,
+    data: dict | None = None,
+    auth: OFFAuthentication | None = None,
     trusted_annotator: bool = False,
 ) -> AnnotationResult:
     """Saves annotation either by using a single response as ground truth or
@@ -474,16 +493,35 @@ def save_annotation(
 
 def get_logo_annotation(
     server_type: ServerType,
-    barcode: Optional[str] = None,
-    keep_types: Optional[list[str]] = None,
-    value_tag: Optional[str] = None,
-    limit: Optional[int] = 25,
-    offset: Optional[int] = None,
+    barcode: str | None = None,
+    keep_types: list[str] | None = None,
+    value_tag: str | None = None,
+    limit: int | None = 25,
+    offset: int | None = None,
     count: bool = False,
 ) -> Iterable[LogoAnnotation]:
+    """Return logos that fit the criteria passed as parameters.
+
+    :param server_type: the server type (project) associated with the logos
+    :param barcode: the barcode of the product associated with the logos,
+        defaults to None (no barcode filter)
+    :param keep_types: the list of logo types to keep, defaults to None (no
+        type filter)
+    :param value_tag: the annotation value tag to filter on, defaults to None
+        (no value tag filter)
+    :param limit: maximum number of logos to return, defaults to 25
+    :param offset: offset for pagination, defaults to None (page 1)
+    :param count: if True, return the number of logos instead of the logos,
+        defaults to False
+    :return: either the number of logos (if `count=True`) or an iterable of
+        logos
+    """
     query = LogoAnnotation.select().join(ImagePrediction).join(ImageModel)
 
-    where_clauses = [ImageModel.server_type == server_type.name]
+    where_clauses = [
+        ImageModel.server_type == server_type.name,
+        ImageModel.deleted == False,  # noqa
+    ]
 
     if barcode:
         where_clauses.append(LogoAnnotation.barcode == barcode)
@@ -512,7 +550,7 @@ def get_logo_annotation(
 
 
 def update_logo_annotations(
-    annotation_logos: list[tuple[str, Optional[str], LogoAnnotation]],
+    annotation_logos: list[tuple[str, str | None, LogoAnnotation]],
     username: str,
     completed_at: datetime.datetime,
 ) -> list[LogoAnnotation]:
@@ -544,7 +582,7 @@ def update_logo_annotations(
     return updated_logos
 
 
-def filter_question_insight_types(keep_types: Optional[list[str]]):
+def filter_question_insight_types(keep_types: list[str] | None):
     """Utility function to validate `insight_types` parameters in /questions/*
     queries.
 
@@ -561,3 +599,23 @@ def filter_question_insight_types(keep_types: Optional[list[str]]):
             set(keep_types) & set(QuestionFormatterFactory.get_available_types())
         )
     return keep_types
+
+
+def validate_params(params: JSONType, schema: type) -> BaseModel:
+    """Validate the parameters passed to a Falcon resource.
+
+    Either returns a validated params object or raises a falcon.HTTPBadRequest.
+
+    :param params: the input parameters to validate, as a dict
+    :param schema: the pydantic schema to use for validation
+    :raises falcon.HTTPBadRequest: if the parameters are invalid
+    """
+    # Remove None values from the params dict
+    params = {k: v for k, v in params.items() if v is not None}
+    try:
+        return schema.model_validate(params)  # type: ignore
+    except ValidationError as e:
+        errors = e.errors(include_url=False)
+        plural = "s" if len(errors) > 1 else ""
+        description = f"{len(errors)} validation error{plural}: {errors}"
+        raise falcon.HTTPBadRequest(description=description)

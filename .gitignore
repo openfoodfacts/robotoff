@@ -8,7 +8,9 @@ dist
 .idea
 robotoff.egg-info
 ml/data/*
+cache
 datasets
+data/taxonomies
 *.joblib
 .ipynb_checkpoints
 .mypy_cache
@@ -25,7 +27,6 @@ images
 .venv/
 # pyenv file
 .python-version
-tf_models/*
 weights/
 
 # direnv
@@ -41,5 +42,4 @@ coverage.xml
 site/
 gh_pages/
 doc/README.md
-doc/references/cli.md 
-data/diskcache
+doc/references/cli.md
