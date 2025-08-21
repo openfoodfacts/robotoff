@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.77.1](https://github.com/openfoodfacts/robotoff/compare/v1.77.0...v1.77.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* remove local test data stored using git LFS ([#1716](https://github.com/openfoodfacts/robotoff/issues/1716)) ([6021158](https://github.com/openfoodfacts/robotoff/commit/60211583451ed3ede92df7c642f963f3e1842bfb))
+
 ## [1.77.0](https://github.com/openfoodfacts/robotoff/compare/v1.76.1...v1.77.0) (2025-08-21)
 
 
