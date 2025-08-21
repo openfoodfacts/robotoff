@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.77.0](https://github.com/openfoodfacts/robotoff/compare/v1.76.1...v1.77.0) (2025-08-21)
+
+
+### Features
+
+* add `delete_image_job` ([#1709](https://github.com/openfoodfacts/robotoff/issues/1709)) ([f93daae](https://github.com/openfoodfacts/robotoff/commit/f93daae668f46b66ca8f93916f0fcd05cf660741))
+
+
+### Bug Fixes
+
+* add missing `[@with](https://github.com/with)_db` decorator ([b10e9da](https://github.com/openfoodfacts/robotoff/commit/b10e9da5452fbb4d0dd90f74b032ce12688cf155))
+* fix issue in get_tag function ([#1713](https://github.com/openfoodfacts/robotoff/issues/1713)) ([d94527a](https://github.com/openfoodfacts/robotoff/commit/d94527a03f46a49e5585ed7e98dfb14bbd881611))
+
 ## [1.76.1](https://github.com/openfoodfacts/robotoff/compare/v1.76.0...v1.76.1) (2025-08-14)
 
 
