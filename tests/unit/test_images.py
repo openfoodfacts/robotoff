@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from openfoodfacts.images import download_image
 from PIL import Image
 
 from robotoff.images import generate_image_fingerprint
@@ -13,8 +14,10 @@ def load_test_image(file_name: str) -> Image.Image:
 
 
 def test_generate_image_fingerprint():
-    image_1 = load_test_image("no_upc1.jpg")
-    image_2 = load_test_image("no_upc2.jpg")
+    image_1_url = "https://raw.githubusercontent.com/openfoodfacts/test-data/4a6446c9cac4b279f406fd1e20f8a28b045c823c/robotoff/tests/unit/upc_image/no_upc1.jpg"
+    image_2_url = "https://raw.githubusercontent.com/openfoodfacts/test-data/4a6446c9cac4b279f406fd1e20f8a28b045c823c/robotoff/tests/unit/upc_image/no_upc2.jpg"
+    image_1 = download_image(image_1_url)
+    image_2 = download_image(image_2_url)
     image_1_rescaled = image_1.copy()
     image_1_rescaled.thumbnail((400, 400))
 
