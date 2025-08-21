@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0 (2025-08-21)
+
+
+### Technical
+
+* add release please manifest file ([#1719](https://github.com/openfoodfacts/robotoff/issues/1719)) ([ce8cadd](https://github.com/openfoodfacts/robotoff/commit/ce8cadd7201a312fbcd987825df9ad51e137e527))
+* fix release please configuration ([#1718](https://github.com/openfoodfacts/robotoff/issues/1718)) ([32e32f1](https://github.com/openfoodfacts/robotoff/commit/32e32f10c588241ef0b4a6e67f418177743740c5))
+* set last release sha ([67e8ae1](https://github.com/openfoodfacts/robotoff/commit/67e8ae13ea8a3c1686f83b3bcc6fba694bb5a01f))
+
 ## [1.77.1](https://github.com/openfoodfacts/robotoff/compare/v1.77.0...v1.77.1) (2025-08-21)
 
 
