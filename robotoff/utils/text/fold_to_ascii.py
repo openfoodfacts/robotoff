@@ -1400,10 +1400,48 @@ class TranslateTableWithoutInsertionDeletion:
         return replacement_value
 
 
+class TranslateTableWithoutDeletion:
+    """Class to be used as a translate table (see `str.translate` function)
+    without deletion: we keep unrecognized characters as it."""
+
+    _translate_table = dict(
+        (ordinal, replacement) for (ordinal, replacement) in translate_table
+    )
+
+    def __getitem__(self, value):
+        if (replacement_value := self._translate_table.get(value)) is None:
+            # Return original character if it is not in translate table
+            return value
+        return replacement_value
+
+
 translate_table_without_insertion_deletion = TranslateTableWithoutInsertionDeletion()
+translate_table_without_deletion = TranslateTableWithoutDeletion()
 
 
 def fold_without_insertion_deletion(string: str):
+    """Replace non-ascii characters with their ascii equivalent (no deletion, no
+    insertion).
+
+    If there is no ascii-equivalent character, keep the character (no
+    deletion). If the replacement is not of length 1, do not perform the
+    translation (no insertion). This way, we don't perform any deletion or
+    insertion: the folded string doesn't change length.
+    """
+    if string is None:
+        return ""
+
+    try:
+        # If string contains only ASCII characters, return it.
+        string.encode("ascii")
+        return string
+    except UnicodeEncodeError:
+        pass
+
+    return string.translate(translate_table_without_insertion_deletion)
+
+
+def fold_without_deletion(string: str):
     """Replace non-ascii characters with their ascii equivalent.
 
     If there is no ascii-equivalent character, keep the character. This way,
@@ -1420,7 +1458,7 @@ def fold_without_insertion_deletion(string: str):
     except UnicodeEncodeError:
         pass
 
-    return string.translate(translate_table_without_insertion_deletion)
+    return string.translate(translate_table_without_deletion)
 
 
 def fold(string: str, replacement: str = "") -> str:
