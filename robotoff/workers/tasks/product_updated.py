@@ -245,8 +245,7 @@ def product_type_switched_job(product_id: ProductIdentifier) -> None:
     deleted_image_predictions = (
         ImagePrediction.delete()
         .where(
-            ImagePrediction.image_id
-            == (
+            ImagePrediction.image_id.in_(
                 ImageModel.select(ImageModel.id).where(
                     ImageModel.barcode == product_id.barcode,
                     ImageModel.server_type == product_id.server_type,
