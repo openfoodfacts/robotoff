@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.77.2](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.1...robotoff-v1.77.2) (2025-08-22)
+
+
+### Bug Fixes
+
+* fix issue with subquery used in product_type_switched_job ([#1722](https://github.com/openfoodfacts/robotoff/issues/1722)) ([267ad66](https://github.com/openfoodfacts/robotoff/commit/267ad66e031b14fe6510d378b60a8387931da178))
+
+
+### Technical
+
+* add current version of Robotoff ([d9d372c](https://github.com/openfoodfacts/robotoff/commit/d9d372cfd273ba296db86c228bdc3f7d27550a4c))
+* add release please manifest file ([#1719](https://github.com/openfoodfacts/robotoff/issues/1719)) ([ce8cadd](https://github.com/openfoodfacts/robotoff/commit/ce8cadd7201a312fbcd987825df9ad51e137e527))
+* fix release please configuration ([#1718](https://github.com/openfoodfacts/robotoff/issues/1718)) ([32e32f1](https://github.com/openfoodfacts/robotoff/commit/32e32f10c588241ef0b4a6e67f418177743740c5))
+* set last release sha ([67e8ae1](https://github.com/openfoodfacts/robotoff/commit/67e8ae13ea8a3c1686f83b3bcc6fba694bb5a01f))
+
 ## [1.77.1](https://github.com/openfoodfacts/robotoff/compare/v1.77.0...v1.77.1) (2025-08-21)
 
 
