@@ -130,37 +130,65 @@ class TestProductTypeSwitchedJob:
 
         with peewee_db:
             image_1 = ImageModelFactory.create(
-                barcode=DEFAULT_BARCODE, server_type=ServerType.off, image_id="1"
+                barcode=DEFAULT_BARCODE,
+                server_type=ServerType.off,
+                image_id="1",
+                id=1000,
+            )
+            image_2 = ImageModelFactory.create(
+                barcode=DEFAULT_BARCODE,
+                server_type=ServerType.off,
+                image_id="2",
+                id=1001,
             )
             other_image = ImageModelFactory.create(
-                barcode=other_barcode, server_type=ServerType.off, image_id="2"
+                barcode=other_barcode, server_type=ServerType.off, image_id="1", id=1002
             )
             image_prediction_1 = ImagePredictionFactory.create(
-                image=image_1, server_type=ServerType.off, prediction_id="1"
+                image=image_1, server_type=ServerType.off, id=2000
+            )
+            image_prediction_2 = ImagePredictionFactory.create(
+                image=image_2, server_type=ServerType.off, id=2001
             )
             image_prediction_other = ImagePredictionFactory.create(
-                image=other_image, server_type=ServerType.off, prediction_id="2"
+                image=other_image, server_type=ServerType.off, id=2002
             )
-            LogoAnnotationFactory.create(image_prediction=image_prediction_1, id=52)
-            LogoAnnotationFactory.create(image_prediction=image_prediction_other)
+
+            LogoAnnotationFactory.create(image_prediction=image_prediction_1, id=3000)
+            LogoAnnotationFactory.create(image_prediction=image_prediction_2, id=3001)
+            LogoAnnotationFactory.create(
+                image_prediction=image_prediction_other, id=3002
+            )
+
             PredictionFactory.create(
-                barcode=DEFAULT_BARCODE, server_type=ServerType.off
+                barcode=DEFAULT_BARCODE, server_type=ServerType.off, id=4000
             )
             # Create a second prediction for the same barcode but with a different type
             PredictionFactory.create(
                 barcode=DEFAULT_BARCODE,
                 server_type=ServerType.off,
                 type="nutrition_image",
+                id=4001,
             )
-            PredictionFactory.create(barcode=other_barcode, server_type=ServerType.off)
+            PredictionFactory.create(
+                barcode=other_barcode, server_type=ServerType.off, id=4002
+            )
+
             ProductInsightFactory.create(
-                barcode=DEFAULT_BARCODE, server_type=ServerType.off
+                barcode=DEFAULT_BARCODE,
+                server_type=ServerType.off,
+                id=uuid.UUID("00000000-0000-0000-0000-000000000001"),
             )
             ProductInsightFactory.create(
-                barcode=DEFAULT_BARCODE, server_type=ServerType.off, annotation=1
+                barcode=DEFAULT_BARCODE,
+                server_type=ServerType.off,
+                annotation=1,
+                id=uuid.UUID("00000000-0000-0000-0000-000000000002"),
             )
             ProductInsightFactory.create(
-                barcode=other_barcode, server_type=ServerType.off
+                barcode=other_barcode,
+                server_type=ServerType.off,
+                id=uuid.UUID("00000000-0000-0000-0000-000000000003"),
             )
 
         product_type_switched_job(
@@ -168,100 +196,47 @@ class TestProductTypeSwitchedJob:
         )
 
         with peewee_db:
-            # Check that the image related to the product was deleted
-            assert (
-                not ImageModel.select()
-                .where(
-                    ImageModel.barcode == DEFAULT_BARCODE,
-                    ImageModel.server_type == ServerType.off,
-                )
-                .exists()
-            )
-            # Check that other images were not deleted
-            assert (
-                ImageModel.select()
-                .where(
-                    ImageModel.barcode == other_barcode,
-                    ImageModel.server_type == ServerType.off,
-                )
-                .exists()
-            )
+            # Check that the image related to the product was deleted, and
+            # that other images were not deleted
+            assert sorted(
+                id_ for (id_,) in ImageModel.select(ImageModel.id).tuples()
+            ) == [1002]
+
             # Check that the image predictions related to the product were deleted
-            assert (
-                not ImagePrediction.select()
-                .where(ImagePrediction.image == image_prediction_1.image)
-                .exists()
-            )
-            # Check that other image predictions were not deleted
-            assert (
-                ImagePrediction.select()
-                .where(ImagePrediction.image == image_prediction_other.image)
-                .exists()
-            )
+            # and that other image predictions were not deleted
+            assert sorted(
+                id_ for (id_,) in ImagePrediction.select(ImagePrediction.id).tuples()
+            ) == [2002]
+
             # Check that the logo annotations related to the product were deleted
-            assert (
-                not LogoAnnotation.select()
-                .where(
-                    LogoAnnotation.image_prediction == image_prediction_1,
-                )
-                .exists()
-            )
-            # Check that other logo annotations were not deleted
-            assert (
-                LogoAnnotation.select()
-                .where(
-                    LogoAnnotation.image_prediction == image_prediction_other,
-                )
-                .exists()
-            )
-            # Check that the predictions related to the product were deleted
-            assert (
-                not Prediction.select()
-                .where(
-                    Prediction.barcode == DEFAULT_BARCODE,
-                    Prediction.server_type == ServerType.off,
-                )
-                .exists()
-            )
-            # Check that other predictions were not deleted
-            assert (
-                Prediction.select()
-                .where(
-                    Prediction.barcode == other_barcode,
-                    Prediction.server_type == ServerType.off,
-                )
-                .exists()
-            )
-            # Check that the non-annotated insights related to the product were deleted
-            assert (
-                len(
-                    list(
-                        ProductInsight.select().where(
-                            ProductInsight.barcode == DEFAULT_BARCODE,
-                            ProductInsight.server_type == ServerType.off,
-                        )
-                    )
-                )
-                == 1
-            )
-            # Check that other insights were not deleted
-            assert (
-                ProductInsight.select()
-                .where(
-                    ProductInsight.barcode == other_barcode,
-                    ProductInsight.server_type == ServerType.off,
-                )
-                .exists()
-            )
+            # and that other logo annotations were not deleted
+            assert sorted(
+                id_ for (id_,) in LogoAnnotation.select(LogoAnnotation.id).tuples()
+            ) == [3002]
+
+            # Check that the predictions related to the product were deleted, and
+            # that other predictions were not deleted
+            assert sorted(
+                id_ for (id_,) in Prediction.select(Prediction.id).tuples()
+            ) == [4002]
+
+            # Check that the non-annotated insights related to the product were deleted,
+            # and that the annotated insights were not deleted
+            assert sorted(
+                id_ for (id_,) in ProductInsight.select(ProductInsight.id).tuples()
+            ) == [
+                uuid.UUID("00000000-0000-0000-0000-000000000002"),
+                uuid.UUID("00000000-0000-0000-0000-000000000003"),
+            ]
 
         assert len(caplog.records) == 1
         record = caplog.records[0]
         assert record.message == (
             f"Product type switched for <Product {DEFAULT_BARCODE} | off>, "
-            "deleted 1 images, "
-            "1 logos, "
+            "deleted 2 images, "
+            "2 logos, "
             "1 logos on Elasticsearch, "
-            "1 image predictions, "
+            "2 image predictions, "
             "2 predictions "
             "and 1 insights"
         )
@@ -272,7 +247,7 @@ class TestProductTypeSwitchedJob:
 
         assert delete_ann_logos_mock.call_count == 1
         assert len(delete_ann_logos_mock.call_args.args) == 2
-        assert delete_ann_logos_mock.call_args.args[1] == [52]
+        assert delete_ann_logos_mock.call_args.args[1] == [3000, 3001]
 
         new_product_id = ProductIdentifier(
             barcode=DEFAULT_BARCODE, server_type=ServerType.obf
