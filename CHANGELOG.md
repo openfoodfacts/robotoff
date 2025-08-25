@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.77.3](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.2...robotoff-v1.77.3) (2025-08-25)
+
+
+### Technical
+
+* allow to return np array or bytes in download_image func ([#1727](https://github.com/openfoodfacts/robotoff/issues/1727)) ([02054cc](https://github.com/openfoodfacts/robotoff/commit/02054cc8bc94647a64d327e612e47cfc8e36bae6))
+* remove reference to latest release ([#1724](https://github.com/openfoodfacts/robotoff/issues/1724)) ([ab2935b](https://github.com/openfoodfacts/robotoff/commit/ab2935bb33ba8f2143801e3b259f1747abc16dd8))
+
 ## [1.77.2](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.1...robotoff-v1.77.2) (2025-08-22)
 
 
