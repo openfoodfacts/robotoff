@@ -6,6 +6,7 @@ import hashlib
 import io
 import re
 import tempfile
+import typing
 import urllib
 import uuid
 from collections import defaultdict
@@ -434,8 +435,11 @@ class NutritionPredictorResource:
         image_url = req.get_param("image_url", required=True)
         ocr_url = req.get_param("ocr_url", required=True)
 
-        image = get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=False
+        image = typing.cast(
+            Image.Image | None,
+            get_image_from_url(
+                image_url, error_raise=False, session=http_session, use_cache=False
+            ),
         )
 
         if image is None:
@@ -711,8 +715,11 @@ class ImageCropResource:
 
         # Get image from cache, as Hunger Games can requests many crops
         # from the same image
-        image = get_image_from_url(
-            image_url, session=http_session, error_raise=False, use_cache=True
+        image = typing.cast(
+            Image.Image | None,
+            get_image_from_url(
+                image_url, session=http_session, error_raise=False, use_cache=True
+            ),
         )
 
         if image is None:
@@ -829,8 +836,11 @@ class ImagePredictorResource:
                     f"model {models[0]} does not support image output",
                 )
 
-        image = get_image_from_url(
-            image_url, session=http_session, error_raise=False, use_cache=True
+        image = typing.cast(
+            Image.Image | None,
+            get_image_from_url(
+                image_url, session=http_session, error_raise=False, use_cache=True
+            ),
         )
 
         if image is None:

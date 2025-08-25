@@ -1,5 +1,6 @@
 import datetime
 import logging
+import typing
 from pathlib import Path
 
 import imagehash
@@ -95,8 +96,11 @@ def save_image(
         # MongoDB (in the `images` field), we download the image to know the
         # image size
         logger.info("DB Product check disabled, downloading image to get image size")
-        image = get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=use_cache
+        image = typing.cast(
+            Image.Image | None,
+            get_image_from_url(
+                image_url, error_raise=False, session=http_session, use_cache=use_cache
+            ),
         )
 
         if image is None:
@@ -159,8 +163,11 @@ def add_image_fingerprint(image_model: ImageModel, overwrite: bool = False) -> N
         return
 
     image_url = image_model.get_image_url()
-    image = get_image_from_url(
-        image_url, error_raise=False, session=http_session, use_cache=True
+    image = typing.cast(
+        Image.Image | None,
+        get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        ),
     )
 
     if image is None:

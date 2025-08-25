@@ -1,7 +1,9 @@
 import logging
 from io import BytesIO
 from pathlib import Path
+from typing import Literal
 
+import cv2
 import numpy as np
 import PIL
 import requests
@@ -39,7 +41,8 @@ def get_image_from_url(
     session: requests.Session | None = None,
     use_cache: bool = False,
     cache_expire: int = 86400,
-) -> Image.Image | None:
+    return_type: Literal["PIL", "np", "bytes"] = "PIL",
+) -> Image.Image | np.ndarray | bytes | None:
     """Fetch an image from `image_url` and load it.
 
     :param image_url: URL of the image to load
@@ -51,8 +54,13 @@ def get_image_from_url(
       result in the cache in case of cache miss)
     :param cache_expire: the expiration value of the item in the cache (in
       seconds), default to 86400 (24h).
+    :param return_type: the type of object to return, can be "PIL" (Pillow
+      Image), "np" (numpy array) or "bytes" (raw bytes). Defaults to "PIL".
     :return: the Pillow Image or None.
     """
+    if return_type not in ("PIL", "np", "bytes"):
+        raise ValueError(f"Invalid return_type {return_type}")
+
     if use_cache:
         content_bytes = cache_asset_from_url(
             key=f"image:{image_url}",
@@ -71,18 +79,36 @@ def get_image_from_url(
             return None
         content_bytes = r.content
 
-    try:
-        return Image.open(BytesIO(content_bytes))
-    except PIL.UnidentifiedImageError:
-        error_message = f"Cannot identify image {image_url}"
-        if error_raise:
-            raise AssetLoadingException(error_message)
-        logger.info(error_message)
-    except PIL.Image.DecompressionBombError:
-        error_message = f"Decompression bomb error for image {image_url}"
-        if error_raise:
-            raise AssetLoadingException(error_message)
-        logger.info(error_message)
+    if return_type == "PIL":
+        try:
+            return Image.open(BytesIO(content_bytes))
+        except PIL.UnidentifiedImageError:
+            error_message = f"Cannot identify image {image_url}"
+            if error_raise:
+                raise AssetLoadingException(error_message)
+            logger.info(error_message)
+        except PIL.Image.DecompressionBombError:
+            error_message = f"Decompression bomb error for image {image_url}"
+            if error_raise:
+                raise AssetLoadingException(error_message)
+            logger.info(error_message)
+
+    elif return_type == "np":
+        try:
+            image = cv2.imdecode(
+                np.frombuffer(content_bytes, dtype=np.uint8), cv2.IMREAD_COLOR_RGB
+            )
+            if image is None:
+                raise ValueError("cv2.imdecode could not decode image")
+            return image
+        except Exception as e:
+            error_message = f"Error decoding image {image_url}: {e}"
+            if error_raise:
+                raise AssetLoadingException(error_message)
+            logger.info(error_message)
+
+    elif return_type == "bytes":
+        return content_bytes
 
     return None
 

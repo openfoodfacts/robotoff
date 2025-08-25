@@ -1,5 +1,6 @@
 import logging
 import time
+import typing
 from typing import Literal
 
 import numpy as np
@@ -147,14 +148,17 @@ def generate_image_embeddings(
                 "Computing embeddings for %d images", len(missing_embedding_ids)
             )
             images_by_id: dict[str, Image.Image | None] = {
-                image_id: get_image_from_url(
-                    # Images are resized to 224x224, so there is no need to
-                    # fetch the full-sized image, the 400px resized
-                    # version is enough
-                    generate_image_url(product_id, f"{image_id}.400"),
-                    error_raise=False,
-                    session=http_session,
-                    use_cache=True,
+                image_id: typing.cast(
+                    Image.Image | None,
+                    get_image_from_url(
+                        # Images are resized to 224x224, so there is no need to
+                        # fetch the full-sized image, the 400px resized
+                        # version is enough
+                        generate_image_url(product_id, f"{image_id}.400"),
+                        error_raise=False,
+                        session=http_session,
+                        use_cache=True,
+                    ),
                 )
                 for image_id in missing_embedding_ids
             }

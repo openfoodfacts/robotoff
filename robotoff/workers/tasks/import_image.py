@@ -2,6 +2,7 @@ import copy
 import dataclasses
 import datetime
 import logging
+import typing
 from pathlib import Path
 
 import elasticsearch
@@ -330,8 +331,11 @@ def run_import_image(
 def import_insights_from_image(
     product_id: ProductIdentifier, image_url: str, ocr_url: str
 ):
-    image = get_image_from_url(
-        image_url, error_raise=False, session=http_session, use_cache=True
+    image = typing.cast(
+        Image.Image | None,
+        get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        ),
     )
 
     if image is None:
@@ -408,8 +412,11 @@ def run_nutrition_table_object_detection(
         image_url,
     )
 
-    image = get_image_from_url(
-        image_url, error_raise=False, session=http_session, use_cache=True
+    image = typing.cast(
+        Image.Image | None,
+        get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        ),
     )
 
     if image is None:
@@ -484,6 +491,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                 logger.info("Error while downloading image %s", image_url)
                 return
 
+            image = typing.cast(Image.Image, image)
             area, prediction_class, polygon = find_image_is_upc(
                 convert_image_to_array(image).astype(np.uint8)
             )
@@ -537,8 +545,11 @@ def run_nutriscore_object_detection(
         "Running nutriscore object detection for %s, image %s", product_id, image_url
     )
 
-    image = get_image_from_url(
-        image_url, error_raise=False, session=http_session, use_cache=True
+    image = typing.cast(
+        Image.Image | None,
+        get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        ),
     )
 
     if image is None:
@@ -619,8 +630,11 @@ def run_logo_object_detection(
     """
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
-    image = get_image_from_url(
-        image_url, error_raise=False, session=http_session, use_cache=True
+    image = typing.cast(
+        Image.Image | None,
+        get_image_from_url(
+            image_url, error_raise=False, session=http_session, use_cache=True
+        ),
     )
     ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
 
@@ -1108,8 +1122,11 @@ def extract_nutrition_job(
         ) is not None:
             return
 
-        image = get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=True
+        image = typing.cast(
+            Image.Image | None,
+            get_image_from_url(
+                image_url, error_raise=False, session=http_session, use_cache=True
+            ),
         )
 
         if image is None:
