@@ -1093,7 +1093,7 @@ As the model requires token text and position as input, an OCR must be performed
 <h3 id="integration">Integration</h3>
 <p>For every new uploaded image, the model is run on this image <sup id="fnref:extract_nutrition_job"><a class="footnote-ref" href="#fn:extract_nutrition_job">3</a></sup>. As for all computer vision models, we save the model prediction in the <code>image_prediction</code> table.
 If some entities were detected, we create a <code>Prediction</code> in DB using the usual import mechanism <sup id="fnref:import_mechanism"><a class="footnote-ref" href="#fn:import_mechanism">4</a></sup>, under the type <code>nutrient_extraction</code>.</p>
-<p>We only create an insight if we detected at least one nutrient value that is not in the product nutrients <sup id="fnref:nutrient_extraction_import"><a class="footnote-ref" href="#fn:nutrient_extraction_import">5</a></sup>.</p>
+<p>We only create an insight if the model detected a nutrient whose value is different than what's registered on the product (this includes nutrients with missing value) <sup id="fnref:nutrient_extraction_import"><a class="footnote-ref" href="#fn:nutrient_extraction_import">5</a></sup>. We only consider nutrient values entered for the same quantity (100g or serving) as what's indicated in Open Food Facts. It means that for a product with <code>nutrition_data_per=serving</code> and missing <code>proteins_serving</code>, we won't generate an insight if the model detected the protein quantity per 100g (<code>proteins_100g</code>). </p>
 <div class="footnote">
 <hr />
 <ol>
