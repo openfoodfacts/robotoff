@@ -38,7 +38,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "robotoff"
-version = "1.77.2"
+version = "1.78.0"
 description = "Real-time and batch prediction service for Open Food Facts."
 authors = ["Open Food Facts Team"]
 license = "GNU Affero General Public License v3"
