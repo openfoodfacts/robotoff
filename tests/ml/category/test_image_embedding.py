@@ -12,7 +12,6 @@ from robotoff.prediction.category.neural.keras_category_classifier_3_0 import (
 from robotoff.triton import GRPCInferenceServiceStub
 from robotoff.utils.download import get_asset_from_url
 
-
 @pytest.mark.parametrize(
     "image_urls",
     [
