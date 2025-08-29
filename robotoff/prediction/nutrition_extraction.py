@@ -1,6 +1,8 @@
 import dataclasses
 import functools
+import logging
 import re
+import time
 import typing
 from collections import Counter
 from pathlib import Path
@@ -20,9 +22,9 @@ from robotoff.triton import (
 )
 from robotoff.types import JSONType
 from robotoff.utils.cache import function_cache_register
-from robotoff.utils.logger import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 MODEL_NAME = "nutrition_extractor"
 MODEL_VERSION = f"{MODEL_NAME}-2.0"
@@ -79,10 +81,10 @@ def predict(
     :param ocr_result: the OCR result
     :param model_version: the version of the model to use, defaults to None (latest)
     :param triton_uri: the URI of the Triton Inference Server, if not provided, the
-        default value from settings is used
+        default value from settings is used (settings.TRITON_URI_NUTRITION_EXTRACTOR).
     :return: a `NutritionExtractionPrediction` object
     """
-    triton_stub = get_triton_inference_stub(triton_uri)
+    start_time = time.monotonic()
     id2label = get_id2label(MODEL_DIR)
     processor = get_processor(MODEL_DIR)
 
@@ -92,6 +94,14 @@ def predict(
         return None
 
     words, char_offsets, _, batch_encoding = preprocess_result
+    ml_metrics_logger.info(
+        "Preprocessing time for %s: %ss", MODEL_NAME, time.monotonic() - start_time
+    )
+
+    start_time = time.monotonic()
+    triton_stub = get_triton_inference_stub(
+        triton_uri or settings.TRITON_URI_NUTRITION_EXTRACTOR
+    )
     logits = send_infer_request(
         input_ids=batch_encoding.input_ids,
         attention_mask=batch_encoding.attention_mask,
@@ -101,7 +111,18 @@ def predict(
         triton_stub=triton_stub,
         model_version=model_version,
     )
-    return postprocess(logits[0], words, char_offsets, batch_encoding, id2label)
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss",
+        MODEL_NAME,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
+    results = postprocess(logits[0], words, char_offsets, batch_encoding, id2label)
+    ml_metrics_logger.info(
+        "Post-processing time for %s: %ss", MODEL_NAME, time.monotonic() - start_time
+    )
+    return results
 
 
 def preprocess(

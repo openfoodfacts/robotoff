@@ -1,6 +1,7 @@
+import logging
 import time
+import typing
 from typing import Literal, Union
-
 import numpy as np
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
@@ -11,12 +12,13 @@ from robotoff.models import ImageEmbedding, ImageModel, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
+    GRPCInferenceServiceStub,
     deserialize_byte_tensor,
     generate_clip_embedding_request,
     serialize_byte_tensor,
 )
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
-from robotoff.utils import get_image_from_url, get_logger, http_session
+from robotoff.utils import get_image_from_url, http_session
 from robotoff.utils.cache import function_cache_register
 
 from .preprocessing import (
@@ -26,8 +28,8 @@ from .preprocessing import (
     generate_inputs_dict,
 )
 
-logger = get_logger(__name__)
-
+logger = logging.getLogger(__name__)
+ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
 
 # Category IDs to ignore in v3 model predictions
 CATEGORY_EXCLUDE_SET = {
@@ -105,7 +107,9 @@ def save_image_embeddings(
 
 @with_db
 def generate_image_embeddings(
-    product: JSONType, product_id: ProductIdentifier, stub
+    product: JSONType,
+    product_id: ProductIdentifier,
+    triton_stub: GRPCInferenceServiceStub,
 ) -> np.ndarray | None:
     """Generate image embeddings using CLIP model for the `MAX_IMAGE_EMBEDDING`
     most recent images.
@@ -117,7 +121,7 @@ def generate_image_embeddings(
 
     :param product: product data
     :param product_id: identifier of the product
-    :param stub: the triton inference stub to use
+    :param triton_stub: the triton inference stub to use
     :return: None if no image was available or a numpy array of shape
         (num_images, IMAGE_EMBEDDING_DIM)
     """
@@ -143,14 +147,17 @@ def generate_image_embeddings(
                 "Computing embeddings for %d images", len(missing_embedding_ids)
             )
             images_by_id: dict[str, Image.Image | None] = {
-                image_id: get_image_from_url(
-                    # Images are resized to 224x224, so there is no need to
-                    # fetch the full-sized image, the 400px resized
-                    # version is enough
-                    generate_image_url(product_id, f"{image_id}.400"),
-                    error_raise=False,
-                    session=http_session,
-                    use_cache=True,
+                image_id: typing.cast(
+                    Image.Image | None,
+                    get_image_from_url(
+                        # Images are resized to 224x224, so there is no need to
+                        # fetch the full-sized image, the 400px resized
+                        # version is enough
+                        generate_image_url(product_id, f"{image_id}.400"),
+                        error_raise=False,
+                        session=http_session,
+                        use_cache=True,
+                    ),
                 )
                 for image_id in missing_embedding_ids
             }
@@ -171,7 +178,7 @@ def generate_image_embeddings(
             if non_null_image_by_ids:
                 start_time = time.monotonic()
                 computed_embeddings_by_id = _generate_image_embeddings(
-                    non_null_image_by_ids, stub
+                    non_null_image_by_ids, triton_stub
                 )
                 logger.debug(
                     "Computed %d embeddings in %.2f seconds",
@@ -194,7 +201,7 @@ def generate_image_embeddings(
 
 
 def _generate_image_embeddings(
-    images_by_id: dict[str, Union[Image.Image, np.ndarray]], stub
+    images_by_id: dict[str, Union[Image.Image, np.ndarray]], stub: GRPCInferenceServiceStub
 ) -> dict[str, np.ndarray]:
     """
     Generate CLIP image embeddings by sending a request to Triton.
@@ -222,7 +229,7 @@ def _generate_image_embeddings(
     ml_metrics_logger.info(
         "Inference time for CLIP: %ss", time.monotonic() - start_time
     )
-
+    
     # Parse embeddings
     computed_embeddings = np.frombuffer(
         response.raw_output_contents[0],
@@ -394,12 +401,30 @@ def _predict(
     inputs: JSONType, model_name: NeuralCategoryClassifierModel, stub
 ) -> tuple[np.ndarray, list[str]]:
     """Internal method to prepare and run triton request."""
+    start_time = time.monotonic()
     request = build_triton_request(inputs, model_name=triton_model_names[model_name])
+    ml_metrics_logger.info(
+        "Preprocessing time for %s: %ss",
+        model_name.value,
+        time.monotonic() - start_time,
+    )
+
+    start_time = time.monotonic()
     response = stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for %s: %ss", model_name.value, time.monotonic() - start_time
+    )
+
+    start_time = time.monotonic()
     scores = np.frombuffer(response.raw_output_contents[0], dtype=np.float32).reshape(
         (1, -1)
     )[0]
     labels = deserialize_byte_tensor(response.raw_output_contents[1])
+    ml_metrics_logger.info(
+        "Post-processing time for %s: %ss",
+        model_name.value,
+        time.monotonic() - start_time,
+    )
     return scores, labels
 
 

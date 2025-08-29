@@ -131,7 +131,11 @@ Postprocessed entities contain the following fields:
 For every new uploaded image, the model is run on this image [^extract_nutrition_job]. As for all computer vision models, we save the model prediction in the `image_prediction` table.
 If some entities were detected, we create a `Prediction` in DB using the usual import mechanism [^import_mechanism], under the type `nutrient_extraction`.
 
-We only create an insight if we detected at least one nutrient value that is not in the product nutrients [^nutrient_extraction_import].
+We only create an insight if the model detected a nutrient whose value is different than what's registered on the product (this includes nutrients with missing value) [^nutrient_extraction_import]. We only consider nutrient values entered for the same quantity (100g or serving) as what's indicated in Open Food Facts. It means that for a product with `nutrition_data_per=serving` and missing `proteins_serving`, we won't generate an insight if the model detected the protein quantity per 100g (`proteins_100g`). 
+
+We consider images from the most recent image to the oldest one, and stop the process as soon as a valid candidate insight is found. This ensures that the nutrient prediction is made on the most recent image available. Indeed, nutrition values can change over time, and we want to avoid creating insights based on possibly outdated images.
+
+If a `nutrient_extraction` insight was already validated for a product, we only create a new insight if the associated image is more recent than the image that was used to create the last validated insight.
 
 [^other_nutrient_detection]: Using a fixed set of classes is not the best approach when we have many classes. It however allows us to use LayoutLM architecture, which is very performant for this task, even when the nutrition table is hard to read due to packaging deformations or alterations. To detect the long-tail of nutrients, approaches using graph-based approach, where we would map a nutrient mention to its value, could be explored in the future.
 

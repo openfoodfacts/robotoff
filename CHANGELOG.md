@@ -1,5 +1,93 @@
 # Changelog
 
+## [1.77.2](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.1...robotoff-v1.77.2) (2025-08-22)
+
+
+### Bug Fixes
+
+* fix issue with subquery used in product_type_switched_job ([#1722](https://github.com/openfoodfacts/robotoff/issues/1722)) ([267ad66](https://github.com/openfoodfacts/robotoff/commit/267ad66e031b14fe6510d378b60a8387931da178))
+
+
+### Technical
+
+* add current version of Robotoff ([d9d372c](https://github.com/openfoodfacts/robotoff/commit/d9d372cfd273ba296db86c228bdc3f7d27550a4c))
+* add release please manifest file ([#1719](https://github.com/openfoodfacts/robotoff/issues/1719)) ([ce8cadd](https://github.com/openfoodfacts/robotoff/commit/ce8cadd7201a312fbcd987825df9ad51e137e527))
+* fix release please configuration ([#1718](https://github.com/openfoodfacts/robotoff/issues/1718)) ([32e32f1](https://github.com/openfoodfacts/robotoff/commit/32e32f10c588241ef0b4a6e67f418177743740c5))
+* set last release sha ([67e8ae1](https://github.com/openfoodfacts/robotoff/commit/67e8ae13ea8a3c1686f83b3bcc6fba694bb5a01f))
+
+## [1.77.1](https://github.com/openfoodfacts/robotoff/compare/v1.77.0...v1.77.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* remove local test data stored using git LFS ([#1716](https://github.com/openfoodfacts/robotoff/issues/1716)) ([6021158](https://github.com/openfoodfacts/robotoff/commit/60211583451ed3ede92df7c642f963f3e1842bfb))
+
+## [1.77.0](https://github.com/openfoodfacts/robotoff/compare/v1.76.1...v1.77.0) (2025-08-21)
+
+
+### Features
+
+* add `delete_image_job` ([#1709](https://github.com/openfoodfacts/robotoff/issues/1709)) ([f93daae](https://github.com/openfoodfacts/robotoff/commit/f93daae668f46b66ca8f93916f0fcd05cf660741))
+
+
+### Bug Fixes
+
+* add missing `[@with](https://github.com/with)_db` decorator ([b10e9da](https://github.com/openfoodfacts/robotoff/commit/b10e9da5452fbb4d0dd90f74b032ce12688cf155))
+* fix issue in get_tag function ([#1713](https://github.com/openfoodfacts/robotoff/issues/1713)) ([d94527a](https://github.com/openfoodfacts/robotoff/commit/d94527a03f46a49e5585ed7e98dfb14bbd881611))
+
+## [1.76.1](https://github.com/openfoodfacts/robotoff/compare/v1.76.0...v1.76.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* add more perf logs for object detection models ([#1704](https://github.com/openfoodfacts/robotoff/issues/1704)) ([0130724](https://github.com/openfoodfacts/robotoff/commit/01307245558c93dc02b775f18b22f4ef6b948077))
+
+## [1.76.0](https://github.com/openfoodfacts/robotoff/compare/v1.75.1...v1.76.0) (2025-08-14)
+
+
+### Features
+
+* integrate front-classification image model ([#1702](https://github.com/openfoodfacts/robotoff/issues/1702)) ([7ed0e49](https://github.com/openfoodfacts/robotoff/commit/7ed0e496c887485d1d95ed6626282bb3ddc9babe))
+
+
+### Bug Fixes
+
+* clean old tmp directory in /tmp ([#1699](https://github.com/openfoodfacts/robotoff/issues/1699)) ([2cc5d9e](https://github.com/openfoodfacts/robotoff/commit/2cc5d9e570b6fcb6433d26e1c0da33c7685a3fef))
+* Update labeler.yml with fix for md files ([5fa8d43](https://github.com/openfoodfacts/robotoff/commit/5fa8d433af88680766fa7854009f438ef5bbc1f0))
+
+
+### Documentation
+
+* Create robotoff-for-3rd-party-apps.md ([#1688](https://github.com/openfoodfacts/robotoff/issues/1688)) ([15b8667](https://github.com/openfoodfacts/robotoff/commit/15b866772a10723a5ae485d01fd0cfbaf20709f8))
+
+## [1.75.1](https://github.com/openfoodfacts/robotoff/compare/v1.75.0...v1.75.1) (2025-07-24)
+
+
+### Bug Fixes
+
+* remove store Alteza ([#1686](https://github.com/openfoodfacts/robotoff/issues/1686)) ([a115e56](https://github.com/openfoodfacts/robotoff/commit/a115e56b4f01ce5d1815cb37047d979b18a3110b))
+
+## [1.75.0](https://github.com/openfoodfacts/robotoff/compare/v1.74.1...v1.75.0) (2025-07-21)
+
+
+### Features
+
+* add bearer token to nutripatrol auth ([#1676](https://github.com/openfoodfacts/robotoff/issues/1676)) ([c4be13d](https://github.com/openfoodfacts/robotoff/commit/c4be13d54409c9b11ce272620db0838836aebc35))
+* allow to specify Triton backend at the model level ([#1682](https://github.com/openfoodfacts/robotoff/issues/1682)) ([e6fd7f8](https://github.com/openfoodfacts/robotoff/commit/e6fd7f8634041e47acd2594136bb82b4a8bb37ae))
+
+
+### Documentation
+
+* fix issues in OpenAPI file (api.yml) ([#1681](https://github.com/openfoodfacts/robotoff/issues/1681)) ([8f664c6](https://github.com/openfoodfacts/robotoff/commit/8f664c6fb619114eb3a9acdd5b8fec0498937fba)), closes [#1680](https://github.com/openfoodfacts/robotoff/issues/1680)
+
+## [1.74.1](https://github.com/openfoodfacts/robotoff/compare/v1.74.0...v1.74.1) (2025-07-07)
+
+
+### Bug Fixes
+
+* pass empty dict instead of None as `diffs` ([#1673](https://github.com/openfoodfacts/robotoff/issues/1673)) ([ad504cc](https://github.com/openfoodfacts/robotoff/commit/ad504cc61eca01072be2b941bf61fe7290542aa9))
+* take into account product type changes ([#1671](https://github.com/openfoodfacts/robotoff/issues/1671)) ([6478326](https://github.com/openfoodfacts/robotoff/commit/6478326fa7b7aa2adbae639c2d8e9a7fa4c16ede))
+
 ## [1.74.0](https://github.com/openfoodfacts/robotoff/compare/v1.73.1...v1.74.0) (2025-07-04)
 
 

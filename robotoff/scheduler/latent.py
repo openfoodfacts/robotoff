@@ -1,3 +1,5 @@
+import logging
+
 from pymongo.collection import Collection
 
 from robotoff.models import Prediction, with_db
@@ -8,9 +10,8 @@ from robotoff.products import (
     is_valid_image,
 )
 from robotoff.types import PredictionType, ProductIdentifier, ServerType
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 FIBER_QUALITY_FACET_NAME = "en:missing-nutrition-facts-fibers-present-on-photos"
 FIBER_NUTRITION_QUALITY_FACET_NAME = (

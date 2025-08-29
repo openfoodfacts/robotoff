@@ -1,3 +1,5 @@
+import logging
+
 import backoff
 from openfoodfacts import Environment, Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
@@ -8,7 +10,6 @@ from redis.exceptions import ConnectionError
 
 from robotoff import settings
 from robotoff.types import ProductIdentifier, ServerType
-from robotoff.utils.logger import get_logger
 from robotoff.workers.queues import (
     enqueue_in_job,
     enqueue_job,
@@ -17,9 +18,13 @@ from robotoff.workers.queues import (
 )
 from robotoff.workers.tasks import delete_product_insights_job
 from robotoff.workers.tasks.import_image import run_import_image_job
-from robotoff.workers.tasks.product_updated import update_insights_job
+from robotoff.workers.tasks.product_updated import (
+    deleted_image_job,
+    product_type_switched_job,
+    update_insights_job,
+)
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def get_redis_client():
@@ -102,6 +107,33 @@ class UpdateListener(BaseUpdateListener):
                     product_id=product_id,
                     image_url=image_url,
                     ocr_url=ocr_url,
+                )
+            elif redis_update.is_product_type_change():
+                logger.info(
+                    "Product type has been updated for product %s",
+                    redis_update.code,
+                )
+                enqueue_in_job(
+                    func=product_type_switched_job,
+                    queue=selected_queue,
+                    job_delay=settings.UPDATED_PRODUCT_WAIT,
+                    job_kwargs={"result_ttl": 0},
+                    product_id=product_id,
+                )
+            elif redis_update.is_image_deletion():
+                image_id = redis_update.diffs["uploaded_images"]["delete"][0]  # type: ignore
+                logger.info(
+                    "Image %s for product %s has been deleted",
+                    image_id,
+                    redis_update.code,
+                )
+                enqueue_in_job(
+                    func=deleted_image_job,
+                    queue=selected_queue,
+                    job_delay=settings.UPDATED_PRODUCT_WAIT,
+                    job_kwargs={"result_ttl": 0},
+                    product_id=product_id,
+                    image_id=image_id,
                 )
             else:
                 logger.info("Product %s has been updated", redis_update.code)

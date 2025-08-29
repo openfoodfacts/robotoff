@@ -115,7 +115,7 @@ legacy:
 
 📚 Documentation:
 - changed-files:
-  - any-glob-to-any-file: ['*.MD']
+  - any-glob-to-any-file: ['*.md']
 
 spellcheck:
 - changed-files:

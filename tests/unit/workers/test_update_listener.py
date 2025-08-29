@@ -6,7 +6,10 @@ from rq.queue import Queue
 from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.workers.tasks import delete_product_insights_job
 from robotoff.workers.tasks.import_image import run_import_image_job
-from robotoff.workers.tasks.product_updated import update_insights_job
+from robotoff.workers.tasks.product_updated import (
+    deleted_image_job,
+    update_insights_job,
+)
 from robotoff.workers.update_listener import UpdateListener
 
 REDIS_STREAM_NAME = "product_updates"
@@ -172,3 +175,35 @@ class TestUpdateListener:
         assert kwargs["ocr_url"] == (
             "https://images.openfoodfacts.net/images/products/123/456/789/0123/1.json"
         )
+
+    def test_update_listener_image_deletion(self, mocker):
+        enqueue_in_job = mocker.patch("robotoff.workers.update_listener.enqueue_in_job")
+        enqueue_job = mocker.patch("robotoff.workers.update_listener.enqueue_job")
+        update_listener = UpdateListener(
+            redis_client=None,
+            redis_stream_name=REDIS_STREAM_NAME,
+            redis_latest_id_key=REDIS_LATEST_ID_KEY,
+        )
+        redis_update = create_redis_update(
+            diffs='{"uploaded_images": {"delete": ["4"]}}'
+        )
+        update_listener.process_redis_update(redis_update)
+        assert enqueue_in_job.call_count == 1
+        assert enqueue_job.call_count == 0
+        assert len(enqueue_in_job.call_args.args) == 0
+        kwargs = enqueue_in_job.call_args.kwargs
+        assert set(kwargs.keys()) == {
+            "func",
+            "queue",
+            "job_kwargs",
+            "job_delay",
+            "product_id",
+            "image_id",
+        }
+        assert kwargs["func"] == deleted_image_job
+        assert isinstance(kwargs["queue"], Queue)
+        assert kwargs["job_kwargs"] == {"result_ttl": 0}
+        assert kwargs["product_id"] == ProductIdentifier(
+            redis_update.code, ServerType[redis_update.flavor]
+        )
+        assert kwargs["image_id"] == "4"

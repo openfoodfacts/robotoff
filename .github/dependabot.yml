@@ -10,9 +10,15 @@ updates:
       prefix: "chore"
       include: "scope"
 
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 2
 
     groups:
       all-actions:
         patterns:
           - "*"
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2

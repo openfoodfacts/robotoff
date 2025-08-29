@@ -1,9 +1,11 @@
 import io
+import typing
 from pathlib import Path
 
 import numpy as np
 import pytest
 import requests
+from PIL import Image
 
 from robotoff.images import get_image_from_url
 from robotoff.prediction.category.neural.keras_category_classifier_3_0 import (
@@ -49,7 +51,7 @@ def test__generate_image_embeddings(
     """
     images_by_id = {}
     for image_url in image_urls:
-        image = get_image_from_url(image_url)
+        image = typing.cast(Image.Image, get_image_from_url(image_url))
         if image:
             images_by_id[image_url.split("/")[-1]] = image
 
@@ -60,7 +62,7 @@ def test__generate_image_embeddings(
     if update_results:
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / output_url.split("/")[-1]
-        np.savez(output_path, **embeddings)
+        np.savez(output_path, allow_pickle=True, **embeddings)
     elif is_output_available:
         r = get_asset_from_url(output_url)
         assert r is not None

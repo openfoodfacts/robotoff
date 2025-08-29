@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -13,12 +14,11 @@ from robotoff.insights.importer import import_insights
 from robotoff.models import db
 from robotoff.prediction.langid import predict_lang
 from robotoff.types import BatchJobType, Prediction, PredictionType, ServerType
-from robotoff.utils import get_logger
 
 from .buckets import fetch_dataframe_from_gcs, upload_file_to_gcs
 from .launch import GoogleBatchJobConfig, launch_job
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def import_batch_predictions(job_type: BatchJobType, batch_dir: str) -> None:

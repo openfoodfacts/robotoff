@@ -21,6 +21,7 @@ class ObjectDetectionModel(str, enum.Enum):
 
 class ImageClassificationModel(str, enum.Enum):
     price_proof_classification = enum.auto()
+    front_image_classification = enum.auto()
 
 
 @enum.unique
@@ -163,6 +164,9 @@ class InsightType(str, enum.Enum):
     nutrient_extraction = "nutrient_extraction"
 
     ingredient_detection = "ingredient_detection"
+
+
+ProductTypeLiteral = Literal["food", "beauty", "petfood", "product"]
 
 
 class ServerType(str, enum.Enum):

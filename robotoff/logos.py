@@ -1,6 +1,7 @@
 import datetime
 import functools
 import itertools
+import logging
 import operator
 
 import elasticsearch
@@ -32,11 +33,10 @@ from robotoff.types import (
     PredictionType,
     ServerType,
 )
-from robotoff.utils import get_logger
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import get_tag
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 LOGO_TYPE_MAPPING: dict[str, PredictionType] = {

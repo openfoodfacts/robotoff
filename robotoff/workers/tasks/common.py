@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 from robotoff.insights.importer import import_insights
@@ -6,9 +8,8 @@ from robotoff.prediction.category.neural.category_classifier import CategoryClas
 from robotoff.products import get_product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
 from robotoff.types import JSONType, ProductIdentifier
-from robotoff.utils import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @with_db

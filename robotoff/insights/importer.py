@@ -2,6 +2,8 @@ import abc
 import datetime
 import functools
 import itertools
+import logging
+import math
 import operator
 import typing
 import uuid
@@ -46,11 +48,12 @@ from robotoff.types import (
     ProductInsightImportResult,
     ServerType,
 )
-from robotoff.utils import get_logger, text_file_iter
+from robotoff.utils import text_file_iter
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.image import convert_bounding_box_absolute_to_relative_from_images
+from robotoff.utils.weight_unit import normalize_weight
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 @functools.cache
@@ -449,7 +452,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             or reference.automatic_processing is True
         )
         for candidate in cls.sort_candidates(candidates):
-            # if match is True, candidate conflicts with existing insight,
+            # if match is True, candidate conflicts with existing annotated insight,
             # keeping existing insight and discarding candidate
             match = any(
                 cls.is_conflicting_insight(candidate, reference_insight)
@@ -485,7 +488,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
                             break
 
                     # If mapping_ref_insight is None, a new insight is created
-                    # in DB, Otherwise the reference insight is updated with
+                    # in DB, otherwise the reference insight is updated with
                     # candidate information
                     to_create_or_update.append((candidate, mapping_ref_insight))
 
@@ -1506,7 +1509,7 @@ class NutrientExtractionImporter(InsightImporter):
         ]
 
         for prediction in predictions:
-            if cls.keep_prediction(product, list(prediction.data["nutrients"].keys())):
+            if cls.keep_prediction(product, prediction.data["nutrients"]):
                 insight_dict = prediction.to_dict()
 
                 if image_orientation_prediction is not None:
@@ -1559,15 +1562,16 @@ class NutrientExtractionImporter(InsightImporter):
             return None
 
     @staticmethod
-    def keep_prediction(product: Product | None, nutrients_keys: list[str]) -> bool:
+    def keep_prediction(product: Product | None, nutrients: JSONType) -> bool:
         """Return True if the prediction should be kept, False otherwise.
 
         The prediction should be kept if:
         - the product has no nutrition information
-        - the prediction brings new nutrient values that are missing in the product
+        - at least one predicted nutrient value is different from the value
+          in the product
 
         :param product: the product
-        :param nutrients_keys: the nutrient keys predicted by the model
+        :param nutrients: the nutrient values extracted from the image
         :return: True if the prediction should be kept, False otherwise
         """
         if product is None or not product.nutriments:
@@ -1591,32 +1595,85 @@ class NutrientExtractionImporter(InsightImporter):
         # Only keep the nutrient that are either per "100g" or "per serving"
         # depending on `product.nutrition_data_per`, so that we know which
         # nutrient values the prediction brings
-        current_keys = set(
-            key
-            for key in product.nutriments.keys()
-            if key.endswith(f"_{nutrition_data_per}")
+        for key in (
+            k for k in nutrients.keys() if k.endswith(f"_{nutrition_data_per}")
+        ):
+            predicted_value: str = nutrients[key]["value"]
+            predicted_unit: str = nutrients[key]["unit"]
+            current_value: str | int | None = product.nutriments.get(key)
+            suffix = "_100g" if key.endswith("_100g") else "_serving"
+            current_unit: str | None = typing.cast(
+                str | None, product.nutriments.get(key.replace(suffix, "_unit"))
+            )
+
+            # If at least one nutrient value is different, we keep the prediction
+            if not NutrientExtractionImporter._is_equal_nutrient_value(
+                predicted_value, predicted_unit, current_value, current_unit
+            ):
+                return True
+
+        # If the nutrition data is provided for the product per serving, but
+        # the serving size is missing, we keep the prediction if it brings
+        # the `serving_size` field.
+        if (
+            nutrition_data_per == "serving"
+            and not product.serving_size
+            and "serving_size" in nutrients
+        ):
+            return True
+
+        return False
+
+    @staticmethod
+    def _is_equal_nutrient_value(
+        predicted_value: str,
+        predicted_unit: str,
+        current_value: str | float | int | None,
+        current_unit: str | None,
+    ) -> bool:
+        if current_value is None or current_unit is None:
+            return False
+
+        # We don't need to normalize unit for kcal and kj (the unit is already part of
+        # the nutrient name), but we check just in case that the unit is the same
+        for unit in ("kj", "kcal"):
+            if predicted_unit.lower() == unit:
+                if current_unit.lower() != unit:
+                    raise ValueError(
+                        f"Predicted unit is {predicted_unit} but current unit is {current_unit}"
+                    )
+                return math.isclose(float(predicted_value), float(current_value))
+
+        normalized_predicted_value, _ = normalize_weight(
+            predicted_value, predicted_unit
         )
-
-        if nutrition_data_per == "serving" and product.serving_size:
-            current_keys.add("serving_size")
-
-        prediction_keys = set(
-            key for key in nutrients_keys if (key.endswith(f"_{nutrition_data_per}"))
-        )
-        if nutrition_data_per == "serving" and "serving_size" in nutrients_keys:
-            prediction_keys.add("serving_size")
-
-        # If the prediction brings a nutrient value that is missing in
-        # the product, we generate an insight, otherwise we
-        # skip it
-        add_information = bool(len(prediction_keys - current_keys))
-        return add_information
+        normalized_current_value, _ = normalize_weight(str(current_value), current_unit)
+        return math.isclose(normalized_predicted_value, normalized_current_value)
 
     @classmethod
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         # Only one insight per product
+        candidate_image_id = get_image_id(candidate.source_image)
+        reference_image_id = get_image_id(reference.source_image)
+
+        # There is a single case where we want to have more than one
+        # `nutrient_extraction` insight in DB: it's when we have a validated
+        # (annotation != null) insight in DB, and when the candidate insight comes from
+        # a more recent image. As the image is more recent, we consider it as ground
+        # truth.
+        if (
+            reference.annotation is not None
+            # Just in case, we check that both images IDs are valid
+            and candidate_image_id is not None
+            and reference_image_id is not None
+        ):
+            # If the image ID of the candidate is not higher (=not more recent) than
+            # the image ID of the reference, we discard the insight during selection
+            return int(candidate_image_id) <= int(reference_image_id)
+
+        # Otherwise, we only allow one insight per product
         return True
 
     @classmethod

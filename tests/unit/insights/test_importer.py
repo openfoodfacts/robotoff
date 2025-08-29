@@ -1,4 +1,5 @@
 import datetime
+import re
 import uuid
 from typing import Any, Iterator
 
@@ -1619,6 +1620,8 @@ class TestNutrientExtractionImporter:
         }
 
     def test_generate_candidates_no_nutrient(self):
+        """A candidate must be generated if the product has no nutriments
+        and if at least one nutrient value is predicted."""
         product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
         data = {
             "nutrients": {
@@ -1825,11 +1828,56 @@ class TestNutrientExtractionImporter:
         assert len(candidates) == 1
 
     @pytest.mark.parametrize(
-        "nutriments,nutrition_data_per,serving_size,nutrients_keys,expected_output",
+        "candidate,reference,expected",
+        [
+            (
+                # Same source image
+                # -> conflicting
+                ProductInsight(source_image="/000/000/000/0000/1.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=None),
+                True,
+            ),
+            (
+                # More recent source image for candidate, but non-annotated reference:
+                # -> conflicting
+                # The candidate will be chosen because insights are sorted by decreasing
+                # image IDs
+                ProductInsight(source_image="/000/000/000/0000/2.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=None),
+                True,
+            ),
+            (
+                # More recent source image for candidate, and annotated reference:
+                # -> not conflicting
+                # The annotated reference will be kept in DB (because we don't remove
+                # annotated insights), but the candidate will be kept as well because
+                # the image is more recent.
+                ProductInsight(source_image="/000/000/000/0000/2.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=2),
+                False,
+            ),
+            (
+                # Check that it still works if the image ID is invalid
+                ProductInsight(source_image="/000/000/000/0000/invalid.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=2),
+                True,
+            ),
+        ],
+    )
+    def test_is_conflicting_insight(self, candidate, reference, expected):
+        assert (
+            NutrientExtractionImporter.is_conflicting_insight(
+                candidate=candidate, reference=reference
+            )
+            is expected
+        )
+
+    @pytest.mark.parametrize(
+        "nutriments,nutrition_data_per,serving_size,predicted_nutrients,expected_output",
         [
             # We keep the prediction if the product does not have any nutrients
             (None, None, None, ["energy-kj_100g"], True),
-            # We bring fat which is missing, so we keep the prediction
+            # We bring sugar which is missing, so we keep the prediction
             (
                 {
                     "energy-kj": 100,
@@ -1842,7 +1890,10 @@ class TestNutrientExtractionImporter:
                 },
                 "100g",
                 None,
-                ["energy-kj_100g", "sugars_100g"],
+                {
+                    "energy-kj_100g": {"value": "100", "unit": "kj"},
+                    "sugars_100g": {"value": "1.5", "unit": "g"},
+                },
                 True,
             ),
             # Same but with 100ml
@@ -1858,7 +1909,29 @@ class TestNutrientExtractionImporter:
                 },
                 "100ml",
                 None,
-                ["energy-kj_100g", "sugars_100g"],
+                {
+                    "energy-kj_100g": {"value": "100", "unit": "kj"},
+                    "sugars_100g": {"value": "1.5", "unit": "g"},
+                },
+                True,
+            ),
+            # fat quantity is different than what's saved on the product, so we keep
+            # the prediction
+            (
+                {
+                    "energy-kj": 100,
+                    "energy-kj_100g": 100,
+                    "energy-kj_value": 100,
+                    "energy-kj_unit": "kJ",
+                    "fat": 10,
+                    "fat_100g": 10,
+                    "fat_unit": "g",
+                },
+                "100g",
+                None,
+                {
+                    "fat_100g": {"value": "9.5", "unit": "g"},
+                },
                 True,
             ),
             # The nutrition is per 100g, and we don't bring any new value for 100g, so
@@ -1875,7 +1948,10 @@ class TestNutrientExtractionImporter:
                 },
                 "100g",
                 None,
-                ["energy-kj_100g", "energy-kj_serving"],
+                {
+                    "energy-kj_100g": {"value": "100", "unit": "kj"},
+                    "energy-kj_serving": {"value": "50", "unit": "kj"},
+                },
                 False,
             ),
             # Same thing as above but for serving
@@ -1891,7 +1967,11 @@ class TestNutrientExtractionImporter:
                 },
                 "serving",
                 "100 g",
-                ["energy-kj_100g", "energy-kj_serving", "fat_serving"],
+                {
+                    "energy-kj_100g": {"value": "100", "unit": "kj"},
+                    "energy-kj_serving": {"value": "100", "unit": "kj"},
+                    "fat_serving": {"value": "10", "unit": "g"},
+                },
                 False,
             ),
             # Here we keep the prediction as serving_size is missing
@@ -1907,7 +1987,10 @@ class TestNutrientExtractionImporter:
                 },
                 "serving",
                 None,
-                ["energy-kj_100g", "energy-kj_serving", "serving_size"],
+                {
+                    "energy-kj_serving": {"value": "100", "unit": "kj"},
+                    "serving_size": {"value": "50 g", "unit": None},
+                },
                 True,
             ),
         ],
@@ -1917,7 +2000,7 @@ class TestNutrientExtractionImporter:
         nutriments: JSONType | None,
         nutrition_data_per: str | None,
         serving_size: str | None,
-        nutrients_keys: list[str],
+        predicted_nutrients: JSONType,
         expected_output: bool,
     ):
         if nutriments is None:
@@ -1933,9 +2016,56 @@ class TestNutrientExtractionImporter:
                 }
             )
         assert (
-            NutrientExtractionImporter.keep_prediction(product, nutrients_keys)
+            NutrientExtractionImporter.keep_prediction(product, predicted_nutrients)
             == expected_output
         )
+
+    @pytest.mark.parametrize(
+        "predicted_value,predicted_unit,current_value,current_unit,expected",
+        [
+            # Same value and unit
+            ("100", "g", "100", "g", True),
+            ("100.0", "g", "100", "g", True),
+            # Different value or unit
+            ("100", "g", "101", "g", False),
+            ("100", "g", "100", "mg", False),
+            ("100", "g", "101", "mg", False),
+            # Different value but equivalent unit
+            ("1000", "mg", "1", "g", True),
+            ("1", "g", "1000", "mg", True),
+            ("0.1", "g", "100", "mg", True),
+            ("100", "mg", "0.1", "g", True),
+            ("100", "μg", "0.1", "mg", True),
+            ("100", "μg", "0.1001", "mg", False),
+            # Test kJ and kcal
+            ("1000", "kj", "1000", "kj", True),
+            ("1000", "kcal", "1000", "kcal", True),
+        ],
+    )
+    def test__is_equal_nutrient_values(
+        self, predicted_value, predicted_unit, current_value, current_unit, expected
+    ):
+        assert (
+            NutrientExtractionImporter._is_equal_nutrient_value(
+                predicted_value, predicted_unit, current_value, current_unit
+            )
+            is expected
+        )
+
+    def test__is_equal_nutrient_values_invalid_kj_unit(self):
+        with pytest.raises(
+            ValueError, match=re.escape("Predicted unit is kj but current unit is kcal")
+        ):
+            NutrientExtractionImporter._is_equal_nutrient_value(
+                "100", "kj", "110", "kcal"
+            )
+
+        with pytest.raises(
+            ValueError, match=re.escape("Predicted unit is kcal but current unit is kj")
+        ):
+            NutrientExtractionImporter._is_equal_nutrient_value(
+                "100", "kcal", "110", "kj"
+            )
 
     def test_add_optional_fields(self):
         product_missing = Product(

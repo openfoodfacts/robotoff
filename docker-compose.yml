@@ -5,6 +5,7 @@ x-robotoff-base-volumes:
   - ./datasets:/opt/robotoff/datasets
   - ./models:/opt/robotoff/models
   - robotoff_tmp:/tmp
+  - home_cache:/home/off/.cache
 
 x-robotoff-base:
   &robotoff-base
@@ -19,6 +20,7 @@ x-robotoff-base:
 x-robotoff-base-env:
   &robotoff-base-env
   LOG_LEVEL:
+  LOG_ML_METRICS_ENABLED:
   ROBOTOFF_INSTANCE:
   ROBOTOFF_TLD:
   ROBOTOFF_SCHEME:
@@ -45,12 +47,20 @@ x-robotoff-base-env:
   ELASTIC_HOST:
   ELASTIC_PASSWORD:
   ELASTIC_USER:
-  TRITON_URI:
+  DEFAULT_TRITON_URI:
+  TRITON_URI_CLIP:
+  TRITON_URI_NUTRISCORE:
+  TRITON_URI_NUTRITION_TABLE:
+  TRITON_URI_UNIVERSAL_LOGO_DETECTOR:
+  TRITON_URI_CATEGORY_CLASSIFIER:
+  TRITON_URI_INGREDIENT_NER:
+  TRITON_URI_NUTRITION_EXTRACTOR:
   FASTTEXT_HOST:
   FASTTEXT_PORT:
   ENABLE_MONGODB_ACCESS:
   IN_DOCKER_CONTAINER:
   IMAGE_MODERATION_SERVICE_URL:
+  AUTH_BEARER_TOKEN_NUTRIPATROL:
   CROP_ALLOWED_DOMAINS:
   NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
   # Used by Google SDK to know where to find the credentials
@@ -186,6 +196,8 @@ volumes:
   # large docker layer overlay
   robotoff_tmp:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_tmp
+  home_cache:
+    name: ${COMPOSE_PROJECT_NAME:-robotoff}_home_cache
   elasticsearch_tmp:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_elasticsearch_tmp
 

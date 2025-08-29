@@ -1,9 +1,9 @@
 import functools
+import logging
 import math
 import re
 from typing import Union
 
-import pint
 from openfoodfacts.ocr import (
     OCRField,
     OCRRegex,
@@ -13,19 +13,13 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.types import Prediction, PredictionType
-from robotoff.utils import get_logger
+from robotoff.utils.weight_unit import get_unit_registry
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
-
-
-@functools.cache
-def get_unit_registry():
-    # We initialize UnitRegistry here to prevent
-    return pint.UnitRegistry()
 
 
 def normalize_weight(value: str, unit: str) -> tuple[float, str]:

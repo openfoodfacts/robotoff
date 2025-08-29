@@ -36,6 +36,9 @@ jobs:
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
+        echo "TRITON_URI_CLIP=triton:8001" >> $GITHUB_ENV
+        echo "TRITON_URI_NUTRITION_TABLE=triton:8001" >> $GITHUB_ENV
+        echo "TRITON_URI_NUTRISCORE=triton:8001" >> $GITHUB_ENV
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
       run: |
@@ -56,6 +59,9 @@ jobs:
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
+        echo "TRITON_URI_CLIP=10.3.0.201:5504" >> $GITHUB_ENV
+        echo "TRITON_URI_NUTRITION_TABLE=10.3.0.201:5504" >> $GITHUB_ENV
+        echo "TRITON_URI_NUTRISCORE=10.3.0.201:5504" >> $GITHUB_ENV
     - name: Wait for container build
       uses: lewagon/wait-on-check-action@v1.4.0
       with:
@@ -142,7 +148,10 @@ jobs:
           echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
-          echo "TRITON_URI=triton:8001" >> .env
+          echo "DEFAULT_TRITON_URI=triton:8001" >> .env
+          echo "TRITON_URI_CLIP=${{ env.TRITON_URI_CLIP }}" >> .env
+          echo "TRITON_URI_NUTRITION_TABLE=${{ env.TRITON_URI_NUTRITION_TABLE }}" >> .env
+          echo "TRITON_URI_NUTRISCORE=${{ env.TRITON_URI_NUTRISCORE }}" >> .env
           echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
           echo "FASTTEXT_MODEL_DIR=./models" >> .env
@@ -153,6 +162,7 @@ jobs:
           echo "GUNICORN_NUM_WORKERS=4" >> .env
           echo "EVENTS_API_URL=https://event.openfoodfacts.${{ env.ROBOTOFF_TLD }}" >> .env
           echo "IMAGE_MODERATION_SERVICE_URL=${{ env.IMAGE_MODERATION_SERVICE_URL }}" >> .env
+          echo "AUTH_BEARER_TOKEN_NUTRIPATROL =${{ secrets.AUTH_BEARER_TOKEN_NUTRIPATROL }}" >> .env
           echo "CROP_ALLOWED_DOMAINS=${{ env.CROP_ALLOWED_DOMAINS }}" >> .env
 
           # PostgreSQL config
@@ -164,6 +174,9 @@ jobs:
 
           # Secret key to secure batch job import
           echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
+
+          # Specific logging settings
+          echo "LOG_ML_METRICS_ENABLED=1" >> .env
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master

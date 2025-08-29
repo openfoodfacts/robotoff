@@ -1,8 +1,10 @@
+import logging
+
 from robotoff import settings
 from robotoff.types import Prediction, ProductIdentifier
-from robotoff.utils import get_logger, http_session
+from robotoff.utils import http_session
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class NotifierInterface:
@@ -145,9 +147,12 @@ class ImageModerationNotifier(NotifierInterface):
                 "reason": reason,
                 "comment": comment,
             }
+            headers = {
+                "Authorization": f"Bearer {settings.AUTH_BEARER_TOKEN_NUTRIPATROL}"
+            }
             try:
                 logger.info("Notifying image %s to moderation service", image_url)
-                http_session.post(self.service_url, json=data)
+                http_session.post(self.service_url, json=data, headers=headers)
             except Exception:
                 logger.exception(
                     "Error while notifying image to moderation service",

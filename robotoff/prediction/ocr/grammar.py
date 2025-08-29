@@ -1,10 +1,11 @@
+import logging
 from pathlib import Path
 
 from robotoff.taxonomy import Taxonomy, TaxonomyType, get_taxonomy
-from robotoff.utils import dump_json, get_logger
+from robotoff.utils import dump_json
 from robotoff.utils.text import strip_accents_v2
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def normalize_string(text: str, lowercase: bool, strip_accent: bool) -> str:

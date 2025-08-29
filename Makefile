@@ -16,7 +16,6 @@ MOUNT_POINT ?= /mnt
 HOSTS=127.0.0.1 robotoff.openfoodfacts.localhost
 DOCKER_COMPOSE=docker compose --env-file=${ENV_FILE}
 DOCKER_COMPOSE_TEST=COMPOSE_PROJECT_NAME=robotoff_test COMMON_NET_NAME=po_test docker compose --env-file=${ENV_FILE}
-ML_OBJECT_DETECTION_MODELS := tf-universal-logo-detector tf-nutrition-table tf-nutriscore
 # Use bash shell for variable substitution
 SHELL := /bin/bash
 
@@ -101,7 +100,7 @@ log:
 # Management #
 #------------#
 
-dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model
+dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model dl-image-clf-models
 	@echo "⏬ Downloading all models …"
 
 dl-langid-model:
@@ -114,17 +113,14 @@ dl-object-detection-models:
 	@echo "⏬ Downloading object detection model files …"
 	mkdir -p models/triton; \
 	cd models/triton; \
-	for asset_name in ${ML_OBJECT_DETECTION_MODELS}; \
-		do \
-			dir=`echo $${asset_name} | sed 's/tf-//g'`; \
-			mkdir -p $${dir}/1; \
-			wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/$${asset_name}-1.0/model.onnx > $${dir}/1/model.onnx; \
-	done; \
-	mkdir -p nutriscore-yolo/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore-yolo/1/model.onnx; \
-	mkdir -p nutrition-table-yolo/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition-table-yolo/1/model.onnx;
-
+	mkdir -p universal_logo_detector/1; \
+	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/tf-universal-logo-detector-1.0/model.onnx > universal_logo_detector/1/model.onnx; \
+	mkdir -p nutriscore/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore/1/model.onnx; \
+	mkdir -p nutrition_table/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition_table/1/model.onnx; \
+	mkdir -p price_tag_detection/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/price-tag-detection/resolve/86a8e0f02e0789d6d53226bc3fd3c919680d47c9/weights/model_ir_10_opset_19.onnx > price_tag_detection/1/model.onnx;
 
 dl-category-classifier-model:
 	@echo "⏬ Downloading category classifier model files …"
@@ -154,18 +150,15 @@ dl-image-clf-models:
 	@echo "⏬ Downloading image classification model files …"
 	mkdir -p models/triton; \
 	cd models/triton; \
-	for asset_name in 'price-proof-classification'; \
-		do \
-			dir=$${asset_name//-/_}/1; \
-			mkdir -p $${dir}; \
-			wget -cO - https://huggingface.co/openfoodfacts/$${asset_name}/resolve/main/weights/best.onnx > $${dir}/model.onnx; \
-	done;
+	mkdir -p price_proof_classification/1; \
+	wget -cO - https://huggingface.co/openfoodfacts/price-proof-classification/resolve/03c3bad38f4135d755584c346769f3217231cb36/weights/model_ir_10_opset_19.onnx > price_proof_classification/1/model.onnx; \
 
 
 dl-nutrition-extractor-model:
 	@echo "⏬ Downloading nutrition extractor model files …"
-	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/1/; \
-	cd models/triton/nutrition_extractor/1/; \
+	mkdir -p models/triton/nutrition_extractor/2; \
+	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/2/; \
+	cd models/triton/nutrition_extractor/2/; \
 	mv onnx model.onnx;
 
 init-elasticsearch:
