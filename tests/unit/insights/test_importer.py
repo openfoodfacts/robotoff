@@ -1828,6 +1828,51 @@ class TestNutrientExtractionImporter:
         assert len(candidates) == 1
 
     @pytest.mark.parametrize(
+        "candidate,reference,expected",
+        [
+            (
+                # Same source image
+                # -> conflicting
+                ProductInsight(source_image="/000/000/000/0000/1.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=None),
+                True,
+            ),
+            (
+                # More recent source image for candidate, but non-annotated reference:
+                # -> conflicting
+                # The candidate will be chosen because insights are sorted by decreasing
+                # image IDs
+                ProductInsight(source_image="/000/000/000/0000/2.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=None),
+                True,
+            ),
+            (
+                # More recent source image for candidate, and annotated reference:
+                # -> not conflicting
+                # The annotated reference will be kept in DB (because we don't remove
+                # annotated insights), but the candidate will be kept as well because
+                # the image is more recent.
+                ProductInsight(source_image="/000/000/000/0000/2.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=2),
+                False,
+            ),
+            (
+                # Check that it still works if the image ID is invalid
+                ProductInsight(source_image="/000/000/000/0000/invalid.jpg"),
+                ProductInsight(source_image="/000/000/000/0000/1.jpg", annotation=2),
+                True,
+            ),
+        ],
+    )
+    def test_is_conflicting_insight(self, candidate, reference, expected):
+        assert (
+            NutrientExtractionImporter.is_conflicting_insight(
+                candidate=candidate, reference=reference
+            )
+            is expected
+        )
+
+    @pytest.mark.parametrize(
         "nutriments,nutrition_data_per,serving_size,predicted_nutrients,expected_output",
         [
             # We keep the prediction if the product does not have any nutrients

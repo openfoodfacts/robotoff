@@ -452,7 +452,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
             or reference.automatic_processing is True
         )
         for candidate in cls.sort_candidates(candidates):
-            # if match is True, candidate conflicts with existing insight,
+            # if match is True, candidate conflicts with existing annotated insight,
             # keeping existing insight and discarding candidate
             match = any(
                 cls.is_conflicting_insight(candidate, reference_insight)
@@ -488,7 +488,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
                             break
 
                     # If mapping_ref_insight is None, a new insight is created
-                    # in DB, Otherwise the reference insight is updated with
+                    # in DB, otherwise the reference insight is updated with
                     # candidate information
                     to_create_or_update.append((candidate, mapping_ref_insight))
 
@@ -1655,6 +1655,25 @@ class NutrientExtractionImporter(InsightImporter):
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         # Only one insight per product
+        candidate_image_id = get_image_id(candidate.source_image)
+        reference_image_id = get_image_id(reference.source_image)
+
+        # There is a single case where we want to have more than one
+        # `nutrient_extraction` insight in DB: it's when we have a validated
+        # (annotation != null) insight in DB, and when the candidate insight comes from
+        # a more recent image. As the image is more recent, we consider it as ground
+        # truth.
+        if (
+            reference.annotation is not None
+            # Just in case, we check that both images IDs are valid
+            and candidate_image_id is not None
+            and reference_image_id is not None
+        ):
+            # If the image ID of the candidate is not higher (=not more recent) than
+            # the image ID of the reference, we discard the insight during selection
+            return int(candidate_image_id) <= int(reference_image_id)
+
+        # Otherwise, we only allow one insight per product
         return True
 
     @classmethod
