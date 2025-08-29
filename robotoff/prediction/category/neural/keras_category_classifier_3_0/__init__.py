@@ -201,7 +201,8 @@ def generate_image_embeddings(
 
 
 def _generate_image_embeddings(
-    images_by_id: dict[str, Union[Image.Image, np.ndarray]], stub: GRPCInferenceServiceStub
+    images_by_id: dict[str, Union[Image.Image, np.ndarray]],
+    stub: GRPCInferenceServiceStub,
 ) -> dict[str, np.ndarray]:
     """
     Generate CLIP image embeddings by sending a request to Triton.
@@ -229,7 +230,7 @@ def _generate_image_embeddings(
     ml_metrics_logger.info(
         "Inference time for CLIP: %ss", time.monotonic() - start_time
     )
-    
+
     # Parse embeddings
     computed_embeddings = np.frombuffer(
         response.raw_output_contents[0],
