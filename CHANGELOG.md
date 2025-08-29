@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.78.0](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.2...robotoff-v1.78.0) (2025-08-29)
+
+
+### Features
+
+* improve nutrition insight generation ([#1735](https://github.com/openfoodfacts/robotoff/issues/1735)) ([b82a1bb](https://github.com/openfoodfacts/robotoff/commit/b82a1bbb036769f9fc0ec58f6b2f3aa949723fe6))
+
+
+### Bug Fixes
+
+* allow creating new nutrition insight after an insight was validated ([#1737](https://github.com/openfoodfacts/robotoff/issues/1737)) ([e110009](https://github.com/openfoodfacts/robotoff/commit/e110009964be1f00b11a38a998f5df0d414ad99d))
+
+
+### Technical
+
+* allow to return np array or bytes in download_image func ([#1727](https://github.com/openfoodfacts/robotoff/issues/1727)) ([02054cc](https://github.com/openfoodfacts/robotoff/commit/02054cc8bc94647a64d327e612e47cfc8e36bae6))
+* **deps:** bump the all-actions group with 4 updates ([#1731](https://github.com/openfoodfacts/robotoff/issues/1731)) ([2eccf75](https://github.com/openfoodfacts/robotoff/commit/2eccf75499c724cfe784ebe89f6a098a60c38479))
+* **deps:** bump vllm from 0.9.0 to 0.10.1.1 in /batch/spellcheck ([#1714](https://github.com/openfoodfacts/robotoff/issues/1714)) ([2f8f6b7](https://github.com/openfoodfacts/robotoff/commit/2f8f6b74752df76798c6f42f19e22172173dde8c))
+* move clip config to triton-config folder ([#1738](https://github.com/openfoodfacts/robotoff/issues/1738)) ([2c88eaf](https://github.com/openfoodfacts/robotoff/commit/2c88eaf67d72e439bf4792c54cd287dbf5be7175))
+* remove legacy module ([#1732](https://github.com/openfoodfacts/robotoff/issues/1732)) ([3464875](https://github.com/openfoodfacts/robotoff/commit/346487545a681f4b4354856eb7d6ba80247ff72f))
+* remove reference to latest release ([#1724](https://github.com/openfoodfacts/robotoff/issues/1724)) ([ab2935b](https://github.com/openfoodfacts/robotoff/commit/ab2935bb33ba8f2143801e3b259f1747abc16dd8))
+
 ## [1.77.2](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.1...robotoff-v1.77.2) (2025-08-22)
 
 
