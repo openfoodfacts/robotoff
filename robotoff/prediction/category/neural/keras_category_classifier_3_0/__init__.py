@@ -2,6 +2,7 @@ import logging
 import time
 import typing
 from typing import Literal, Union
+
 import numpy as np
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
