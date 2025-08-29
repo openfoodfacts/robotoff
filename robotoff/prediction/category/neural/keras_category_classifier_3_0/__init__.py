@@ -1,5 +1,5 @@
 import time
-from typing import Literal
+from typing import Literal, Union
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -194,20 +194,42 @@ def generate_image_embeddings(
 
 
 def _generate_image_embeddings(
-    images_by_id: dict[str, Image.Image], stub
+    images_by_id: dict[str, Union[Image.Image, np.ndarray]], 
+    stub
 ) -> dict[str, np.ndarray]:
-    """Generate CLIP image embeddings by sending a request to Triton.
-
-    :param images_by_id: a dict mapping image ID to PIL Image
-    :param stub: the triton inference stub to use
-    :return: a dict mapping image ID to CLIP embedding
     """
-    request = generate_clip_embedding_request(list(images_by_id.values()))
+    Generate CLIP image embeddings by sending a request to Triton.
+
+    :param images_by_id: dict mapping image ID to PIL.Image or numpy.ndarray
+    :param stub: Triton inference stub
+    :return: dict mapping image ID to CLIP embedding (numpy array)
+    """
+    # Convert all images to numpy arrays
+    np_images = []
+    for img in images_by_id.values():
+        if isinstance(img, Image.Image):  # PIL -> numpy
+            np_images.append(np.array(img))
+        elif isinstance(img, np.ndarray):
+            np_images.append(img)
+        else:
+            raise TypeError(f"Unsupported image type: {type(img)}")
+
+    # Build request
+    request = generate_clip_embedding_request(np_images)
+
+    # Send to Triton
+    start_time = time.monotonic()
     response = stub.ModelInfer(request)
+    ml_metrics_logger.info(
+        "Inference time for CLIP: %ss", time.monotonic() - start_time
+    )
+    
+    # Parse embeddings
     computed_embeddings = np.frombuffer(
         response.raw_output_contents[0],
         dtype=np.float32,
     ).reshape((len(images_by_id), -1))
+
     return dict(zip(images_by_id.keys(), computed_embeddings))
 
 
