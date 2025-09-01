@@ -43,7 +43,9 @@ ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 ARG OFF_UID=1000
 ARG OFF_GID=$OFF_UID
 RUN groupadd -g $OFF_GID off && \
-    useradd -u $OFF_UID -g off -m off
+    useradd -u $OFF_UID -g off -m off && \
+    mkdir -p /home/off/.cache && \
+    chown -R off:off /home/off/.cache
 
 COPY --chown=off:off i18n /opt/robotoff/i18n
 RUN cd /opt/robotoff/i18n && \
