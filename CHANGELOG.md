@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.78.2](https://github.com/openfoodfacts/robotoff/compare/v1.78.1...v1.78.2) (2025-09-01)
+
+
+### Bug Fixes
+
+* catch exceptions during healthcheck to return it in the response ([#1750](https://github.com/openfoodfacts/robotoff/issues/1750)) ([a8ea109](https://github.com/openfoodfacts/robotoff/commit/a8ea109b4e5ef610eb0b9fdb1fc2b0641cf32935))
+* catch Redis events with empty codes ([#1745](https://github.com/openfoodfacts/robotoff/issues/1745)) ([653040e](https://github.com/openfoodfacts/robotoff/commit/653040e464090940d541cf58006d3113d85f0305))
+* handle more edge cases when comparing nutrient values ([#1751](https://github.com/openfoodfacts/robotoff/issues/1751)) ([9c34049](https://github.com/openfoodfacts/robotoff/commit/9c340491dac3c4b48697fdaf57ed1a9ebf5fc93e))
+* **nutrition:** handle the case where predicted unit is null ([#1747](https://github.com/openfoodfacts/robotoff/issues/1747)) ([b2f03e2](https://github.com/openfoodfacts/robotoff/commit/b2f03e2da0bd0821939621ee5d65937f595b7563))
+
 ## [1.78.1](https://github.com/openfoodfacts/robotoff/compare/v1.78.0...v1.78.1) (2025-09-01)
 
 
