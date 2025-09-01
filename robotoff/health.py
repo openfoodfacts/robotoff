@@ -7,6 +7,8 @@ from playhouse.postgres_ext import PostgresqlExtDatabase
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 from redis import Redis
+from requests.exceptions import ConnectionError as RequestConnectionError
+from requests.exceptions import JSONDecodeError, SSLError, Timeout
 
 from robotoff import settings
 from robotoff.elasticsearch import get_es_client
@@ -60,11 +62,26 @@ def test_connect_influxdb():
     return True, "InfluxDB db connection check succeedeed!"
 
 
-def test_connect_robotoff_api():
+def test_connect_robotoff_api() -> tuple[bool, str]:
     logger.debug("health: testing robotoff API status")
-    status = requests.get(
-        f"{settings.BaseURLProvider.robotoff()}/api/v1/status", timeout=10
-    ).json()["status"]
+
+    try:
+        resp = requests.get(
+            f"{settings.BaseURLProvider.robotoff()}/api/v1/status", timeout=10
+        )
+    except (RequestConnectionError, SSLError, Timeout) as e:
+        return False, f"Robotoff API status call failed: {e}"
+
+    if resp.status_code != 200:
+        return (
+            False,
+            f"Robotoff API status call failed (status code {resp.status_code})",
+        )
+
+    try:
+        status = resp.json().get("status")
+    except JSONDecodeError as e:
+        return False, f"Robotoff API status call failed: {e}"
 
     if status != "running":
         raise RuntimeError(f"invalid API status: {status}")
