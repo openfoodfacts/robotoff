@@ -1,8 +1,7 @@
 {
     "packages": {
         ".": {
-            "release-type": "python",
-            "package-name": "robotoff"
+            "release-type": "python"
         }
     },
     "changelog-sections": [
