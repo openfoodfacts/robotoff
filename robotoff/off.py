@@ -514,12 +514,13 @@ def update_product(
         raise ValueError(
             "a password or a session cookie is required to update a product"
         )
-    r = http_session.post(
+    r = requests.post(
         url,
         data=params,
         auth=settings._off_request_auth,
         cookies=cookies,
         timeout=timeout,
+        headers={"User-Agent": settings.ROBOTOFF_USER_AGENT},
     )
 
     r.raise_for_status()
