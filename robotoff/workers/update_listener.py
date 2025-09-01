@@ -44,6 +44,12 @@ class UpdateListener(BaseUpdateListener):
             logger.warning("Product type is null, skipping")
             return
 
+        if not redis_update.code:
+            logger.warning(
+                "Product code is empty or null ('%s'), skipping", redis_update.code
+            )
+            return
+
         action = redis_update.action
         server_type = ServerType.from_product_type(redis_update.product_type)
         product_id = ProductIdentifier(redis_update.code, server_type)
