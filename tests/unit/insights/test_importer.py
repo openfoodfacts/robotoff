@@ -2044,6 +2044,12 @@ class TestNutrientExtractionImporter:
             # We then consider the nutrient values to be the same
             # so that we don't create an insight
             ("102", None, "100", "g", True),
+            # Test with traces
+            ("traces", None, "traces", None, True),
+            ("traces", None, "10", "g", False),
+            # Test with values < X g
+            ("<0.5", "g", "0.5", "g", True),
+            ("<0.6", "g", "0.5", "g", False),
         ],
     )
     def test__is_equal_nutrient_values(

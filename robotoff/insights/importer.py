@@ -1631,6 +1631,13 @@ class NutrientExtractionImporter(InsightImporter):
         current_value: str | float | int | None,
         current_unit: str | None,
     ) -> bool:
+        if predicted_value == "traces":
+            return current_value == "traces" or (
+                current_value is not None
+                # We consider that "traces" is equivalent to 0
+                and math.isclose(float(current_value), 0.0)
+            )
+
         if current_value is None or current_unit is None:
             return False
 
@@ -1639,6 +1646,12 @@ class NutrientExtractionImporter(InsightImporter):
         # bring new values).
         if predicted_unit is None:
             return True
+
+        # Predicted value can start with "< " (ex: "<0.1g"), we remove it to
+        # perform the comparison. We assume that "< 0.5 g" and "0.5 g" are
+        # equivalent (just as Product Opener does)
+        if predicted_value.startswith("<"):
+            predicted_value = predicted_value.lstrip("< ")
 
         # We don't need to normalize unit for kcal and kj (the unit is already part of
         # the nutrient name), but we check just in case that the unit is the same
