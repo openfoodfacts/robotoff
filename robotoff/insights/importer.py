@@ -1599,7 +1599,7 @@ class NutrientExtractionImporter(InsightImporter):
             k for k in nutrients.keys() if k.endswith(f"_{nutrition_data_per}")
         ):
             predicted_value: str = nutrients[key]["value"]
-            predicted_unit: str = nutrients[key]["unit"]
+            predicted_unit: str | None = nutrients[key]["unit"]
             current_value: str | int | None = product.nutriments.get(key)
             suffix = "_100g" if key.endswith("_100g") else "_serving"
             current_unit: str | None = typing.cast(
@@ -1627,12 +1627,18 @@ class NutrientExtractionImporter(InsightImporter):
     @staticmethod
     def _is_equal_nutrient_value(
         predicted_value: str,
-        predicted_unit: str,
+        predicted_unit: str | None,
         current_value: str | float | int | None,
         current_unit: str | None,
     ) -> bool:
         if current_value is None or current_unit is None:
             return False
+
+        # If one of the unit is missing, we cannot compare the values, so we
+        # consider that they are the same (to avoid generating an insight that doesn't
+        # bring new values).
+        if predicted_unit is None:
+            return True
 
         # We don't need to normalize unit for kcal and kj (the unit is already part of
         # the nutrient name), but we check just in case that the unit is the same
