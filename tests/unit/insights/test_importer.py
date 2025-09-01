@@ -2040,6 +2040,10 @@ class TestNutrientExtractionImporter:
             # Test kJ and kcal
             ("1000", "kj", "1000", "kj", True),
             ("1000", "kcal", "1000", "kcal", True),
+            # Test if the predicted unit is missing
+            # We then consider the nutrient values to be the same
+            # so that we don't create an insight
+            ("102", None, "100", "g", True),
         ],
     )
     def test__is_equal_nutrient_values(
