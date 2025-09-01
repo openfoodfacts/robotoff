@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.78.1](https://github.com/openfoodfacts/robotoff/compare/v1.78.0...v1.78.1) (2025-09-01)
+
+
+### Bug Fixes
+
+* don't send auth cookies twice ([#1741](https://github.com/openfoodfacts/robotoff/issues/1741)) ([97c12eb](https://github.com/openfoodfacts/robotoff/commit/97c12ebeaa8222a698cc7695171f9944fd12cb00))
+
 ## [1.78.0](https://github.com/openfoodfacts/robotoff/compare/robotoff-v1.77.2...robotoff-v1.78.0) (2025-08-29)
 
 
