@@ -404,6 +404,12 @@ class TestAggregateEntities:
         ("219", "proteins_100g", ("21", "g", True)),
         ("318", "carbohydrates_100g", ("31", "g", True)),
         ("105", "proteins_100g", ("105", None, True)),
+        # For energy, if unit is not the same as the one indicated in the entity label,
+        # mark as invalid
+        ("525 kcal", "energy_kj_100g", ("525", "kcal", False)),
+        ("525 g", "energy_kcal_100g", ("525", "g", False)),
+        ("525 kJ", "energy_kcal_100g", ("525", "kj", False)),
+        ("525 g", "energy_kj_100g", ("525", "g", False)),
     ],
 )
 def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):

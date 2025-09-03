@@ -534,6 +534,9 @@ def match_nutrient_value(
     - `unit`: the nutrient unit (string, ex: "g")
     - `is_valid`: a boolean indicating whether the entity is valid or not
 
+    Currently, the only invalid entities are energy entities with a unit that does not
+    match the entity label (ex: "energy_kcal_100g" with a unit of "kJ").
+
     In case we could not extract the nutrient value, the function returns `None` for the
     value and the unit and `False` for the validity.
     Otherwise, the value is never null but the unit can be null if the OCR engine didn't
@@ -552,6 +555,7 @@ def match_nutrient_value(
 
     prefix = match.group(1)
     value = match.group(2).replace(",", ".")
+    is_valid = True
 
     if prefix is not None:
         prefix = prefix.strip()
@@ -605,7 +609,14 @@ def match_nutrient_value(
         if unit == "mcg":
             unit = "µg"
 
-    return value, unit, True
+        if (entity_label.startswith("energy_kcal") and unit != "kcal") or (
+            entity_label.startswith("energy_kj") and unit != "kj"
+        ):
+            # The unit should always be "kcal" for "energy_kcal_100g"
+            # and "kJ" for "energy_kj_100g", mark the entity as invalid
+            is_valid = False
+
+    return value, unit, is_valid
 
 
 @functools.cache
