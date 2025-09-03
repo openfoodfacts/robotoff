@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.78.3](https://github.com/openfoodfacts/robotoff/compare/v1.78.2...v1.78.3) (2025-09-03)
+
+
+### Bug Fixes
+
+* mark invalid nutrient entity (energy_*) as such ([#1755](https://github.com/openfoodfacts/robotoff/issues/1755)) ([acb9ada](https://github.com/openfoodfacts/robotoff/commit/acb9adad05d6bf35a174c13eb8884ac0f9e5832e))
+
 ## [1.78.2](https://github.com/openfoodfacts/robotoff/compare/v1.78.1...v1.78.2) (2025-09-01)
 
 
