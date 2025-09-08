@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.78.3](https://github.com/openfoodfacts/robotoff/compare/v1.78.2...v1.78.3) (2025-09-08)
+
+
+### Bug Fixes
+
+* fix issue in _is_equal_nutrient_value ([#1758](https://github.com/openfoodfacts/robotoff/issues/1758)) ([9f94a76](https://github.com/openfoodfacts/robotoff/commit/9f94a76d5129cb997b55f73b2c6509ee7700051f))
+* mark invalid nutrient entity (energy_*) as such ([#1755](https://github.com/openfoodfacts/robotoff/issues/1755)) ([acb9ada](https://github.com/openfoodfacts/robotoff/commit/acb9adad05d6bf35a174c13eb8884ac0f9e5832e))
+
 ## [1.78.2](https://github.com/openfoodfacts/robotoff/compare/v1.78.1...v1.78.2) (2025-09-01)
 
 
