@@ -1638,7 +1638,8 @@ class NutrientExtractionImporter(InsightImporter):
                 and math.isclose(float(current_value), 0.0)
             )
 
-        if current_value is None or current_unit is None:
+        # If current value or unit is missing (null or empty string), we stop here
+        if not current_value or not current_unit:
             return False
 
         # If one of the unit is missing, we cannot compare the values, so we

@@ -2050,6 +2050,11 @@ class TestNutrientExtractionImporter:
             # Test with values < X g
             ("<0.5", "g", "0.5", "g", True),
             ("<0.6", "g", "0.5", "g", False),
+            # Test with empty current value or unit
+            ("100", "g", None, "g", False),
+            ("100", "g", "", "g", False),
+            ("100", "g", "100", "", False),
+            ("100", "g", "100", None, False),
         ],
     )
     def test__is_equal_nutrient_values(
