@@ -70,7 +70,6 @@ def process_updates_since(
     redis_client = get_redis_client()
     update_listener = UpdateListener(
         redis_client=redis_client,
-        redis_stream_name=settings.REDIS_STREAM_NAME,
         redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
     )
     update_listener.process_updates_since(since)
@@ -91,8 +90,7 @@ def create_redis_update(
 ):
     """Create a new product update event in Redis.
 
-    This command is meant for **local development only**. It creates a new
-    product update event in the Redis stream.
+    This command is meant for **local development only**.
     """
     import json
 
@@ -126,8 +124,54 @@ def create_redis_update(
         diffs = {"fields": {"change": ["generic_name", "generic_name_fr"]}}
 
     event["diffs"] = json.dumps(diffs)
-    client.xadd(settings.REDIS_STREAM_NAME, event)
-    typer.echo(f"Event added to Redis stream {settings.REDIS_STREAM_NAME}: {event}")
+    client.xadd(settings.PRODUCT_UDPATE_STREAM_NAME, event)
+    typer.echo(
+        f"Event added to Redis stream {settings.PRODUCT_UDPATE_STREAM_NAME}: {event}"
+    )
+
+
+@app.command()
+def create_redis_ocr_ready_event(
+    barcode: str = typer.Option(
+        default="3274080005003",
+        help="barcode of the product associated with the OCR result",
+    ),
+    product_type: str = typer.Option(
+        default="food",
+        help="product type of the product associated with the OCR result",
+    ),
+    image_id: str = typer.Option(
+        default="1", help="image ID associated with the OCR result"
+    ),
+):
+    """Create a new `ocr_ready` event in Redis.
+    This event is published when a new OCR result (response from Google Cloud Vision
+    saved as a JSON file) is available for a product image.
+
+    This command is meant for **local development only**.
+    """
+    from robotoff import settings
+    from robotoff.off import generate_json_ocr_url
+    from robotoff.utils.logger import get_logger
+    from robotoff.workers.update_listener import get_redis_client
+
+    get_logger()
+    client = get_redis_client()
+    json_url = generate_json_ocr_url(
+        ProductIdentifier(barcode, ServerType.from_product_type(product_type)), image_id
+    )
+    event = {
+        "code": barcode,
+        "product_type": product_type,
+        "image_id": image_id,
+        "json_url": json_url,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).timestamp(),
+    }
+
+    client.xadd(settings.OCR_READY_STREAM_NAME, event)
+    typer.echo(
+        f"Event added to Redis stream '{settings.OCR_READY_STREAM_NAME}': {event}"
+    )
 
 
 @app.command()

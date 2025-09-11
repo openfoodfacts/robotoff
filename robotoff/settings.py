@@ -4,6 +4,7 @@ from pathlib import Path
 
 import sentry_sdk
 import toml
+from openfoodfacts import Environment
 from sentry_sdk.integrations import Integration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -37,6 +38,11 @@ def _get_tld():
     # `ROBOTOFF_TLD` can be used to overwrite the Product Opener top level
     # domain used. If empty, the tld will be inferred from `ROBOTOFF_INSTANCE`
     return os.environ.get("ROBOTOFF_TLD", _instance_tld())
+
+
+def get_environment() -> Environment:
+    """Return the Open Food Facts environment for the current Robotoff instance."""
+    return Environment.org if _get_tld() == "org" else Environment.net
 
 
 class BaseURLProvider(object):
@@ -208,7 +214,10 @@ REDIS_UPDATE_HOST = os.environ.get("REDIS_UPDATE_HOST", "localhost")
 REDIS_UPDATE_PORT = os.environ.get("REDIS_UPDATE_PORT", 6379)
 
 # Name of the Redis stream where Product Opener publishes product updates
-REDIS_STREAM_NAME = os.environ.get("REDIS_STREAM_NAME", "product_updates")
+PRODUCT_UDPATE_STREAM_NAME = os.environ.get(
+    "PRODUCT_UDPATE_STREAM_NAME", "product_updates"
+)
+OCR_READY_STREAM_NAME = os.environ.get("OCR_READY_STREAM_NAME", "ocr_ready")
 REDIS_LATEST_ID_KEY = os.environ.get(
     "REDIS_LATEST_ID_KEY", "robotoff:product_updates:latest_id"
 )

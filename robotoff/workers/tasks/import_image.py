@@ -90,7 +90,7 @@ def rerun_import_all_images(
         (all)
     :param return_count: if True, return the number of images to process, without
         processing them, defaults to False
-    :param flags: the list of flags to rerun, defaults to None (all)
+    :param flags: the list of flags to rerun, defaults to None (all tasks are rerun).
     :return: the number of images to process, or None if return_count is False
     """
     where_clauses = [ImageModel.deleted == False]  # noqa: E712
@@ -126,7 +126,7 @@ def rerun_import_all_images(
             image_model_id=image_model_id,
             image_url=image_url,
             ocr_url=ocr_url,
-            flags=flags,
+            include_flags=flags,
             # Use the low queue for rerun, as it's not as important as the
             # real-time updates from Redis
             use_high_queue=False,
@@ -138,7 +138,8 @@ def run_import_image_job(
     product_id: ProductIdentifier,
     image_url: str,
     ocr_url: str,
-    flags: list[ImportImageFlag] | None = None,
+    include_flags: list[ImportImageFlag] | None = None,
+    exclude_flags: list[ImportImageFlag] | None = None,
 ) -> None:
     """This job is triggered every time there is a new OCR image available for
     processing by Robotoff, via an event published on the Redis stream.
@@ -161,7 +162,9 @@ def run_import_image_job(
     :param product_id: the product identifier
     :param image_url: the URL of the image to import
     :param ocr_url: the URL of the OCR JSON file
-    :param flags: the list of flags to run, defaults to None (all)
+    :param include_flags: the list of flags to run, defaults to None (all tasks are
+        run).
+    :param exclude_flags: the list of flags to exclude, defaults to None.
     """
     logger.info("Running `import_image` for %s, image %s", product_id, image_url)
 
@@ -201,7 +204,8 @@ def run_import_image_job(
         image_model_id=image_model.id,
         image_url=image_url,
         ocr_url=ocr_url,
-        flags=flags,
+        include_flags=include_flags,
+        exclude_flags=exclude_flags,
     )
 
 
@@ -210,7 +214,8 @@ def run_import_image(
     image_model_id: int,
     image_url: str,
     ocr_url: str,
-    flags: list[ImportImageFlag] | None = None,
+    include_flags: list[ImportImageFlag] | None = None,
+    exclude_flags: list[ImportImageFlag] | None = None,
     use_high_queue: bool = True,
 ) -> None:
     """Launch all extraction tasks on an image.
@@ -224,12 +229,17 @@ def run_import_image(
     :param image_model_id: the DB ID of the image
     :param image_url: the URL of the image to import
     :param ocr_url: the URL of the OCR JSON file
-    :param flags: the list of flags to run, defaults to None (all)
+    :param include_flags: the list of flags to run, defaults to None (all models are
+        run).
+    :param exclude_flags: the list of flags to exclude, defaults to None.
     param use_high_queue: if True, use the high priority queue for most important
         tasks. If False, always use the low priority queue. Defaults to True.
     """
-    if flags is None:
-        flags = [flag for flag in ImportImageFlag]
+    flags = (
+        [flag for flag in ImportImageFlag if flag not in (exclude_flags or [])]
+        if include_flags is None
+        else include_flags
+    )
 
     high_queue = get_high_queue(product_id) if use_high_queue else low_queue
 
