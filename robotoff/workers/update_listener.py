@@ -117,6 +117,8 @@ class UpdateListener(BaseUpdateListener):
                         ImportImageFlag.extract_nutrition,
                         ImportImageFlag.predict_category,
                         ImportImageFlag.import_insights_from_image,
+                        # We extract text from logos, so it requires OCR
+                        ImportImageFlag.run_logo_object_detection,
                     ],
                 )
             elif event.is_product_type_change():
@@ -202,6 +204,8 @@ class UpdateListener(BaseUpdateListener):
                 ImportImageFlag.extract_nutrition,
                 ImportImageFlag.predict_category,
                 ImportImageFlag.import_insights_from_image,
+                # We extract text from logos, so it requires OCR
+                ImportImageFlag.run_logo_object_detection,
             ],
         )
 

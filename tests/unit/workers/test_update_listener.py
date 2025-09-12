@@ -190,6 +190,7 @@ class TestUpdateListener:
             ImportImageFlag.extract_nutrition,
             ImportImageFlag.predict_category,
             ImportImageFlag.import_insights_from_image,
+            ImportImageFlag.run_logo_object_detection,
         ]
 
     def test_update_listener_image_deletion(self, mocker):
@@ -264,4 +265,5 @@ class TestUpdateListener:
             ImportImageFlag.extract_nutrition,
             ImportImageFlag.predict_category,
             ImportImageFlag.import_insights_from_image,
+            ImportImageFlag.run_logo_object_detection,
         ]
