@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.79.1](https://github.com/openfoodfacts/robotoff/compare/v1.79.0...v1.79.1) (2025-09-12)
+
+
+### Bug Fixes
+
+* fix OPF base domain ([#1763](https://github.com/openfoodfacts/robotoff/issues/1763)) ([abc3ec1](https://github.com/openfoodfacts/robotoff/commit/abc3ec1ee0485990084857936426f43172a06a98))
+
 ## [1.79.0](https://github.com/openfoodfacts/robotoff/compare/v1.78.3...v1.79.0) (2025-09-12)
 
 
