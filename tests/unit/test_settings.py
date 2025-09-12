@@ -20,7 +20,7 @@ from robotoff.types import ServerType  # noqa: F401
         (
             "dev",
             "settings.BaseURLProvider.world(ServerType.opf)",
-            "https://world.openproductfacts.net",
+            "https://world.openproductsfacts.net",
         ),
         (
             "prod",
