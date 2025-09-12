@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.79.0](https://github.com/openfoodfacts/robotoff/compare/v1.78.3...v1.79.0) (2025-09-12)
+
+
+### Features
+
+* support OCR-ready event from Redis ([#1760](https://github.com/openfoodfacts/robotoff/issues/1760)) ([da9db9a](https://github.com/openfoodfacts/robotoff/commit/da9db9ad317055a2a7563355cc395ef0701687f2))
+
 ## [1.78.3](https://github.com/openfoodfacts/robotoff/compare/v1.78.2...v1.78.3) (2025-09-08)
 
 
