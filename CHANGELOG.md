@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.79.2](https://github.com/openfoodfacts/robotoff/compare/v1.79.1...v1.79.2) (2025-09-12)
+
+
+### Bug Fixes
+
+* only run logo object detection job when OCR is ready ([#1766](https://github.com/openfoodfacts/robotoff/issues/1766)) ([de75631](https://github.com/openfoodfacts/robotoff/commit/de756312ea0572c9d4709e8e0a6da4f963378279))
+
 ## [1.79.1](https://github.com/openfoodfacts/robotoff/compare/v1.79.0...v1.79.1) (2025-09-12)
 
 
