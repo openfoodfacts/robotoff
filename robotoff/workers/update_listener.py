@@ -1,15 +1,15 @@
 import logging
 
 import backoff
-from openfoodfacts import Environment, Flavor
+from openfoodfacts import Flavor
 from openfoodfacts.images import generate_image_url, generate_json_ocr_url
-from openfoodfacts.redis import RedisUpdate
+from openfoodfacts.redis import OCRReadyEvent, ProductUpdateEvent
 from openfoodfacts.redis import UpdateListener as BaseUpdateListener
 from redis import Redis
 from redis.exceptions import ConnectionError
 
 from robotoff import settings
-from robotoff.types import ProductIdentifier, ServerType
+from robotoff.types import ImportImageFlag, ProductIdentifier, ServerType
 from robotoff.workers.queues import (
     enqueue_in_job,
     enqueue_job,
@@ -37,25 +37,23 @@ def get_redis_client():
 
 
 class UpdateListener(BaseUpdateListener):
-    def process_redis_update(self, redis_update: RedisUpdate):
-        logger.debug("New update: %s", redis_update)
+    def process_redis_update(self, event: ProductUpdateEvent):
+        logger.debug("New update: %s", event)
 
-        if redis_update.product_type is None:
+        if event.product_type is None:
             logger.warning("Product type is null, skipping")
             return
 
-        if not redis_update.code:
-            logger.warning(
-                "Product code is empty or null ('%s'), skipping", redis_update.code
-            )
+        if not event.code:
+            logger.warning("Product code is empty or null ('%s'), skipping", event.code)
             return
 
-        action = redis_update.action
-        server_type = ServerType.from_product_type(redis_update.product_type)
-        product_id = ProductIdentifier(redis_update.code, server_type)
+        action = event.action
+        server_type = ServerType.from_product_type(event.product_type)
+        product_id = ProductIdentifier(event.code, server_type)
 
         # Check if the update was triggered by scanbot or specific mass update accounts
-        is_scanbot_or_mass_update = redis_update.user_id in [
+        is_scanbot_or_mass_update = event.user_id in [
             "scanbot",
             "update_all_products",
         ]
@@ -64,19 +62,19 @@ class UpdateListener(BaseUpdateListener):
             get_low_queue() if is_scanbot_or_mass_update else get_high_queue(product_id)
         )
 
-        if redis_update.user_id == "roboto-app" or "[robotoff]" in redis_update.comment:
+        if event.user_id == "roboto-app" or "[robotoff]" in event.comment:
             # If the update was triggered by Robotoff (automatically of through a user
             # annotation), we skip it as the DB is already up to date with respect to
             # Product Opener changes. Besides, it prevents unnecessary processing and
             # race conditions during insight update/deletion.
             logger.info(
                 "Skipping update for product %s triggered by Robotoff",
-                redis_update.code,
+                event.code,
             )
             return
 
         if action == "deleted":
-            logger.info("Product %s has been deleted", redis_update.code)
+            logger.info("Product %s has been deleted", event.code)
             enqueue_job(
                 func=delete_product_insights_job,
                 queue=selected_queue,
@@ -84,24 +82,20 @@ class UpdateListener(BaseUpdateListener):
                 product_id=product_id,
             )
         elif action == "updated":
-            if redis_update.is_image_upload():
+            if event.is_image_upload():
                 # A new image was uploaded
-                image_id = redis_update.diffs["uploaded_images"]["add"][0]  # type: ignore
-                logger.info(
-                    "Image %s was added on product %s", image_id, redis_update.code
-                )
-                environment = (
-                    Environment.org if settings._get_tld() == "org" else Environment.net
-                )
+                image_id = event.diffs["uploaded_images"]["add"][0]  # type: ignore
+                logger.info("Image %s was added on product %s", image_id, event.code)
+                environment = settings.get_environment()
                 flavor = Flavor[server_type.name]
                 image_url = generate_image_url(
-                    redis_update.code,
+                    event.code,
                     image_id,
                     flavor=flavor,
                     environment=environment,
                 )
                 ocr_url = generate_json_ocr_url(
-                    redis_update.code,
+                    event.code,
                     image_id,
                     flavor=flavor,
                     environment=environment,
@@ -113,11 +107,22 @@ class UpdateListener(BaseUpdateListener):
                     product_id=product_id,
                     image_url=image_url,
                     ocr_url=ocr_url,
+                    # Exclude all models that rely on OCR, as OCR may not be ready yet
+                    # when the image is uploaded. A separate OCR ready event will be
+                    # sent by Product Opener when the OCR processing is done, which will
+                    # trigger a separate job to update insights relying on OCR (see
+                    # `process_ocr_ready` method below).
+                    exclude_flags=[
+                        ImportImageFlag.extract_ingredients,
+                        ImportImageFlag.extract_nutrition,
+                        ImportImageFlag.predict_category,
+                        ImportImageFlag.import_insights_from_image,
+                    ],
                 )
-            elif redis_update.is_product_type_change():
+            elif event.is_product_type_change():
                 logger.info(
                     "Product type has been updated for product %s",
-                    redis_update.code,
+                    event.code,
                 )
                 enqueue_in_job(
                     func=product_type_switched_job,
@@ -126,12 +131,12 @@ class UpdateListener(BaseUpdateListener):
                     job_kwargs={"result_ttl": 0},
                     product_id=product_id,
                 )
-            elif redis_update.is_image_deletion():
-                image_id = redis_update.diffs["uploaded_images"]["delete"][0]  # type: ignore
+            elif event.is_image_deletion():
+                image_id = event.diffs["uploaded_images"]["delete"][0]  # type: ignore
                 logger.info(
                     "Image %s for product %s has been deleted",
                     image_id,
-                    redis_update.code,
+                    event.code,
                 )
                 enqueue_in_job(
                     func=deleted_image_job,
@@ -142,15 +147,63 @@ class UpdateListener(BaseUpdateListener):
                     image_id=image_id,
                 )
             else:
-                logger.info("Product %s has been updated", redis_update.code)
+                logger.info("Product %s has been updated", event.code)
                 enqueue_in_job(
                     func=update_insights_job,
                     queue=selected_queue,
                     job_delay=settings.UPDATED_PRODUCT_WAIT,
                     job_kwargs={"result_ttl": 0},
                     product_id=product_id,
-                    diffs=redis_update.diffs,
+                    diffs=event.diffs,
                 )
+
+    def process_ocr_ready(self, event: OCRReadyEvent):
+        logger.info("New OCR ready event: %s", event)
+
+        if not event.code:
+            logger.warning("Product code is empty or null ('%s'), skipping", event.code)
+            return
+
+        if event.image_id is None:
+            logger.warning(
+                "Image ID is empty or null for product '%s', skipping", event.code
+            )
+            return
+
+        server_type = ServerType.from_product_type(event.product_type)
+        flavor = Flavor[server_type.name]
+        product_id = ProductIdentifier(event.code, server_type)
+
+        environment = settings.get_environment()
+        image_url = generate_image_url(
+            event.code,
+            event.image_id,
+            flavor=flavor,
+            environment=environment,
+        )
+        ocr_url = generate_json_ocr_url(
+            event.code,
+            event.image_id,
+            flavor=flavor,
+            environment=environment,
+        )
+        selected_queue = get_high_queue(product_id)
+        enqueue_job(
+            func=run_import_image_job,
+            queue=selected_queue,
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
+            image_url=image_url,
+            ocr_url=ocr_url,
+            # Only include models that rely on OCR, as these tasks were not launched
+            # when the image was uploaded.
+            include_flags=[
+                ImportImageFlag.extract_ingredients,
+                ImportImageFlag.extract_nutrition,
+                ImportImageFlag.predict_category,
+                ImportImageFlag.import_insights_from_image,
+            ],
+        )
 
 
 @backoff.on_exception(
@@ -180,7 +233,6 @@ def run_update_listener():
             redis_client = get_redis_client()
             update_listener = UpdateListener(
                 redis_client=redis_client,
-                redis_stream_name=settings.REDIS_STREAM_NAME,
                 redis_latest_id_key=settings.REDIS_LATEST_ID_KEY,
             )
             update_listener.run()
