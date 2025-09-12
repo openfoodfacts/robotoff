@@ -201,7 +201,7 @@ class ServerType(str, enum.Enum):
         elif self == self.opff:
             return "openpetfoodfacts"
         elif self == self.opf:
-            return "openproductfacts"
+            return "openproductsfacts"
         else:
             # Open Food Facts Pro
             return "pro.openfoodfacts"
