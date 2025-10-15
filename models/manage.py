@@ -11,6 +11,7 @@ Currently, it can:
 """
 
 # /// script
+# requires-python = "~=3.11"
 # dependencies = [
 #  "openfoodfacts==3.1.0",
 #  "typer==0.19.2",
@@ -49,7 +50,7 @@ TRITON_URL_PARAM = Annotated[
         help="URL of the Triton server (HTTP)",
     ),
 ]
-TRITON_URL_DEFAULT = "localhost:5503"
+TRITON_URL_DEFAULT = "127.0.0.1:5503"
 
 
 class HuggingFaceModel(BaseModel):
@@ -106,7 +107,7 @@ def list_models(
 
     for model in models:
         typer.echo(
-            f"{model['name']} (version: {model['version']}), state: {model['state']}"
+            f"{model['name']} (version: {model.get('version')}), state: {model.get('state')}"
         )
 
 
@@ -323,7 +324,7 @@ def _load_model(
     """
     current_models = _list_models(client)
     first_load = not any(
-        model["name"] == model_name and model["state"] == "READY"
+        model["name"] == model_name and model.get("state") == "READY"
         for model in current_models
     )
 
@@ -382,12 +383,12 @@ def load_model(
 
     typer.echo(f"Loading model {model_name}")
     typer.echo("** Current models (before) **")
-    list_models()
+    list_models(triton_url=triton_url)
     client = InferenceServerClient(url=triton_url)
     _load_model(client, model_name, model_version=model_version)
     typer.echo("Done.")
     typer.echo("**Current models (after) **")
-    list_models()
+    list_models(triton_url=triton_url)
 
 
 @app.command()
