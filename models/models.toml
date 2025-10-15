@@ -1,0 +1,82 @@
+[models]
+
+[[models.nutrition_extractor]]
+repo_id = "openfoodfacts/nutrition-extractor"
+revision = "7a43f38725f50f37a8c7bce417fc75741bea49fe"
+triton_version = 2
+type = "directory"
+subfolder = "onnx"
+
+[[models.universal_logo_detector]]
+repo_id = "openfoodfacts/universal_logo_detector"
+revision = "281fafb4eef768410f432eb58343c5ae003f3007"
+triton_version = 1
+type = "single_file"
+model_path = "weights/model.onnx"
+
+[[models.nutriscore]]
+repo_id = "openfoodfacts/nutriscore-yolo"
+revision = "2a38f0c0f495af86ca93584b6b1a5993e2bbe097"
+triton_version = 1
+type = "single_file"
+model_path = "weights/best.onnx"
+
+[[models.nutrition_table]]
+repo_id = "openfoodfacts/nutrition-table-yolo"
+revision = "8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647"
+triton_version = 1
+type = "single_file"
+model_path = "weights/best.onnx"
+
+[[models.price_tag_detection]]
+repo_id = "openfoodfacts/price-tag-detection"
+revision = "86a8e0f02e0789d6d53226bc3fd3c919680d47c9"
+triton_version = 1
+type = "single_file"
+model_path = "weights/model_ir_10_opset_19.onnx"
+
+[[models.price_proof_classification]]
+repo_id = "openfoodfacts/price-proof-classification"
+revision = "03c3bad38f4135d755584c346769f3217231cb36"
+triton_version = 1
+type = "single_file"
+model_path = "weights/model_ir_10_opset_19.onnx"
+
+
+[[models.category_classifier]]
+# We overwrite the model name here, as TOML tables do not support dots in keys
+name = "category-classifier-keras-image-embeddings-3.0"
+repo_id = "openfoodfacts/category_classifier"
+revision = "cbef967e0017d5ba49f6951a211fb214f7acf800"
+triton_version = 1
+type = "directory"
+subfolder = "model.savedmodel"
+local_name = "model.savedmodel"
+
+
+[[models.ingredient-ner]]
+repo_id = "openfoodfacts/ingredient-detection"
+revision = "e96cbd447883aaec60862640684a03169ce703b8"
+triton_version = 1
+type = "directory"
+subfolder = "onnx"
+
+
+[[models.clip]]
+repo_id = "openfoodfacts/clip-vit-base-patch32"
+revision = "591d0849745889d40d66649652130eb3fde38d71"
+triton_version = 1
+type = "single_file"
+model_path = "model.onnx"
+
+
+## Deprecated
+
+# The version 1 of this model is not used anymore, we now use version 2
+
+# [[models.nutrition_extractor]]
+# repo_id = "openfoodfacts/nutrition-extractor"
+# revision = "dea426bf3c3d289ad7b65d29a7744ea6851632a6"
+# triton_version = 1
+# type = "directory"
+# subfolder = "onnx"

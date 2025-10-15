@@ -100,66 +100,11 @@ log:
 # Management #
 #------------#
 
-dl-models: dl-langid-model dl-object-detection-models dl-category-classifier-model dl-ingredient-detection-model dl-image-clf-models
-	@echo "⏬ Downloading all models …"
-
 dl-langid-model:
 	@echo "⏬ Downloading language identification model file …"
 	mkdir -p models; \
 	cd models; \
 	wget -cO - https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.bin > lid.176.bin;
-
-dl-object-detection-models:
-	@echo "⏬ Downloading object detection model files …"
-	mkdir -p models/triton; \
-	cd models/triton; \
-	mkdir -p universal_logo_detector/1; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/tf-universal-logo-detector-1.0/model.onnx > universal_logo_detector/1/model.onnx; \
-	mkdir -p nutriscore/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/nutriscore-yolo/resolve/main/weights/best.onnx > nutriscore/1/model.onnx; \
-	mkdir -p nutrition_table/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/nutrition-table-yolo/resolve/8fbcc3d7c442ae5d8f5fca4f99acc19e55d89647/weights/best.onnx > nutrition_table/1/model.onnx; \
-	mkdir -p price_tag_detection/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/price-tag-detection/resolve/86a8e0f02e0789d6d53226bc3fd3c919680d47c9/weights/model_ir_10_opset_19.onnx > price_tag_detection/1/model.onnx;
-
-dl-category-classifier-model:
-	@echo "⏬ Downloading category classifier model files …"
-	mkdir -p models/triton; \
-	cd models/triton; \
-	mkdir -p clip/1; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/clip-vit-base-patch32/model.onnx > clip/1/model.onnx; \
-	dir=category-classifier-keras-image-embeddings-3.0/1/model.savedmodel; \
-	mkdir -p $${dir}; \
-	wget -cO - https://github.com/openfoodfacts/robotoff-models/releases/download/keras-category-classifier-image-embeddings-3.0/saved_model.tar.gz > $${dir}/saved_model.tar.gz; \
-	cd $${dir}; \
-	tar -xzvf saved_model.tar.gz --strip-component=1; \
-	rm saved_model.tar.gz
-
-dl-ingredient-detection-model:
-	@echo "⏬ Downloading ingredient detection model files …"
-	mkdir -p models/triton; \
-	cd models/triton; \
-    dir=ingredient-ner/1/model.onnx; \
-	mkdir -p $${dir}; \
-	wget -cO - https://huggingface.co/openfoodfacts/ingredient-detection/resolve/main/onnx.tar.gz > $${dir}/onnx.tar.gz; \
-	cd $${dir}; \
-	tar -xzvf onnx.tar.gz --strip-component=1; \
-	rm onnx.tar.gz
-
-dl-image-clf-models:
-	@echo "⏬ Downloading image classification model files …"
-	mkdir -p models/triton; \
-	cd models/triton; \
-	mkdir -p price_proof_classification/1; \
-	wget -cO - https://huggingface.co/openfoodfacts/price-proof-classification/resolve/03c3bad38f4135d755584c346769f3217231cb36/weights/model_ir_10_opset_19.onnx > price_proof_classification/1/model.onnx; \
-
-
-dl-nutrition-extractor-model:
-	@echo "⏬ Downloading nutrition extractor model files …"
-	mkdir -p models/triton/nutrition_extractor/2; \
-	${DOCKER_COMPOSE} run --rm --no-deps api huggingface-cli download openfoodfacts/nutrition-extractor --include 'onnx/*' --local-dir models/triton/nutrition_extractor/2/; \
-	cd models/triton/nutrition_extractor/2/; \
-	mv onnx model.onnx;
 
 init-elasticsearch:
 	@echo "Initializing elasticsearch indices"

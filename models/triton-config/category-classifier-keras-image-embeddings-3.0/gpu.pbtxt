@@ -1,0 +1,98 @@
+backend: "tensorflow"
+platform: "tensorflow_savedmodel"
+runtime: ""
+max_batch_size: 0
+
+input [
+  {
+    name: "salt"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "fruits_vegetables_nuts"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "image_embeddings_mask"
+    data_type: TYPE_FP32
+    dims: [ -1, -1 ]
+  },
+  {
+    name: "ingredients_ocr_tags"
+    data_type: TYPE_STRING
+    dims: [ -1, -1 ]
+  },
+  {
+    name: "proteins"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "product_name"
+    data_type: TYPE_STRING
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "fat"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "ingredients_tags"
+    data_type: TYPE_STRING
+    dims: [ -1, -1 ]
+  },
+  {
+    name: "fiber"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "saturated_fat"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "carbohydrates"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "energy_kcal"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  },
+  {
+    name: "image_embeddings"
+    data_type: TYPE_FP32
+    dims: [ -1, -1, 512 ]
+  },
+  {
+    name: "sugars"
+    data_type: TYPE_FP32
+    dims: [ -1, 1 ]
+  }
+]
+
+output [
+  {
+    name: "output_0"
+    data_type: TYPE_FP32
+    dims: [ -1, 3891 ]
+  },
+  {
+    name: "output_1"
+    data_type: TYPE_STRING
+    dims: [ 3891 ]
+  }
+]
+
+instance_group [
+  {
+    count: 1
+    kind: KIND_GPU
+    gpus: [ 0 ]
+  }
+]

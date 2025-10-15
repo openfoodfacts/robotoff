@@ -1,0 +1,43 @@
+backend: "onnxruntime"
+max_batch_size: 4
+input [
+  {
+    name: "pixel_values"
+    data_type: TYPE_FP32
+    format: FORMAT_NONE
+    dims: [ -1, 224, 224 ]
+  },
+  {
+    name: "attention_mask"
+    data_type: TYPE_INT64
+    format: FORMAT_NONE
+    dims: [ -1 ]
+  },
+  {
+    name: "bbox"
+    data_type: TYPE_INT64
+    format: FORMAT_NONE
+    dims: [ -1, 4 ]
+  },
+  {
+    name: "input_ids"
+    data_type: TYPE_INT64
+    format: FORMAT_NONE
+    dims: [ -1 ]
+  }
+]
+
+output [
+  {
+    name: "logits"
+    data_type: TYPE_FP32
+    dims: [ -1, 71 ]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_CPU
+    count: 1
+  }
+]
