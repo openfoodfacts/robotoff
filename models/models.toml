@@ -70,6 +70,13 @@ type = "single_file"
 model_path = "model.onnx"
 
 
+[[models.front_image_classification]]
+repo_id = "openfoodfacts/front_image_classification"
+revision = "0d851b1122fb36f3ad54dc1ff70598e6ee4333a7"
+triton_version = 1
+type = "single_file"
+model_path = "weights/model.onnx"
+
 ## Deprecated
 
 # The version 1 of this model is not used anymore, we now use version 2
