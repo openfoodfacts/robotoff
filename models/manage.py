@@ -315,7 +315,7 @@ def _load_model(
     provided:
 
     - If the option is provided, only the specified version will be loaded, the other
-        versions will be unloaded.
+    versions will be unloaded.
     - If the option is not provided, the two latest versions will be loaded.
 
     :param triton_stub: gRPC stub for Triton Inference Server
