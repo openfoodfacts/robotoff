@@ -1059,8 +1059,7 @@ Each model version should be in a subdirectory named after the version number, f
 We ask Triton to load all the models in the <code>models/triton</code> directory at startup.</p>
 <p>Using this mode, we don't have to restart the server when we add or remove models.</p>
 <h3 id="triton-deployment">Triton deployment</h3>
-<p>Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs. </p>
-<p>As of today (October 2025), we still have a Triton server running on CPU (on osm45) that serves some models, but we're in the process of migrating fully on GPUs.</p>
+<p>Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs (server <code>gpu-01</code>, deployed on Google Cloud). </p>
 <p>To deploy Triton on a distinct server, go to <code>models</code>, where you will find a <code>docker-compose.yml</code> file to run the Triton server in a Docker container:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>models
 docker-compose<span class="w"> </span>up<span class="w"> </span>-d
