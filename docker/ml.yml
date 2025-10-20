@@ -15,10 +15,3 @@ services:
     # for more information
     entrypoint: "tritonserver --model-repository=/models --model-control-mode=explicit --load-model=*"
     mem_limit: 30g
-
-  fasttext:
-    restart: $RESTART_POLICY
-    image: messense/fasttext-serving
-    volumes:
-      - ${FASTTEXT_MODEL_DIR:-../models}:/models
-    entrypoint: "fasttext-serving --model=/models/lid.176.bin --port 8000 --address 0.0.0.0"

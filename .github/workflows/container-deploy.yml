@@ -21,6 +21,7 @@ jobs:
     - name: Set various variable for staging deployment
       if: matrix.env == 'robotoff-net'
       run: |
+        echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml;docker/ml.yml" >> $GITHUB_ENV
         echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
         echo "SSH_PROXY_USERNAME=off" >> $GITHUB_ENV
@@ -36,12 +37,12 @@ jobs:
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
-        echo "TRITON_URI_CLIP=triton:8001" >> $GITHUB_ENV
-        echo "TRITON_URI_NUTRITION_TABLE=triton:8001" >> $GITHUB_ENV
-        echo "TRITON_URI_NUTRISCORE=triton:8001" >> $GITHUB_ENV
+        echo "DEFAULT_TRITON_URI=triton:8001" >> $GITHUB_ENV
     - name: Set various variable for production deployment
       if: matrix.env == 'robotoff-org'
       run: |
+       # No need for ml.yml in prod, as we use an external Triton server (running on GPU, see DEFAULT_TRITON_URI)
+        echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml" >> $GITHUB_ENV
         # This is the OSM proxy server, that does have an ipv4 address
         echo "SSH_PROXY_HOST=45.147.209.254" >> $GITHUB_ENV
         echo "SSH_USERNAME=off" >> $GITHUB_ENV
@@ -59,9 +60,8 @@ jobs:
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
-        echo "TRITON_URI_CLIP=10.3.0.201:5504" >> $GITHUB_ENV
-        echo "TRITON_URI_NUTRITION_TABLE=10.3.0.201:5504" >> $GITHUB_ENV
-        echo "TRITON_URI_NUTRISCORE=10.3.0.201:5504" >> $GITHUB_ENV
+        # Triton server for production is running on a separate server with 2 GPUs
+        echo "DEFAULT_TRITON_URI=10.3.0.101:5504" >> $GITHUB_ENV
     - name: Wait for container build
       uses: lewagon/wait-on-check-action@v1.4.0
       with:
@@ -120,7 +120,7 @@ jobs:
           echo "COMPOSE_HTTP_TIMEOUT=200" >> .env
           echo "COMPOSE_PROJECT_NAME=robotoff" >> .env
           echo "COMPOSE_PATH_SEPARATOR=;" >> .env
-          echo "COMPOSE_FILE=docker-compose.yml;docker/prod.yml;docker/monitor.yml;docker/ml.yml" >> .env
+          echo "COMPOSE_FILE=${{ env.COMPOSE_FILE }}" >> .env
           echo "TAG=sha-${{ github.sha }}" >> .env
           echo "RESTART_POLICY=always" >> .env
 
@@ -148,10 +148,7 @@ jobs:
           echo "ELASTIC_HOST=elasticsearch.robotoff_default" >> .env
           echo "ELASTIC_USER=elastic" >> .env
           echo "ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}" >> .env
-          echo "DEFAULT_TRITON_URI=triton:8001" >> .env
-          echo "TRITON_URI_CLIP=${{ env.TRITON_URI_CLIP }}" >> .env
-          echo "TRITON_URI_NUTRITION_TABLE=${{ env.TRITON_URI_NUTRITION_TABLE }}" >> .env
-          echo "TRITON_URI_NUTRISCORE=${{ env.TRITON_URI_NUTRISCORE }}" >> .env
+          echo "DEFAULT_TRITON_URI=${{ env.DEFAULT_TRITON_URI }}" >> .env
           echo "TRITON_MODELS_DIR=./models/triton" >> .env
           echo "FASTTEXT_HOST=fasttext" >> .env
           echo "FASTTEXT_MODEL_DIR=./models" >> .env

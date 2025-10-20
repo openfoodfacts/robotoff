@@ -181,6 +181,13 @@ services:
       - es-logs:/usr/share/elasticsearch/logs
       - elasticsearch_tmp:/tmp
 
+  fasttext:
+    restart: $RESTART_POLICY
+    image: messense/fasttext-serving
+    volumes:
+      - ${FASTTEXT_MODEL_DIR:-./models}:/models
+    entrypoint: "fasttext-serving --model=/models/lid.176.bin --port 8000 --address 0.0.0.0"
+
 volumes:
   postgres-data:
     name: ${COMPOSE_PROJECT_NAME:-robotoff}_postgres-data

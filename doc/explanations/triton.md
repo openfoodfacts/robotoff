@@ -16,9 +16,7 @@ Using this mode, we don't have to restart the server when we add or remove model
 
 ### Triton deployment
 
-Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs. 
-
-As of today (October 2025), we still have a Triton server running on CPU (on osm45) that serves some models, but we're in the process of migrating fully on GPUs.
+Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs (server `gpu-01`, deployed on Google Cloud). 
 
 To deploy Triton on a distinct server, go to `models`, where you will find a `docker-compose.yml` file to run the Triton server in a Docker container:
 
