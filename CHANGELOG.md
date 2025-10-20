@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.80.0](https://github.com/openfoodfacts/robotoff/compare/v1.79.2...v1.80.0) (2025-10-20)
+
+
+### Features
+
+* add standalone CLI to manage triton models ([#1774](https://github.com/openfoodfacts/robotoff/issues/1774)) ([d54edf6](https://github.com/openfoodfacts/robotoff/commit/d54edf6f9f3afbbd9c924a1e3ed887df3a68e77a))
+* improve model management ([#1776](https://github.com/openfoodfacts/robotoff/issues/1776)) ([8280952](https://github.com/openfoodfacts/robotoff/commit/828095233157e3968c89b7a98a17e31b55e99484))
+
+
+### Technical
+
+* add documentation about Triton install & management ([#1777](https://github.com/openfoodfacts/robotoff/issues/1777)) ([5b2d696](https://github.com/openfoodfacts/robotoff/commit/5b2d6961dd44044ec5178f130e0b314cee2206b8))
+* **deps:** bump vllm from 0.10.1.1 to 0.11.0 in /batch/spellcheck ([#1772](https://github.com/openfoodfacts/robotoff/issues/1772)) ([37dd68d](https://github.com/openfoodfacts/robotoff/commit/37dd68dfaa3c3d4658fcc89a4205e36d0eb97d19))
+* switch Triton to GPU instance for all models ([74edcb3](https://github.com/openfoodfacts/robotoff/commit/74edcb3b7099f890ce234e7d1469c7ac88c2ee1e))
+
 ## [1.79.2](https://github.com/openfoodfacts/robotoff/compare/v1.79.1...v1.79.2) (2025-09-12)
 
 
