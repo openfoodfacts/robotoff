@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.80.1](https://github.com/openfoodfacts/robotoff/compare/v1.80.0...v1.80.1) (2025-10-21)
+
+
+### Technical
+
+* **deps:** bump the all-actions group with 4 updates ([#1771](https://github.com/openfoodfacts/robotoff/issues/1771)) ([e4843fe](https://github.com/openfoodfacts/robotoff/commit/e4843fe0d661908d639b17f829699e6298d318ee))
+
 ## [1.80.0](https://github.com/openfoodfacts/robotoff/compare/v1.79.2...v1.80.0) (2025-10-20)
 
 
