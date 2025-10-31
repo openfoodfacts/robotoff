@@ -29,11 +29,11 @@ msgstr "Μήπως το προϊόν ανήκει σε αυτό το εμπορ�
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Συμφωνεί αυτό το βάρος με το βάρος που εμφανίζεται στο προϊόν;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Είναι αυτή η εικόνα μια εικόνα διατροφής για αυτήν τη γλώσσα;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
