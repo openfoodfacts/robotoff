@@ -16,7 +16,7 @@ All services are managed by docker. [docker-compose](https://docs.docker.com/com
 
 `tf-serving` and `triton` have their own file: `docker/ml.yml`.
 
-ML models are stored as released at https://github.com/openfoodfacts/robotoff-models.
+ML models are stored on [the Hugging Face Hub](https://huggingface.co/openfoodfacts).
 
 All Robotoff services are running on one of the two Docker instances (OVH 200 VM for staging and OVH 201 VM for production). You should use the proxy servers ([ovh1.openfoodfacts.org]() or [ovh2.openfoofacts.org]()) to reach these instances. You can get more information on Docker VMs [here](https://github.com/openfoodfacts/openfoodfacts-infrastructure/blob/develop/docs/docker_architecture.md).
 

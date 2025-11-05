@@ -1,11 +1,11 @@
 # Google Batch Job
 
-Robotoff primarily provides models to Open Food Facts with real-time inference using Nvidia Triton Inference on CPUs. 
+Robotoff primarily provides models to Open Food Facts with real-time inference using Nvidia Triton Inference on GPU (gpu-01 server). 
 
 However, this approach presents two major gaps:
 
 * Challenges in processing large volumes of products during extended job runs
-* Limited access to larger computing resources, such as GPUs or multi-CPU setups
+* Limited access to larger computing resources
 
 To fill these gaps, we integrated a batch job feature into Robotoff, leveraging the capabilities of Google Cloud Platform.
 
@@ -36,7 +36,7 @@ The configuration file define the resources and setup allocated to the google ba
 * The resources location,
 * The type and number of resources allocated,
 * The maximal run duration,
-* The number of tasks in parallele,
+* The number of tasks in parallel,
 * The number of retries, ...
 
 When initiating a job, the configuration is validated using the [Pydantic](https://docs.pydantic.dev/latest/) library. This process serves two purposes:
