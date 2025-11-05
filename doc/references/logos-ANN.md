@@ -14,7 +14,7 @@ The third and last one is to search for each logo its nearest neighbors in an in
 When a new image is added to the database, Robotoff applies an object detection model to extract logos from it.[^logos_extraction]
 This model, named "universal-logo-detector" [^universal-logo-detector], is an ONNX model trained by Open Food Facts on numerous data from the database.
 For each input image, it returns bounding boxes that represent the detection zone of each logo of the image and the category of the logo, namely "brand" or "label".
-To know more about this model, see the [robotoff-models release](https://github.com/openfoodfacts/robotoff-models/releases).
+To know more about this model, see the [model card on HuggingFace](https://huggingface.co/openfoodfacts/universal_logo_detector).
 
 ## Logos embedding
 

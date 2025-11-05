@@ -4,7 +4,7 @@ Knowing the category of each product is critically important at Open Food Facts,
 
 In Open Food Facts, more 12,500 categories exist in the [category taxonomy](https://static.openfoodfacts.org/data/taxonomies/categories.full.json) (as of March 2023). Category prediction using product meta-data was one the first project developed as part of Robotoff in 2018.
 
-A neural network model is used to predict categories [^neural]. Details about the model training, results and model assets are available on the [model robotoff-models release page](https://github.com/openfoodfacts/robotoff-models/releases/tag/keras-category-classifier-image-embeddings-3.0). 
+A neural network model is used to predict categories [^neural]. Details about the model training, results and model assets are available on the [model page on HuggingFace](https://huggingface.co/openfoodfacts/category_classifier). 
 
 This model takes as inputs (all inputs are optional):
 
