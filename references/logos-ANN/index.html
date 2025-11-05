@@ -957,7 +957,7 @@ The third and last one is to search for each logo its nearest neighbors in an in
 <p>When a new image is added to the database, Robotoff applies an object detection model to extract logos from it.<sup id="fnref:logos_extraction"><a class="footnote-ref" href="#fn:logos_extraction">1</a></sup>
 This model, named "universal-logo-detector" <sup id="fnref:universal-logo-detector"><a class="footnote-ref" href="#fn:universal-logo-detector">2</a></sup>, is an ONNX model trained by Open Food Facts on numerous data from the database.
 For each input image, it returns bounding boxes that represent the detection zone of each logo of the image and the category of the logo, namely "brand" or "label".
-To know more about this model, see the <a href="https://github.com/openfoodfacts/robotoff-models/releases">robotoff-models release</a>.</p>
+To know more about this model, see the <a href="https://huggingface.co/openfoodfacts/universal_logo_detector">model card on HuggingFace</a>.</p>
 <h2 id="logos-embedding">Logos embedding</h2>
 <p>After the detection of a logo, in the same function <sup id="fnref2:logos_extraction"><a class="footnote-ref" href="#fn:logos_extraction">1</a></sup>, Robotoff uses a computer vision model to vectorize it.
 The model we use is <a href="https://huggingface.co/docs/transformers/model_doc/clip">CLIP-vit-base-patch32</a>, a model developed and trained by OpenAI.

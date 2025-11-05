@@ -1082,11 +1082,11 @@
                 
                 
                 <h1 id="google-batch-job">Google Batch Job</h1>
-<p>Robotoff primarily provides models to Open Food Facts with real-time inference using Nvidia Triton Inference on CPUs. </p>
+<p>Robotoff primarily provides models to Open Food Facts with real-time inference using Nvidia Triton Inference on GPU (gpu-01 server). </p>
 <p>However, this approach presents two major gaps:</p>
 <ul>
 <li>Challenges in processing large volumes of products during extended job runs</li>
-<li>Limited access to larger computing resources, such as GPUs or multi-CPU setups</li>
+<li>Limited access to larger computing resources</li>
 </ul>
 <p>To fill these gaps, we integrated a batch job feature into Robotoff, leveraging the capabilities of Google Cloud Platform.</p>
 <h2 id="architecture">Architecture</h2>
@@ -1108,7 +1108,7 @@
 <li>The resources location,</li>
 <li>The type and number of resources allocated,</li>
 <li>The maximal run duration,</li>
-<li>The number of tasks in parallele,</li>
+<li>The number of tasks in parallel,</li>
 <li>The number of retries, ...</li>
 </ul>
 <p>When initiating a job, the configuration is validated using the <a href="https://docs.pydantic.dev/latest/">Pydantic</a> library. This process serves two purposes:</p>
