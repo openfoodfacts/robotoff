@@ -1,7 +1,6 @@
 import dataclasses
 import logging
 import time
-from typing import Literal
 
 import numpy as np
 from cv2 import dnn
@@ -9,7 +8,6 @@ from openfoodfacts.ml.object_detection import (
     ObjectDetectionRawResult,
     add_triton_infer_input_tensor,
 )
-from openfoodfacts.ml.utils import resize_image
 from PIL import Image
 from pydantic import BaseModel, Field
 from tritonclient.grpc import service_pb2
@@ -41,7 +39,9 @@ class ModelConfig(BaseModel):
         description="The version of the model used on Triton Inference Server (eg: `1`)",
     )
     triton_model_name: str = Field(
-        ..., description="The name of the model on Triton Inference Server"
+        ...,
+        description="The name of the model on Triton Inference Server. It should match "
+        "the name of the model repository in models/triton/*.",
     )
     image_size: int = Field(
         ...,
@@ -53,11 +53,9 @@ class ModelConfig(BaseModel):
         description="The names of the labels used by the model. "
         "The order of the labels must match the order of the classes in the model.",
     )
-    backend: Literal["tf", "yolo"] = Field(
-        ...,
-        description="The backend used by the model. It can be either `tf` for "
-        "Tensorflow models or `yolo` for Ultralytics models. Tensorflow models "
-        "are deprecated and should be replaced by Ultralytics models.",
+    default_threshold: float = Field(
+        default=0.5,
+        description="The default detection threshold to use for the model.",
     )
 
 
@@ -75,7 +73,6 @@ MODELS_CONFIG = {
             "nutriscore-d",
             "nutriscore-e",
         ],
-        backend="yolo",
     ),
     ObjectDetectionModel.nutrition_table: ModelConfig(
         model_name=ObjectDetectionModel.nutrition_table.name,
@@ -84,16 +81,15 @@ MODELS_CONFIG = {
         triton_model_name="nutrition_table",
         image_size=640,
         label_names=["nutrition-table"],
-        backend="yolo",
     ),
     ObjectDetectionModel.universal_logo_detector: ModelConfig(
         model_name=ObjectDetectionModel.universal_logo_detector.name,
-        model_version="tf-universal-logo-detector-1.0",
+        model_version="yolo-universal-logo-detector-1.0",
         triton_version="1",
-        triton_model_name="universal_logo_detector",
-        image_size=1024,
-        label_names=["NULL", "brand", "label"],
-        backend="tf",
+        triton_model_name="universal_logo_detector_yolo",
+        image_size=640,
+        label_names=["object"],
+        default_threshold=0.25,
     ),
     ObjectDetectionModel.price_tag_detection: ModelConfig(
         model_name=ObjectDetectionModel.price_tag_detection.name,
@@ -102,7 +98,6 @@ MODELS_CONFIG = {
         triton_model_name="price_tag_detection",
         image_size=960,
         label_names=["price-tag"],
-        backend="yolo",
     ),
 }
 
@@ -316,126 +311,27 @@ class RemoteModel:
     def __init__(self, config: ModelConfig):
         self.config = config
 
-    def detect_from_image_tf(
+    def detect_from_image(
         self,
         image: Image.Image,
+        output_image: bool = False,
         triton_uri: str | None = None,
-        threshold: float = 0.5,
-    ) -> ObjectDetectionResult:
-        """Run A Tensorflow object detection model on an image.
-
-        The model must have been trained with the Tensorflow Object Detection
-        API.
-
-        :param image: the input Pillow image
-        :param triton_uri: URI of the Triton Inference Server, defaults to
-            None. If not provided, the default value from settings is used.
-        :threshold: the minimum score for a detection to be considered,
-            defaults to 0.5.
-        :return: the detection result
-        """
-        start_time = time.monotonic()
-        # Tensorflow object detection models expect an image with dimensions
-        # up to 1024x1024
-        resized_image = resize_image(image, (1024, 1024))
-        image_array = convert_image_to_array(resized_image).astype(np.uint8)
-        request = service_pb2.ModelInferRequest()
-        request.model_name = self.config.triton_model_name
-
-        image_input = service_pb2.ModelInferRequest().InferInputTensor()
-        image_input.name = "inputs"
-        image_input.datatype = "UINT8"
-        image_input.shape.extend([1, image_array.shape[0], image_array.shape[1], 3])
-        request.inputs.extend([image_input])
-
-        for output_name in (
-            "num_detections",
-            "detection_classes",
-            "detection_scores",
-            "detection_boxes",
-        ):
-            output = service_pb2.ModelInferRequest().InferRequestedOutputTensor()
-            output.name = output_name
-            request.outputs.extend([output])
-        request.raw_input_contents.extend([image_array.tobytes()])
-        ml_metrics_logger.info(
-            "Preprocessing time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-
-        start_time = time.monotonic()
-        grpc_stub = get_triton_inference_stub(triton_uri)
-        response = grpc_stub.ModelInfer(request)
-        ml_metrics_logger.info(
-            "Inference time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-
-        start_time = time.monotonic()
-        if len(response.outputs) != 4:
-            raise Exception(f"expected 4 output, got {len(response.outputs)}")
-
-        if len(response.raw_output_contents) != 4:
-            raise Exception(
-                f"expected 4 raw output content, got {len(response.raw_output_contents)}"
-            )
-
-        output_index = {output.name: i for i, output in enumerate(response.outputs)}
-        detection_scores = np.frombuffer(
-            response.raw_output_contents[output_index["detection_scores"]],
-            dtype=np.float32,
-        ).reshape((1, -1))[0]
-        detection_classes = (
-            np.frombuffer(
-                response.raw_output_contents[output_index["detection_classes"]],
-                dtype=np.float32,
-            )
-            .reshape((1, -1))
-            .astype(int)
-        )[0]
-        detection_boxes = np.frombuffer(
-            response.raw_output_contents[output_index["detection_boxes"]],
-            dtype=np.float32,
-        ).reshape((1, -1, 4))[0]
-
-        threshold_mask = detection_scores > threshold
-        detection_scores = detection_scores[threshold_mask]
-        detection_boxes = detection_boxes[threshold_mask]
-        detection_classes = detection_classes[threshold_mask]
-
-        result = ObjectDetectionResult(
-            num_detections=len(detection_scores),
-            detection_classes=detection_classes,
-            detection_boxes=detection_boxes,
-            detection_scores=detection_scores,
-            label_names=self.config.label_names,
-        )
-        ml_metrics_logger.info(
-            "Post-processing time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-        return result
-
-    def detect_from_image_yolo(
-        self,
-        image: Image.Image,
-        triton_uri: str | None = None,
-        threshold: float = 0.5,
+        threshold: float | None = None,
     ) -> ObjectDetectionResult:
         """Run an object detection model on an image.
 
         The model must have been trained with Ultralytics library.
 
         :param image: the input Pillow image
+        :param output_image: if True, the image with boxes and labels is
+            returned in the result
         :param triton_uri: URI of the Triton Inference Server, defaults to
             None. If not provided, the default value from settings is used.
         :threshold: the minimum score for a detection to be considered,
-            defaults to 0.5.
+            defaults to config.default_threshold.
         :return: the detection result
         """
+        threshold = threshold or self.config.default_threshold
         triton_uri = triton_uri or settings.DEFAULT_TRITON_URI
         start_time = time.monotonic()
         result = ObjectDetector(
@@ -448,34 +344,7 @@ class RemoteModel:
             self.config.triton_model_name,
             time.monotonic() - start_time,
         )
-        return ObjectDetectionResult(**dataclasses.asdict(result))
-
-    def detect_from_image(
-        self,
-        image: Image.Image,
-        output_image: bool = False,
-        triton_uri: str | None = None,
-        threshold: float = 0.5,
-    ) -> ObjectDetectionResult:
-        """Run an object detection model on an image.
-
-        :param image: the input Pillow image
-        :param output_image: if True, the image with boxes and labels is
-            returned in the result
-        :param triton_uri: URI of the Triton Inference Server, defaults to
-            None. If not provided, the default value from settings is used.
-        :threshold: the minimum score for a detection to be considered.
-        :return: the detection result
-        """
-        if self.config.backend == "tf":
-            result = self.detect_from_image_tf(image, triton_uri, threshold)
-
-        elif self.config.backend == "yolo":
-            result = self.detect_from_image_yolo(
-                image=image, triton_uri=triton_uri, threshold=threshold
-            )
-        else:
-            raise ValueError(f"Unknown backend: {self.config.backend}")
+        result = ObjectDetectionResult(**dataclasses.asdict(result))
 
         if output_image:
             add_boxes_and_labels(
