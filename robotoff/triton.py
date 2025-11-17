@@ -6,6 +6,7 @@ import time
 import grpc
 import numpy as np
 from more_itertools import chunked
+from PIL import Image
 from transformers import CLIPImageProcessor
 from tritonclient.grpc import service_pb2, service_pb2_grpc
 from tritonclient.grpc.service_pb2_grpc import GRPCInferenceServiceStub
@@ -39,7 +40,7 @@ def get_triton_inference_stub(
     return service_pb2_grpc.GRPCInferenceServiceStub(channel)
 
 
-def generate_clip_embedding_request(images: list[np.ndarray]):
+def generate_clip_embedding_request(images: list[np.ndarray] | list[Image.Image]):
     processor = CLIPImageProcessor()
     inputs = processor(images=images, return_tensors="np").pixel_values
     request = service_pb2.ModelInferRequest()
