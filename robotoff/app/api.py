@@ -806,6 +806,12 @@ class ImagePredictorResource:
         threshold: float = req.get_param_as_float("threshold", default=0.5)
         mode: str = req.get_param("mode", default="PIL")
 
+        if mode not in ("PIL", "np"):
+            raise falcon.HTTPBadRequest(
+                "invalid_mode", "mode must be either 'PIL' or 'np'"
+            )
+        mode = typing.cast(Literal["PIL", "np"], mode)
+
         available_object_detection_models = list(
             ObjectDetectionModel.__members__.keys()
         )

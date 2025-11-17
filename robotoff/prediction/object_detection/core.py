@@ -429,7 +429,7 @@ class RemoteModel:
 
     def detect_from_image(
         self,
-        image: Image.Image,
+        image: Image.Image | np.ndarray,
         output_image: bool = False,
         triton_uri: str | None = None,
         threshold: float | None = None,
@@ -438,7 +438,8 @@ class RemoteModel:
 
         The model must have been trained with Ultralytics library.
 
-        :param image: the input Pillow image
+        :param image: the input image (Pillow image or numpy uint8 array with
+            shape (height, width, 3) and RGB channels)
         :param output_image: if True, the image with boxes and labels is
             returned in the result
         :param triton_uri: URI of the Triton Inference Server, defaults to
@@ -464,9 +465,11 @@ class RemoteModel:
 
         if output_image:
             if isinstance(image, Image.Image):
-                image = convert_image_to_array(image).astype(np.uint8)
+                output_image_array = convert_image_to_array(image).astype(np.uint8)
+            else:
+                output_image_array = image.copy()
 
-            add_boxes_and_labels(image, result)
+            add_boxes_and_labels(output_image_array, result)
         return result
 
 
