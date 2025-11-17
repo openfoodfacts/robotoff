@@ -805,6 +805,10 @@ class ImagePredictorResource:
         models: list[str] = req.get_param_as_list("models", required=True)
         threshold: float = req.get_param_as_float("threshold", default=0.5)
         mode: str = req.get_param("mode", default="PIL")
+        nms_threshold: float | None = req.get_param_as_float(
+            "nms_threshold", default=None
+        )
+        nms_eta: float | None = req.get_param_as_float("nms_eta", default=None)
 
         if mode not in ("PIL", "np"):
             raise falcon.HTTPBadRequest(
@@ -865,7 +869,11 @@ class ImagePredictorResource:
                     ObjectDetectionModel[model_name]
                 )
                 result = model.detect_from_image(
-                    image, output_image=output_image, threshold=threshold
+                    image,
+                    output_image=output_image,
+                    threshold=threshold,
+                    nms_threshold=nms_threshold,
+                    nms_eta=nms_eta,
                 )
 
                 if output_image:

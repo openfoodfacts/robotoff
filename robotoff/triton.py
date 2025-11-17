@@ -40,7 +40,7 @@ def get_triton_inference_stub(
     return service_pb2_grpc.GRPCInferenceServiceStub(channel)
 
 
-def generate_clip_embedding_request(images: list[Image.Image]):
+def generate_clip_embedding_request(images: list[np.ndarray] | list[Image.Image]):
     processor = CLIPImageProcessor()
     inputs = processor(images=images, return_tensors="np").pixel_values
     request = service_pb2.ModelInferRequest()
@@ -82,7 +82,7 @@ def generate_clip_embedding_request(images: list[Image.Image]):
 
 
 def generate_clip_embedding(
-    images: list[Image.Image], triton_stub: GRPCInferenceServiceStub
+    images: list[np.ndarray], triton_stub: GRPCInferenceServiceStub
 ) -> np.ndarray:
     embedding_batches = []
     for image_batch in chunked(images, CLIP_MAX_BATCH_SIZE):

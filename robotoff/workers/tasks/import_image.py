@@ -5,6 +5,7 @@ import logging
 import typing
 from pathlib import Path
 
+import cv2
 import elasticsearch
 import numpy as np
 from elasticsearch.helpers import BulkIndexError
@@ -423,7 +424,7 @@ def run_nutrition_table_object_detection(
     )
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -562,7 +563,7 @@ def run_nutriscore_object_detection(
     )
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -653,7 +654,7 @@ def run_logo_object_detection(
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -701,7 +702,10 @@ def run_logo_object_detection(
                 if ocr_result:
                     # We try to find the text in the bounding box of the logo
                     text = get_text_from_bounding_box(
-                        ocr_result, item["bounding_box"], image.width, image.height
+                        ocr_result,
+                        item["bounding_box"],
+                        image_height=image.shape[0],
+                        image_width=image.shape[1],
                     )
                 logos.append(
                     LogoAnnotation.create(
@@ -767,22 +771,26 @@ def get_text_from_bounding_box(
 
 def save_logo_embeddings(
     logos: list[LogoAnnotation],
-    image: Image.Image,
+    image: np.ndarray,
     triton_stub: GRPCInferenceServiceStub,
 ):
     """Generate logo embeddings using CLIP model and save them in
     logo_embedding table."""
     resized_cropped_images = []
+    image_height = image.shape[0]
+    image_width = image.shape[1]
     for logo in logos:
         y_min, x_min, y_max, x_max = logo.bounding_box
         (left, right, top, bottom) = (
-            x_min * image.width,
-            x_max * image.width,
-            y_min * image.height,
-            y_max * image.height,
+            int(x_min * image_width),
+            int(x_max * image_width),
+            int(y_min * image_height),
+            int(y_max * image_height),
         )
-        cropped_image = image.crop((left, top, right, bottom))
-        resized_cropped_images.append(cropped_image.resize((224, 224)))
+        cropped_image = image[top:bottom, left:right]
+        resized_cropped_images.append(
+            cv2.resize(cropped_image, (224, 224), interpolation=cv2.INTER_LINEAR)
+        )
     embeddings = generate_clip_embedding(resized_cropped_images, triton_stub)
 
     with db.atomic():

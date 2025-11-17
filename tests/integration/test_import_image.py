@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from PIL import Image
 
 from robotoff.models import LogoEmbedding
 from robotoff.types import InsightImportResult, ServerType
@@ -39,7 +38,7 @@ def test_save_logo_embeddings(peewee_db, mocker):
     triton_stub = mocker.MagicMock()
 
     image_array = np.random.rand(800, 800, 3) * 255
-    image = Image.fromarray(image_array.astype("uint8")).convert("RGB")
+    image = image_array.astype("uint8")
     with peewee_db:
         image_prediction = ImagePredictionFactory()
         logos = [

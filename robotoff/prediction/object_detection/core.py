@@ -193,6 +193,8 @@ class ObjectDetector:
         image: Image.Image | np.ndarray,
         triton_uri: str,
         threshold: float = 0.5,
+        nms_threshold: float | None = None,
+        nms_eta: float | None = None,
         model_version: str | None = None,
     ) -> ObjectDetectionRawResult:
         """Run an object detection model on an image.
@@ -204,6 +206,10 @@ class ObjectDetector:
             None. If not provided, the default value from settings is used.
         :param threshold: the minimum score for a detection to be considered,
             defaults to 0.5.
+        :param nms_threshold: the NMS (Non Maximum Suppression) threshold to use,
+            defaults to None (0.7 will be used).
+        :param nms_eta: the NMS eta parameter to use, defaults to None (1.0 will be
+            used).
         :param model_version: the version of the model to use, defaults to
             None (latest).
         :return: the detection result
@@ -242,6 +248,8 @@ class ObjectDetector:
             scale_x=scale_x,
             scale_y=scale_y,
             original_shape=original_shape,
+            nms_threshold=nms_threshold,
+            nms_eta=nms_eta,
         )
         ml_metrics_logger.info(
             "Post-processing time for %s: %ss",
@@ -309,6 +317,8 @@ class ObjectDetector:
         scale_x: float | None,
         scale_y: float | None,
         original_shape: tuple[int, int] | None,
+        nms_threshold: float | None = None,
+        nms_eta: float | None = None,
     ) -> ObjectDetectionRawResult:
         if len(response.outputs) != 1:
             raise ValueError(f"expected 1 output, got {len(response.outputs)}")
@@ -317,6 +327,11 @@ class ObjectDetector:
             raise ValueError(
                 f"expected 1 raw output content, got {len(response.raw_output_contents)}"
             )
+
+        if nms_threshold is None:
+            nms_threshold = 0.7
+        if nms_eta is None:
+            nms_eta = 1.0
 
         output_index = {output.name: i for i, output in enumerate(response.outputs)}
         output = np.frombuffer(
@@ -377,8 +392,8 @@ class ObjectDetector:
             raw_detection_scores,  # type: ignore
             score_threshold=threshold,
             # the following values are copied from Ultralytics settings
-            nms_threshold=0.7,
-            eta=1.0,
+            nms_threshold=nms_threshold,
+            eta=nms_eta,
         )
         ml_metrics_logger.info(
             "NMS time for %s: %ss",
@@ -433,6 +448,8 @@ class RemoteModel:
         output_image: bool = False,
         triton_uri: str | None = None,
         threshold: float | None = None,
+        nms_threshold: float | None = None,
+        nms_eta: float | None = None,
     ) -> ObjectDetectionResult:
         """Run an object detection model on an image.
 
@@ -446,6 +463,10 @@ class RemoteModel:
             None. If not provided, the default value from settings is used.
         :threshold: the minimum score for a detection to be considered,
             defaults to config.default_threshold.
+        :param nms_threshold: the NMS (Non Maximum Suppression) threshold to use,
+            defaults to None (0.7 will be used).
+        :param nms_eta: the NMS eta parameter to use, defaults to None (1.0 will be
+            used).
         :return: the detection result
         """
         threshold = threshold or self.config.default_threshold
@@ -455,7 +476,13 @@ class RemoteModel:
             model_name=self.config.triton_model_name,
             label_names=self.config.label_names,
             image_size=self.config.image_size,
-        ).detect_from_image(image=image, triton_uri=triton_uri, threshold=threshold)
+        ).detect_from_image(
+            image=image,
+            triton_uri=triton_uri,
+            threshold=threshold,
+            nms_threshold=nms_threshold,
+            nms_eta=nms_eta,
+        )
         ml_metrics_logger.info(
             "Total inference time for %s: %ss",
             self.config.triton_model_name,
