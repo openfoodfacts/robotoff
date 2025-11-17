@@ -804,6 +804,13 @@ class ImagePredictorResource:
         image_url = req.get_param("image_url", required=True)
         models: list[str] = req.get_param_as_list("models", required=True)
         threshold: float = req.get_param_as_float("threshold", default=0.5)
+        mode: str = req.get_param("mode", default="PIL")
+
+        if mode not in ("PIL", "np"):
+            raise falcon.HTTPBadRequest(
+                "invalid_mode", "mode must be either 'PIL' or 'np'"
+            )
+        mode = typing.cast(Literal["PIL", "np"], mode)
 
         available_object_detection_models = list(
             ObjectDetectionModel.__members__.keys()
@@ -839,7 +846,11 @@ class ImagePredictorResource:
         image = typing.cast(
             Image.Image | None,
             get_image_from_url(
-                image_url, session=http_session, error_raise=False, use_cache=True
+                image_url,
+                session=http_session,
+                error_raise=False,
+                use_cache=True,
+                return_type=mode,
             ),
         )
 

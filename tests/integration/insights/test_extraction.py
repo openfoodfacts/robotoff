@@ -24,10 +24,10 @@ class FakeNutriscoreModel(RemoteModel):
 
     def detect_from_image(
         self,
-        image: Image.Image,
+        image: Image.Image | np.ndarray,
         output_image: bool = False,
         triton_uri: str | None = None,
-        threshold: float = 0.5,
+        threshold: float | None = 0.5,
     ) -> ObjectDetectionResult:
         return self.raw_result
 

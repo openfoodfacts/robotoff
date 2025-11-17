@@ -1,15 +1,15 @@
 import dataclasses
 import logging
 import time
-from typing import Literal
 
+import albumentations as A
+import cv2
 import numpy as np
 from cv2 import dnn
 from openfoodfacts.ml.object_detection import (
     ObjectDetectionRawResult,
     add_triton_infer_input_tensor,
 )
-from openfoodfacts.ml.utils import resize_image
 from PIL import Image
 from pydantic import BaseModel, Field
 from tritonclient.grpc import service_pb2
@@ -21,6 +21,74 @@ from robotoff.types import ObjectDetectionModel
 from robotoff.utils.image import convert_image_to_array
 
 ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
+
+
+DEFAULT_MEAN = (0.0, 0.0, 0.0)
+DEFAULT_STD = (1.0, 1.0, 1.0)
+
+
+def object_detection_transform(image_size: int) -> A.Compose:
+    return A.Compose(
+        [
+            A.LongestMaxSize(max_size=image_size, interpolation=cv2.INTER_LINEAR),
+            A.PadIfNeeded(
+                min_height=image_size,
+                min_width=image_size,
+                position="center",
+                fill=114,
+            ),
+            A.Normalize(mean=DEFAULT_MEAN, std=DEFAULT_STD, p=1.0),
+        ],
+    )
+
+
+def reverse_bbox_transform(
+    augmented_bbox: list, original_shape: tuple, image_size: int
+) -> list:
+    """
+    Reverses the Albumentations pipeline to find original bbox coordinates.
+
+    Args:
+        augmented_bbox (list): [y_min, x_min, y_max, x_max] from the
+                               augmented (image_size x image_size) image.
+        original_shape (tuple): (height, width) of the *original* image.
+        image_size (int): The target size used in the pipeline.
+
+    Returns:
+        list: [y_min, x_min, y_max, x_max] in relative coordinates.
+    """
+
+    original_h, original_w = original_shape
+
+    # --- 1. Re-calculate the forward transform parameters ---
+
+    # From A.LongestMaxSize
+    scale = image_size / max(original_h, original_w)
+
+    # The dimensions of the image *after* scaling but *before* padding
+    scaled_h = int(original_h * scale)
+    scaled_w = int(original_w * scale)
+
+    # From A.PadIfNeeded (position="center")
+    # This is the amount of padding added to each side
+    pad_top = (image_size - scaled_h) // 2
+    pad_left = (image_size - scaled_w) // 2
+
+    # --- 2. Apply the inverse transformation ---
+    aug_y_min, aug_x_min, aug_y_max, aug_x_max = augmented_bbox
+
+    # coord_orig = (coord_aug - padding) / scale
+    orig_y_min = (aug_y_min - pad_top) / scale
+    orig_x_min = (aug_x_min - pad_left) / scale
+    orig_y_max = (aug_y_max - pad_top) / scale
+    orig_x_max = (aug_x_max - pad_left) / scale
+
+    return [
+        orig_y_min / original_h,
+        orig_x_min / original_w,
+        orig_y_max / original_h,
+        orig_x_max / original_w,
+    ]
 
 
 class ModelConfig(BaseModel):
@@ -41,7 +109,9 @@ class ModelConfig(BaseModel):
         description="The version of the model used on Triton Inference Server (eg: `1`)",
     )
     triton_model_name: str = Field(
-        ..., description="The name of the model on Triton Inference Server"
+        ...,
+        description="The name of the model on Triton Inference Server. It should match "
+        "the name of the model repository in models/triton/*.",
     )
     image_size: int = Field(
         ...,
@@ -53,11 +123,9 @@ class ModelConfig(BaseModel):
         description="The names of the labels used by the model. "
         "The order of the labels must match the order of the classes in the model.",
     )
-    backend: Literal["tf", "yolo"] = Field(
-        ...,
-        description="The backend used by the model. It can be either `tf` for "
-        "Tensorflow models or `yolo` for Ultralytics models. Tensorflow models "
-        "are deprecated and should be replaced by Ultralytics models.",
+    default_threshold: float = Field(
+        default=0.5,
+        description="The default detection threshold to use for the model.",
     )
 
 
@@ -75,7 +143,6 @@ MODELS_CONFIG = {
             "nutriscore-d",
             "nutriscore-e",
         ],
-        backend="yolo",
     ),
     ObjectDetectionModel.nutrition_table: ModelConfig(
         model_name=ObjectDetectionModel.nutrition_table.name,
@@ -84,16 +151,15 @@ MODELS_CONFIG = {
         triton_model_name="nutrition_table",
         image_size=640,
         label_names=["nutrition-table"],
-        backend="yolo",
     ),
     ObjectDetectionModel.universal_logo_detector: ModelConfig(
         model_name=ObjectDetectionModel.universal_logo_detector.name,
-        model_version="tf-universal-logo-detector-1.0",
+        model_version="yolo-universal-logo-detector-1.0",
         triton_version="1",
-        triton_model_name="universal_logo_detector",
-        image_size=1024,
-        label_names=["NULL", "brand", "label"],
-        backend="tf",
+        triton_model_name="universal_logo_detector_yolo",
+        image_size=640,
+        label_names=["object"],
+        default_threshold=0.25,
     ),
     ObjectDetectionModel.price_tag_detection: ModelConfig(
         model_name=ObjectDetectionModel.price_tag_detection.name,
@@ -102,7 +168,6 @@ MODELS_CONFIG = {
         triton_model_name="price_tag_detection",
         image_size=960,
         label_names=["price-tag"],
-        backend="yolo",
     ),
 }
 
@@ -125,7 +190,7 @@ class ObjectDetector:
 
     def detect_from_image(
         self,
-        image: Image.Image,
+        image: Image.Image | np.ndarray,
         triton_uri: str,
         threshold: float = 0.5,
         model_version: str | None = None,
@@ -144,7 +209,12 @@ class ObjectDetector:
         :return: the detection result
         """
         start_time = time.monotonic()
-        image_array, scale_x, scale_y = self.preprocess(image)
+        original_shape = None if isinstance(image, Image.Image) else image.shape[:2]
+        if isinstance(image, np.ndarray):
+            image_array = self.preprocess_albumentations(image_array=image)
+            scale_x = scale_y = None
+        else:
+            image_array, scale_x, scale_y = self.preprocess(image)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.model_name
         if model_version:
@@ -153,7 +223,7 @@ class ObjectDetector:
             request, name="images", data=image_array, datatype="FP32"
         )
         ml_metrics_logger.info(
-            "Preprocessing time for %s: %ss",
+            "Preprocessing time (including gRPC request building) for %s: %ss",
             self.model_name,
             time.monotonic() - start_time,
         )
@@ -167,7 +237,11 @@ class ObjectDetector:
 
         start_time = time.monotonic()
         response = self.postprocess(
-            response, threshold=threshold, scale_x=scale_x, scale_y=scale_y
+            response,
+            threshold=threshold,
+            scale_x=scale_x,
+            scale_y=scale_y,
+            original_shape=original_shape,
         )
         ml_metrics_logger.info(
             "Post-processing time for %s: %ss",
@@ -176,6 +250,25 @@ class ObjectDetector:
         )
         return response
 
+    def preprocess_albumentations(self, image_array: np.ndarray) -> np.ndarray:
+        start_time = time.monotonic()
+        # Apply the transform to the image
+        image_array = object_detection_transform(image_size=self.image_size)(
+            image=image_array
+        )["image"]
+        ml_metrics_logger.info(
+            "Preprocessing time (without transpose) for %s: %ss",
+            self.model_name,
+            time.monotonic() - start_time,
+        )
+        image_array = np.transpose(image_array, (2, 0, 1))[np.newaxis, :]  # HWC to CHW
+        ml_metrics_logger.info(
+            "Preprocessing time (with transpose) for %s: %ss",
+            self.model_name,
+            time.monotonic() - start_time,
+        )
+        return image_array
+
     def preprocess(self, image: Image.Image) -> tuple[np.ndarray, float, float]:
         # Yolo object detection models expect a specific image dimension
         width, height = image.size
@@ -183,7 +276,7 @@ class ObjectDetector:
         max_size = max(height, width)
         # We paste the original image into a larger square image,
         # in the upper-left corner, on a black background.
-        squared_image = Image.new("RGB", (max_size, max_size), color="black")
+        squared_image = Image.new("RGB", (max_size, max_size), color=(114, 114, 114))
         squared_image.paste(image, (0, 0))
         resized_image = squared_image.resize((self.image_size, self.image_size))
 
@@ -210,7 +303,12 @@ class ObjectDetector:
         return image_array, scale_x, scale_y
 
     def postprocess(
-        self, response, threshold: float, scale_x: float, scale_y: float
+        self,
+        response,
+        threshold: float,
+        scale_x: float | None,
+        scale_y: float | None,
+        original_shape: tuple[int, int] | None,
     ) -> ObjectDetectionRawResult:
         if len(response.outputs) != 1:
             raise ValueError(f"expected 1 output, got {len(response.outputs)}")
@@ -254,10 +352,23 @@ class ObjectDetector:
             # We save the bounding box in the format
             # (y_min, x_min, y_max, x_max) in relative coordinates
             # Scale the bounding boxes back to the original image size
-            raw_detection_boxes[i, 0] = max(0.0, min(1.0, y_min / scale_y))
-            raw_detection_boxes[i, 1] = max(0.0, min(1.0, x_min / scale_x))
-            raw_detection_boxes[i, 2] = max(0.0, min(1.0, y_max / scale_y))
-            raw_detection_boxes[i, 3] = max(0.0, min(1.0, x_max / scale_x))
+
+            if original_shape is None:
+                # Alternative method without Albumentations
+                raw_detection_boxes[i, 0] = max(0.0, min(1.0, y_min / scale_y))
+                raw_detection_boxes[i, 1] = max(0.0, min(1.0, x_min / scale_x))
+                raw_detection_boxes[i, 2] = max(0.0, min(1.0, y_max / scale_y))
+                raw_detection_boxes[i, 3] = max(0.0, min(1.0, x_max / scale_x))
+            else:
+                reversed_bboxes = reverse_bbox_transform(
+                    augmented_bbox=[y_min, x_min, y_max, x_max],
+                    original_shape=original_shape,
+                    image_size=self.image_size,
+                )
+                raw_detection_boxes[i, 0] = max(0.0, min(1.0, reversed_bboxes[0]))
+                raw_detection_boxes[i, 1] = max(0.0, min(1.0, reversed_bboxes[1]))
+                raw_detection_boxes[i, 2] = max(0.0, min(1.0, reversed_bboxes[2]))
+                raw_detection_boxes[i, 3] = max(0.0, min(1.0, reversed_bboxes[3]))
 
         start_time = time.monotonic()
         # Perform NMS (Non Maximum Suppression)
@@ -266,8 +377,8 @@ class ObjectDetector:
             raw_detection_scores,  # type: ignore
             score_threshold=threshold,
             # the following values are copied from Ultralytics settings
-            nms_threshold=0.45,
-            eta=0.5,
+            nms_threshold=0.7,
+            eta=1.0,
         )
         ml_metrics_logger.info(
             "NMS time for %s: %ss",
@@ -316,126 +427,28 @@ class RemoteModel:
     def __init__(self, config: ModelConfig):
         self.config = config
 
-    def detect_from_image_tf(
+    def detect_from_image(
         self,
-        image: Image.Image,
+        image: Image.Image | np.ndarray,
+        output_image: bool = False,
         triton_uri: str | None = None,
-        threshold: float = 0.5,
-    ) -> ObjectDetectionResult:
-        """Run A Tensorflow object detection model on an image.
-
-        The model must have been trained with the Tensorflow Object Detection
-        API.
-
-        :param image: the input Pillow image
-        :param triton_uri: URI of the Triton Inference Server, defaults to
-            None. If not provided, the default value from settings is used.
-        :threshold: the minimum score for a detection to be considered,
-            defaults to 0.5.
-        :return: the detection result
-        """
-        start_time = time.monotonic()
-        # Tensorflow object detection models expect an image with dimensions
-        # up to 1024x1024
-        resized_image = resize_image(image, (1024, 1024))
-        image_array = convert_image_to_array(resized_image).astype(np.uint8)
-        request = service_pb2.ModelInferRequest()
-        request.model_name = self.config.triton_model_name
-
-        image_input = service_pb2.ModelInferRequest().InferInputTensor()
-        image_input.name = "inputs"
-        image_input.datatype = "UINT8"
-        image_input.shape.extend([1, image_array.shape[0], image_array.shape[1], 3])
-        request.inputs.extend([image_input])
-
-        for output_name in (
-            "num_detections",
-            "detection_classes",
-            "detection_scores",
-            "detection_boxes",
-        ):
-            output = service_pb2.ModelInferRequest().InferRequestedOutputTensor()
-            output.name = output_name
-            request.outputs.extend([output])
-        request.raw_input_contents.extend([image_array.tobytes()])
-        ml_metrics_logger.info(
-            "Preprocessing time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-
-        start_time = time.monotonic()
-        grpc_stub = get_triton_inference_stub(triton_uri)
-        response = grpc_stub.ModelInfer(request)
-        ml_metrics_logger.info(
-            "Inference time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-
-        start_time = time.monotonic()
-        if len(response.outputs) != 4:
-            raise Exception(f"expected 4 output, got {len(response.outputs)}")
-
-        if len(response.raw_output_contents) != 4:
-            raise Exception(
-                f"expected 4 raw output content, got {len(response.raw_output_contents)}"
-            )
-
-        output_index = {output.name: i for i, output in enumerate(response.outputs)}
-        detection_scores = np.frombuffer(
-            response.raw_output_contents[output_index["detection_scores"]],
-            dtype=np.float32,
-        ).reshape((1, -1))[0]
-        detection_classes = (
-            np.frombuffer(
-                response.raw_output_contents[output_index["detection_classes"]],
-                dtype=np.float32,
-            )
-            .reshape((1, -1))
-            .astype(int)
-        )[0]
-        detection_boxes = np.frombuffer(
-            response.raw_output_contents[output_index["detection_boxes"]],
-            dtype=np.float32,
-        ).reshape((1, -1, 4))[0]
-
-        threshold_mask = detection_scores > threshold
-        detection_scores = detection_scores[threshold_mask]
-        detection_boxes = detection_boxes[threshold_mask]
-        detection_classes = detection_classes[threshold_mask]
-
-        result = ObjectDetectionResult(
-            num_detections=len(detection_scores),
-            detection_classes=detection_classes,
-            detection_boxes=detection_boxes,
-            detection_scores=detection_scores,
-            label_names=self.config.label_names,
-        )
-        ml_metrics_logger.info(
-            "Post-processing time for %s: %ss",
-            self.config.triton_model_name,
-            time.monotonic() - start_time,
-        )
-        return result
-
-    def detect_from_image_yolo(
-        self,
-        image: Image.Image,
-        triton_uri: str | None = None,
-        threshold: float = 0.5,
+        threshold: float | None = None,
     ) -> ObjectDetectionResult:
         """Run an object detection model on an image.
 
         The model must have been trained with Ultralytics library.
 
-        :param image: the input Pillow image
+        :param image: the input image (Pillow image or numpy uint8 array with
+            shape (height, width, 3) and RGB channels)
+        :param output_image: if True, the image with boxes and labels is
+            returned in the result
         :param triton_uri: URI of the Triton Inference Server, defaults to
             None. If not provided, the default value from settings is used.
         :threshold: the minimum score for a detection to be considered,
-            defaults to 0.5.
+            defaults to config.default_threshold.
         :return: the detection result
         """
+        threshold = threshold or self.config.default_threshold
         triton_uri = triton_uri or settings.DEFAULT_TRITON_URI
         start_time = time.monotonic()
         result = ObjectDetector(
@@ -448,40 +461,15 @@ class RemoteModel:
             self.config.triton_model_name,
             time.monotonic() - start_time,
         )
-        return ObjectDetectionResult(**dataclasses.asdict(result))
-
-    def detect_from_image(
-        self,
-        image: Image.Image,
-        output_image: bool = False,
-        triton_uri: str | None = None,
-        threshold: float = 0.5,
-    ) -> ObjectDetectionResult:
-        """Run an object detection model on an image.
-
-        :param image: the input Pillow image
-        :param output_image: if True, the image with boxes and labels is
-            returned in the result
-        :param triton_uri: URI of the Triton Inference Server, defaults to
-            None. If not provided, the default value from settings is used.
-        :threshold: the minimum score for a detection to be considered.
-        :return: the detection result
-        """
-        if self.config.backend == "tf":
-            result = self.detect_from_image_tf(image, triton_uri, threshold)
-
-        elif self.config.backend == "yolo":
-            result = self.detect_from_image_yolo(
-                image=image, triton_uri=triton_uri, threshold=threshold
-            )
-        else:
-            raise ValueError(f"Unknown backend: {self.config.backend}")
+        result = ObjectDetectionResult(**dataclasses.asdict(result))
 
         if output_image:
-            add_boxes_and_labels(
-                convert_image_to_array(image).astype(np.uint8),
-                result,
-            )
+            if isinstance(image, Image.Image):
+                output_image_array = convert_image_to_array(image).astype(np.uint8)
+            else:
+                output_image_array = image.copy()
+
+            add_boxes_and_labels(output_image_array, result)
         return result
 
 

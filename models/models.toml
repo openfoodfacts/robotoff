@@ -7,9 +7,10 @@ triton_version = 2
 type = "directory"
 subfolder = "onnx"
 
-[[models.universal_logo_detector]]
-repo_id = "openfoodfacts/universal_logo_detector"
-revision = "281fafb4eef768410f432eb58343c5ae003f3007"
+# New version of the universal logo detector, trained with YOLOv8
+[[models.universal_logo_detector_yolo]]
+repo_id = "openfoodfacts/universal-logo-detector"
+revision = "5d47dba7238344f1a0bb9e38f07e236ab2d79c9c"
 triton_version = 1
 type = "single_file"
 model_path = "weights/model.onnx"
@@ -87,3 +88,12 @@ model_path = "weights/model.onnx"
 # triton_version = 1
 # type = "directory"
 # subfolder = "onnx"
+
+# Previous version of the universal logo detector, trained with Tensorflow Object Detection API
+
+# [[models.universal_logo_detector]]
+# repo_id = "openfoodfacts/universal_logo_detector"
+# revision = "281fafb4eef768410f432eb58343c5ae003f3007"
+# triton_version = 1
+# type = "single_file"
+# model_path = "weights/model.onnx"
