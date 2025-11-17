@@ -770,21 +770,23 @@ def get_text_from_bounding_box(
 
 def save_logo_embeddings(
     logos: list[LogoAnnotation],
-    image: Image.Image,
+    image: np.ndarray,
     triton_stub: GRPCInferenceServiceStub,
 ):
     """Generate logo embeddings using CLIP model and save them in
     logo_embedding table."""
     resized_cropped_images = []
+    image_height = image.shape[0]
+    image_width = image.shape[1]
     for logo in logos:
         y_min, x_min, y_max, x_max = logo.bounding_box
         (left, right, top, bottom) = (
-            x_min * image.width,
-            x_max * image.width,
-            y_min * image.height,
-            y_max * image.height,
+            int(x_min * image_width),
+            int(x_max * image_width),
+            int(y_min * image_height),
+            int(y_max * image_height),
         )
-        cropped_image = image.crop((left, top, right, bottom))
+        cropped_image = image[top:bottom, left:right]
         resized_cropped_images.append(cropped_image.resize((224, 224)))
     embeddings = generate_clip_embedding(resized_cropped_images, triton_stub)
 
