@@ -178,7 +178,7 @@ class ObjectDetector:
         max_size = max(height, width)
         # We paste the original image into a larger square image,
         # in the upper-left corner, on a black background.
-        squared_image = Image.new("RGB", (max_size, max_size), color="black")
+        squared_image = Image.new("RGB", (max_size, max_size), color=(114, 114, 114))
         squared_image.paste(image, (0, 0))
         resized_image = squared_image.resize((self.image_size, self.image_size))
 
