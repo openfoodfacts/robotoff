@@ -261,8 +261,8 @@ class ObjectDetector:
             raw_detection_scores,  # type: ignore
             score_threshold=threshold,
             # the following values are copied from Ultralytics settings
-            nms_threshold=0.45,
-            eta=0.5,
+            nms_threshold=0.7,
+            eta=1.0,
         )
         ml_metrics_logger.info(
             "NMS time for %s: %ss",
