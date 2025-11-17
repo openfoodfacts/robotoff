@@ -5,6 +5,7 @@ import logging
 import typing
 from pathlib import Path
 
+import cv2
 import elasticsearch
 import numpy as np
 from elasticsearch.helpers import BulkIndexError
@@ -787,7 +788,9 @@ def save_logo_embeddings(
             int(y_max * image_height),
         )
         cropped_image = image[top:bottom, left:right]
-        resized_cropped_images.append(cropped_image.resize((224, 224)))
+        resized_cropped_images.append(
+            cv2.resize(cropped_image, (224, 224), interpolation=cv2.INTER_LINEAR)
+        )
     embeddings = generate_clip_embedding(resized_cropped_images, triton_stub)
 
     with db.atomic():
