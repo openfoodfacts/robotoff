@@ -28,6 +28,8 @@ class FakeNutriscoreModel(RemoteModel):
         output_image: bool = False,
         triton_uri: str | None = None,
         threshold: float | None = 0.5,
+        nms_threshold: float | None = None,
+        nms_eta: float | None = None,
     ) -> ObjectDetectionResult:
         return self.raw_result
 
