@@ -423,7 +423,7 @@ def run_nutrition_table_object_detection(
     )
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -562,7 +562,7 @@ def run_nutriscore_object_detection(
     )
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -653,7 +653,7 @@ def run_logo_object_detection(
     logger.info("Running logo object detection for %s, image %s", product_id, image_url)
 
     image = typing.cast(
-        Image.Image | None,
+        np.ndarray | None,
         get_image_from_url(
             image_url,
             error_raise=False,
@@ -701,7 +701,10 @@ def run_logo_object_detection(
                 if ocr_result:
                     # We try to find the text in the bounding box of the logo
                     text = get_text_from_bounding_box(
-                        ocr_result, item["bounding_box"], image.width, image.height
+                        ocr_result,
+                        item["bounding_box"],
+                        image_height=image.shape[0],
+                        image_width=image.shape[1],
                     )
                 logos.append(
                     LogoAnnotation.create(

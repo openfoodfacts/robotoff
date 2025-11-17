@@ -2,8 +2,8 @@ import datetime
 import logging
 from typing import Iterable
 
+import numpy as np
 from openfoodfacts.ocr import OCRResult
-from PIL import Image
 
 from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
@@ -49,7 +49,7 @@ PRODUCT_NAME_PREDICTION_TYPES: list[PredictionType] = [
 
 def run_object_detection_model(
     model_name: ObjectDetectionModel,
-    image: Image.Image,
+    image: np.ndarray,
     image_model: ImageModel,
     threshold: float = 0.1,
     return_null_if_exist: bool = True,
@@ -63,7 +63,7 @@ def run_object_detection_model(
     DB for this image and model.
 
     :param model_name: name of the object detection model to use
-    :param image: the input Pillow image
+    :param image: the input image, as a numpy array
     :param image_model: the image in DB
     :param source_image: the source image path (used to fetch the image from
       `image` table)
