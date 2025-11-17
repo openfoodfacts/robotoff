@@ -425,7 +425,13 @@ def run_nutrition_table_object_detection(
     image = typing.cast(
         Image.Image | None,
         get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=True
+            image_url,
+            error_raise=False,
+            session=http_session,
+            use_cache=True,
+            # Preprocessing pipeline for object detection models now expect numpy
+            # arrays as input
+            return_type="np",
         ),
     )
 
@@ -558,7 +564,13 @@ def run_nutriscore_object_detection(
     image = typing.cast(
         Image.Image | None,
         get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=True
+            image_url,
+            error_raise=False,
+            session=http_session,
+            use_cache=True,
+            # Preprocessing pipeline for object detection models now expect numpy
+            # arrays as input
+            return_type="np",
         ),
     )
 
@@ -643,7 +655,13 @@ def run_logo_object_detection(
     image = typing.cast(
         Image.Image | None,
         get_image_from_url(
-            image_url, error_raise=False, session=http_session, use_cache=True
+            image_url,
+            error_raise=False,
+            session=http_session,
+            use_cache=True,
+            # Preprocessing pipeline for object detection models now expect numpy
+            # arrays as input
+            return_type="np",
         ),
     )
     ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
