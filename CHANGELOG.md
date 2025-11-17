@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.81.0](https://github.com/openfoodfacts/robotoff/compare/v1.80.0...v1.81.0) (2025-11-17)
+
+
+### Features
+
+* upgrade logo detector model ([#1781](https://github.com/openfoodfacts/robotoff/issues/1781)) ([6c11615](https://github.com/openfoodfacts/robotoff/commit/6c1161589d3e00f7049dba17041c226e342530d3))
+
+
+### Bug Fixes
+
+* **object-detection:** fix bug after switch from PIL -&gt; np array ([#1782](https://github.com/openfoodfacts/robotoff/issues/1782)) ([d4073d2](https://github.com/openfoodfacts/robotoff/commit/d4073d233364bf210a331d8ff42dc14a6b4befc2))
+
+
+### Technical
+
+* **deps:** bump googleapis/release-please-action from 4.3 to 4.4 in the all-actions group ([#1779](https://github.com/openfoodfacts/robotoff/issues/1779)) ([e751ffa](https://github.com/openfoodfacts/robotoff/commit/e751ffa9da01f03c2e6608244a2a7b58a076c701))
+* **deps:** bump the all-actions group with 4 updates ([#1771](https://github.com/openfoodfacts/robotoff/issues/1771)) ([e4843fe](https://github.com/openfoodfacts/robotoff/commit/e4843fe0d661908d639b17f829699e6298d318ee))
+* update documentation after moving all models to HF ([#1780](https://github.com/openfoodfacts/robotoff/issues/1780)) ([73483a2](https://github.com/openfoodfacts/robotoff/commit/73483a2e85fca904f110e50810fc3697a840d806))
+
 ## [1.80.0](https://github.com/openfoodfacts/robotoff/compare/v1.79.2...v1.80.0) (2025-10-20)
 
 
