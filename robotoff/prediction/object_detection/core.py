@@ -2,6 +2,8 @@ import dataclasses
 import logging
 import time
 
+import albumentations as A
+import cv2
 import numpy as np
 from cv2 import dnn
 from openfoodfacts.ml.object_detection import (
@@ -19,6 +21,74 @@ from robotoff.types import ObjectDetectionModel
 from robotoff.utils.image import convert_image_to_array
 
 ml_metrics_logger = logging.getLogger("robotoff.ml_metrics")
+
+
+DEFAULT_MEAN = (0.0, 0.0, 0.0)
+DEFAULT_STD = (1.0, 1.0, 1.0)
+
+
+def object_detection_transform(image_size: int) -> A.Compose:
+    return A.Compose(
+        [
+            A.LongestMaxSize(max_size=image_size, interpolation=cv2.INTER_LINEAR),
+            A.PadIfNeeded(
+                min_height=image_size,
+                min_width=image_size,
+                position="center",
+                fill=114,
+            ),
+            A.Normalize(mean=DEFAULT_MEAN, std=DEFAULT_STD, p=1.0),
+        ],
+    )
+
+
+def reverse_bbox_transform(
+    augmented_bbox: list, original_shape: tuple, image_size: int
+) -> list:
+    """
+    Reverses the Albumentations pipeline to find original bbox coordinates.
+
+    Args:
+        augmented_bbox (list): [y_min, x_min, y_max, x_max] from the
+                               augmented (image_size x image_size) image.
+        original_shape (tuple): (height, width) of the *original* image.
+        image_size (int): The target size used in the pipeline.
+
+    Returns:
+        list: [y_min, x_min, y_max, x_max] in relative coordinates.
+    """
+
+    original_h, original_w = original_shape
+
+    # --- 1. Re-calculate the forward transform parameters ---
+
+    # From A.LongestMaxSize
+    scale = image_size / max(original_h, original_w)
+
+    # The dimensions of the image *after* scaling but *before* padding
+    scaled_h = int(original_h * scale)
+    scaled_w = int(original_w * scale)
+
+    # From A.PadIfNeeded (position="center")
+    # This is the amount of padding added to each side
+    pad_top = (image_size - scaled_h) // 2
+    pad_left = (image_size - scaled_w) // 2
+
+    # --- 2. Apply the inverse transformation ---
+    aug_y_min, aug_x_min, aug_y_max, aug_x_max = augmented_bbox
+
+    # coord_orig = (coord_aug - padding) / scale
+    orig_y_min = (aug_y_min - pad_top) / scale
+    orig_x_min = (aug_x_min - pad_left) / scale
+    orig_y_max = (aug_y_max - pad_top) / scale
+    orig_x_max = (aug_x_max - pad_left) / scale
+
+    return [
+        orig_y_min / original_h,
+        orig_x_min / original_w,
+        orig_y_max / original_h,
+        orig_x_max / original_w,
+    ]
 
 
 class ModelConfig(BaseModel):
@@ -120,7 +190,7 @@ class ObjectDetector:
 
     def detect_from_image(
         self,
-        image: Image.Image,
+        image: Image.Image | np.ndarray,
         triton_uri: str,
         threshold: float = 0.5,
         model_version: str | None = None,
@@ -139,7 +209,12 @@ class ObjectDetector:
         :return: the detection result
         """
         start_time = time.monotonic()
-        image_array, scale_x, scale_y = self.preprocess(image)
+        original_shape = None if isinstance(image, Image.Image) else image.shape[:2]
+        if isinstance(image, np.ndarray):
+            image_array = self.preprocess_albumentations(image_array=image)
+            scale_x = scale_y = None
+        else:
+            image_array, scale_x, scale_y = self.preprocess(image)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.model_name
         if model_version:
@@ -148,7 +223,7 @@ class ObjectDetector:
             request, name="images", data=image_array, datatype="FP32"
         )
         ml_metrics_logger.info(
-            "Preprocessing time for %s: %ss",
+            "Preprocessing time (including gRPC request building) for %s: %ss",
             self.model_name,
             time.monotonic() - start_time,
         )
@@ -162,7 +237,11 @@ class ObjectDetector:
 
         start_time = time.monotonic()
         response = self.postprocess(
-            response, threshold=threshold, scale_x=scale_x, scale_y=scale_y
+            response,
+            threshold=threshold,
+            scale_x=scale_x,
+            scale_y=scale_y,
+            original_shape=original_shape,
         )
         ml_metrics_logger.info(
             "Post-processing time for %s: %ss",
@@ -170,6 +249,25 @@ class ObjectDetector:
             time.monotonic() - start_time,
         )
         return response
+
+    def preprocess_albumentations(self, image_array: np.ndarray) -> np.ndarray:
+        start_time = time.monotonic()
+        # Apply the transform to the image
+        image_array = object_detection_transform(image_size=self.image_size)(
+            image=image_array
+        )["image"]
+        ml_metrics_logger.info(
+            "Preprocessing time (without transpose) for %s: %ss",
+            self.model_name,
+            time.monotonic() - start_time,
+        )
+        image_array = np.transpose(image_array, (2, 0, 1))[np.newaxis, :]  # HWC to CHW
+        ml_metrics_logger.info(
+            "Preprocessing time (with transpose) for %s: %ss",
+            self.model_name,
+            time.monotonic() - start_time,
+        )
+        return image_array
 
     def preprocess(self, image: Image.Image) -> tuple[np.ndarray, float, float]:
         # Yolo object detection models expect a specific image dimension
@@ -205,7 +303,12 @@ class ObjectDetector:
         return image_array, scale_x, scale_y
 
     def postprocess(
-        self, response, threshold: float, scale_x: float, scale_y: float
+        self,
+        response,
+        threshold: float,
+        scale_x: float | None,
+        scale_y: float | None,
+        original_shape: tuple[int, int] | None,
     ) -> ObjectDetectionRawResult:
         if len(response.outputs) != 1:
             raise ValueError(f"expected 1 output, got {len(response.outputs)}")
@@ -249,10 +352,23 @@ class ObjectDetector:
             # We save the bounding box in the format
             # (y_min, x_min, y_max, x_max) in relative coordinates
             # Scale the bounding boxes back to the original image size
-            raw_detection_boxes[i, 0] = max(0.0, min(1.0, y_min / scale_y))
-            raw_detection_boxes[i, 1] = max(0.0, min(1.0, x_min / scale_x))
-            raw_detection_boxes[i, 2] = max(0.0, min(1.0, y_max / scale_y))
-            raw_detection_boxes[i, 3] = max(0.0, min(1.0, x_max / scale_x))
+
+            if original_shape is None:
+                # Alternative method without Albumentations
+                raw_detection_boxes[i, 0] = max(0.0, min(1.0, y_min / scale_y))
+                raw_detection_boxes[i, 1] = max(0.0, min(1.0, x_min / scale_x))
+                raw_detection_boxes[i, 2] = max(0.0, min(1.0, y_max / scale_y))
+                raw_detection_boxes[i, 3] = max(0.0, min(1.0, x_max / scale_x))
+            else:
+                reversed_bboxes = reverse_bbox_transform(
+                    augmented_bbox=[y_min, x_min, y_max, x_max],
+                    original_shape=original_shape,
+                    image_size=self.image_size,
+                )
+                raw_detection_boxes[i, 0] = max(0.0, min(1.0, reversed_bboxes[0]))
+                raw_detection_boxes[i, 1] = max(0.0, min(1.0, reversed_bboxes[1]))
+                raw_detection_boxes[i, 2] = max(0.0, min(1.0, reversed_bboxes[2]))
+                raw_detection_boxes[i, 3] = max(0.0, min(1.0, reversed_bboxes[3]))
 
         start_time = time.monotonic()
         # Perform NMS (Non Maximum Suppression)
@@ -347,10 +463,10 @@ class RemoteModel:
         result = ObjectDetectionResult(**dataclasses.asdict(result))
 
         if output_image:
-            add_boxes_and_labels(
-                convert_image_to_array(image).astype(np.uint8),
-                result,
-            )
+            if isinstance(image, Image.Image):
+                image = convert_image_to_array(image).astype(np.uint8)
+
+            add_boxes_and_labels(image, result)
         return result
 
 
