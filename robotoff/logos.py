@@ -6,7 +6,6 @@ import operator
 
 import elasticsearch
 import numpy as np
-from cachetools.func import ttl_cache
 from elasticsearch.helpers import bulk as elasticsearch_bulk
 from elasticsearch.helpers import scan as elasticsearch_scan
 from more_itertools import chunked
@@ -53,7 +52,6 @@ BoundingBoxType = tuple[float, float, float, float]
 def load_resources():
     """Load and cache resources."""
     get_logo_confidence_thresholds()
-    get_logo_annotations()
 
 
 def compute_iou(box_1: BoundingBoxType, box_2: BoundingBoxType) -> float:
@@ -245,37 +243,37 @@ def knn_search(
     return []
 
 
-# ttl: 1h
-@ttl_cache(maxsize=1, ttl=3600)
-def get_logo_annotations() -> dict[int, LogoLabelType]:
-    logger.debug("Loading logo annotations from DB...")
+def get_logo_annotations(logo_ids: list[int]) -> dict[int, LogoLabelType]:
+    """Return a mapping of logo_id to its (type, value) annotation for the given
+    logo_ids.
+
+    Unannotated logos are not included in the result.
+
+    :param logo_ids: a list of logo IDs to get annotations for
+    :return: a dict mapping logo_id to (type, value) annotation
+    """
     annotations: dict[int, LogoLabelType] = {}
 
-    for logo in (
+    for logo_id, annotation_type, annotation_value, taxonomy_value in (
         LogoAnnotation.select(
             LogoAnnotation.id,
             LogoAnnotation.annotation_type,
             LogoAnnotation.annotation_value,
             LogoAnnotation.taxonomy_value,
         )
-        .where(LogoAnnotation.annotation_type.is_null(False))
+        .where(
+            LogoAnnotation.annotation_type.is_null(False),
+            LogoAnnotation.id.in_(logo_ids),
+        )
+        .tuples()
         .iterator()
     ):
-        if logo.annotation_value is None:
-            annotations[logo.id] = (logo.annotation_type, None)
-        elif logo.taxonomy_value is not None:
-            annotations[logo.id] = (logo.annotation_type, logo.taxonomy_value)
+        if annotation_value is None:
+            annotations[logo_id] = (annotation_type, None)
+        elif taxonomy_value is not None:
+            annotations[logo_id] = (annotation_type, taxonomy_value)
 
     return annotations
-
-
-def predict_label(logo: LogoAnnotation) -> LogoLabelType | None:
-    probs = predict_proba(logo)
-
-    if probs is None or not probs:
-        return None
-
-    return sorted(probs.items(), key=operator.itemgetter(0))[0][0]
 
 
 def predict_proba(
@@ -287,17 +285,16 @@ def predict_proba(
     nn_distances = logo.nearest_neighbors["distances"]
     nn_logo_ids = logo.nearest_neighbors["logo_ids"]
 
-    logo_annotations = get_logo_annotations()
+    logo_annotations = get_logo_annotations(nn_logo_ids)
 
     nn_labels: list[LogoLabelType] = []
     for nn_logo_id in nn_logo_ids:
         nn_labels.append(logo_annotations.get(nn_logo_id, UNKNOWN_LABEL))
 
-    return _predict_proba(nn_logo_ids, nn_labels, nn_distances, weights)
+    return _predict_proba(nn_labels, nn_distances, weights)
 
 
 def _predict_proba(
-    logo_ids: list[int],
     nn_labels: list[LogoLabelType],
     nn_distances: list[float],
     weights: str,
@@ -631,4 +628,3 @@ def refresh_nearest_neighbors(
 
 
 function_cache_register.register(get_logo_confidence_thresholds)
-function_cache_register.register(get_logo_annotations)
