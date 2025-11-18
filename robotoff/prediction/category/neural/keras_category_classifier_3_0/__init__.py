@@ -4,6 +4,7 @@ import typing
 from typing import Literal
 
 import numpy as np
+import peewee
 from openfoodfacts.ocr import OCRResult
 from PIL import Image
 from tritonclient.grpc import service_pb2
@@ -97,13 +98,22 @@ def save_image_embeddings(
     ):
         logger.info("%d images were not found in image table", num_missing_images)
 
-    rows = [
-        {"image_id": image_id_to_model_id[image_id], "embedding": embedding.tobytes()}
-        for image_id, embedding in embeddings.items()
-        if image_id in image_id_to_model_id
-    ]
-    ImageEmbedding.insert_many(rows).execute()
-    logger.info("%d image embeddings created in db", len(rows))
+    created = 0
+    for image_id, embedding in embeddings.items():
+        if image_id in image_id_to_model_id:
+            try:
+                ImageEmbedding.create(
+                    image_id=image_id_to_model_id[image_id],
+                    embedding=embedding.tobytes(),
+                )
+                created += 1
+            except peewee.IntegrityError:
+                # save_image_embeddings may be called concurrently for the
+                # same product, in this case another process may have already
+                # created the embedding, we can safely ignore this error
+                logger.debug("Image embedding for image_id %s already exists", image_id)
+
+    logger.info("%d image embeddings created in db", created)
 
 
 @with_db
