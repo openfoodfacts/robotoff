@@ -1,0 +1,135 @@
+name: Notify SDK Repositories of API Changes
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  detect-api-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      has-api-changes: ${{ steps.check-api-changes.outputs.has-api-changes }}
+    steps:
+      - name: Check for API changes in release
+        id: check-api-changes
+        run: |
+          # Check if the release body mentions API changes
+          release_body="${{ github.event.release.body }}"
+          
+          # Convert to lowercase for case-insensitive matching
+          release_body_lower=$(echo "$release_body" | tr '[:upper:]' '[:lower:]')
+          
+          # Check for various API-related keywords that indicate API changes
+          # Keywords include: api, endpoint, route, path, openapi, swagger, breaking changes, 
+          # integrate to public API, API requests, predictions API, etc.
+          if echo "$release_body_lower" | grep -E "(api|endpoint|route|path|openapi|swagger|breaking.*change|public.*api|api.*request)" > /dev/null; then
+            echo "has-api-changes=true" >> $GITHUB_OUTPUT
+            echo "API changes detected in release notes"
+          else
+            echo "has-api-changes=false" >> $GITHUB_OUTPUT
+            echo "No API changes detected in release notes"
+          fi
+
+  create-sdk-issues:
+    needs: detect-api-changes
+    if: needs.detect-api-changes.outputs.has-api-changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sdk-repo:
+          - openfoodfacts/openfoodfacts-php
+          - openfoodfacts/openfoodfacts-js
+          - openfoodfacts/openfoodfacts-laravel
+          - openfoodfacts/openfoodfacts-python
+          - openfoodfacts/openfoodfacts-ruby
+          - openfoodfacts/openfoodfacts-java
+          - openfoodfacts/openfoodfacts-elixir
+          - openfoodfacts/openfoodfacts-dart
+          - openfoodfacts/openfoodfacts-go
+      fail-fast: false
+    steps:
+      - name: Check if SDK_NOTIFY_TOKEN is available
+        id: check-token
+        run: |
+          if [ -z "${{ secrets.SDK_NOTIFY_TOKEN }}" ]; then
+            echo "has-token=false" >> $GITHUB_OUTPUT
+            echo "⚠️ SDK_NOTIFY_TOKEN is not configured. Cannot create issues in external repositories."
+          else
+            echo "has-token=true" >> $GITHUB_OUTPUT
+            echo "✅ SDK_NOTIFY_TOKEN is available."
+          fi
+
+      - name: Create issue in SDK repository
+        if: steps.check-token.outputs.has-token == 'true'
+        uses: actions/github-script@v7
+        with:
+          # Use a PAT token since we need to create issues in external repositories
+          # GITHUB_TOKEN only has permissions for the current repository
+          github-token: ${{ secrets.SDK_NOTIFY_TOKEN }}
+          script: |
+            const [owner, repo] = '${{ matrix.sdk-repo }}'.split('/');
+            const releaseUrl = '${{ github.event.release.html_url }}';
+            const releaseTag = '${{ github.event.release.tag_name }}';
+            const releaseBody = `${{ github.event.release.body }}`;
+            
+            const issueTitle = `Update SDK for Robotoff API changes in ${releaseTag}`;
+            const issueBody = `
+            ## API Changes in Robotoff ${releaseTag}
+            
+            A new version of Robotoff has been released that may contain API changes that require updates to this SDK.
+            
+            **Release:** ${releaseUrl}
+            
+            **Release Notes:**
+            ${releaseBody}
+            
+            ## Action Required
+            
+            Please review the release notes and update this SDK accordingly:
+            
+            1. Check the [OpenAPI specification](https://github.com/openfoodfacts/robotoff/blob/main/doc/references/api.yml) for any changes
+            2. Update SDK methods, parameters, and response models as needed
+            3. Update documentation and examples
+            4. Add or update tests to cover the changes
+            5. Update the SDK version and publish a new release
+            
+            ## Additional Resources
+            
+            - [Robotoff API Documentation](https://robotoff.openfoodfacts.org/docs)
+            - [Robotoff Repository](https://github.com/openfoodfacts/robotoff)
+            - [OpenAPI Specification](https://github.com/openfoodfacts/robotoff/blob/main/doc/references/api.yml)
+            
+            ---
+            
+            This issue was automatically created by the Robotoff release workflow.
+            `;
+            
+            try {
+              const response = await github.rest.issues.create({
+                owner: owner,
+                repo: repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['api-update', 'robotoff']
+              });
+              
+              console.log(`✅ Created issue #${response.data.number} in ${owner}/${repo}`);
+              console.log(`📋 Issue URL: ${response.data.html_url}`);
+            } catch (error) {
+              console.error(`❌ Failed to create issue in ${owner}/${repo}:`, error.message);
+              
+              // Log more details for debugging
+              if (error.status === 404) {
+                console.error(`Repository ${owner}/${repo} not found or not accessible`);
+              } else if (error.status === 403) {
+                console.error(`Permission denied for ${owner}/${repo}. Check token permissions.`);
+              }
+              
+              // Don't fail the entire workflow if one repository fails
+            }
+            
+      - name: Log workflow completion
+        if: steps.check-token.outputs.has-token != 'true'
+        run: |
+          echo "⚠️ Skipped creating issue in ${{ matrix.sdk-repo }} due to missing SDK_NOTIFY_TOKEN"
+          echo "To enable this functionality, add SDK_NOTIFY_TOKEN secret with 'issues:write' permission for external repositories"
