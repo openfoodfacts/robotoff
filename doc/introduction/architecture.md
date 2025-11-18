@@ -26,12 +26,17 @@ Robotoff also depends on external services in production:
 
 Communication between API and workers happens through Robotoff Redis DB using [rq](https://python-rq.org). [^worker_job]
 
-Jobs are sent through rq messaging queues. We currently have two types of queues:
+Jobs are sent through rq messaging queues. We currently have three types of queues:
 
-- High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode [^product_specific_queue]. This way, we greatly reduce the risk of concurrent processing for the same product (DB deadlocks or integrity errors).
+- High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode [^product_specific_queue]. This way, we prevent concurrent processing for the same product (DB deadlocks or integrity errors).
 - Low priority queue `robotoff-low`, which is used for all lower-priority jobs.
+- A machine learning queue (`robotoff-ml-model`): this is used to run ML models (logo detection, ingredient extraction,...) on product images. Tasks published on this queue should not directly import insights into the database, they should only create image predictions. Insights import should be done in a separate job using high-priority queues.
 
-Each worker listens to a single high priority queue. It handles high-priority jobs first, then low-priority jobs if the high-priority queue it's listening to is empty. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.
+Currently, we have 4 workers that can process jobs on high priority queues (`robotoff-worker-{1,4}`). These workers listen to a single high priority queue each. Then can also process jobs published on the ML and low queues.
+
+By order of priority, they handle high-priority jobs first, then `robotoff-ml-models` jobs, then low-priority jobs. This way, we ensure low priority jobs don't use excessive system resources, by limiting the number of workers that can handle such jobs.
+
+Two workers (`robotoff-worker-ml-1` and `robotoff-worker-ml-2`) are dedicated to the ML model queue, to ensure a good throughput for ML inference.
 
 [^worker_job]: See `robotoff.workers.queues` and `robotoff.workers.tasks`
 

@@ -46,12 +46,12 @@ To display all running services, run `make status`:
 ```
         Name                      Command               State                  Ports                
 ----------------------------------------------------------------------------------------------------
-robotoff_api_1         /bin/sh -c /docker-entrypo ...   Up      0.0.0.0:5500->5500/tcp,:::5500->5500
+robotoff-api-1         /bin/sh -c /docker-entrypo ...   Up      0.0.0.0:5500->5500/tcp,:::5500->5500
                                                                 /tcp                                
-robotoff_postgres_1    docker-entrypoint.sh postg ...   Up      127.0.0.1:5432->5432/tcp            
-robotoff_scheduler_1   /bin/sh -c /docker-entrypo ...   Up                                          
-robotoff_worker_low_1     /bin/sh -c /docker-entrypo ...   Up                              
-robotoff_worker_high_1     /bin/sh -c /docker-entrypo ...   Up
+robotoff-postgres-1    docker-entrypoint.sh postg ...   Up      127.0.0.1:5432->5432/tcp            
+robotoff-scheduler-1   /bin/sh -c /docker-entrypo ...   Up                                          
+robotoff-worker-1     /bin/sh -c /docker-entrypo ...   Up                              
+robotoff-worker-2     /bin/sh -c /docker-entrypo ...   Up
 ...                              
 ```
 
@@ -61,7 +61,7 @@ If you want to monitor how much job robotoff has to do (how behind it is),
 you can run the `rq` command to get status:
 
 ```bash
-docker compose run --rm --no-deps worker_1 rq info
+docker compose run --rm --no-deps worker-1 rq info
 ```
 
 This may help you understand why robotoff insight are not visible immediately on products.

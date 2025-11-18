@@ -102,29 +102,39 @@ services:
       - redis
     command: python -m robotoff run-update-listener
 
-  worker_1:
+  worker-1:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_1
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-1
     # Each worker listens to a single high priority queue and to the low priority queue.
     # As the low priority queue comes last, it will only be processed if there are no high
     # priority tasks.
-    command: python -m robotoff run-worker robotoff-high-1 robotoff-low
+    command: python -m robotoff run-worker robotoff-high-1 robotoff-ml-model robotoff-low
 
-  worker_2:
+  worker-2:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_2
-    command: python -m robotoff run-worker robotoff-high-2 robotoff-low
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-2
+    command: python -m robotoff run-worker robotoff-high-2 robotoff-ml-model robotoff-low
 
-  worker_3:
+  worker-3:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_3
-    command: python -m robotoff run-worker robotoff-high-3 robotoff-low
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-3
+    command: python -m robotoff run-worker robotoff-high-3 robotoff-ml-model robotoff-low
 
-  worker_4:
+  worker-4:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}_worker_4
-    command: python -m robotoff run-worker robotoff-high-4 robotoff-low
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-4
+    command: python -m robotoff run-worker robotoff-high-4 robotoff-ml-model robotoff-low
 
+  worker-ml-1:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-ml-1
+    command: python -m robotoff run-worker robotoff-ml-model robotoff-low
+
+  worker-ml-2:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-ml-2
+    command: python -m robotoff run-worker robotoff-ml-model robotoff-low
+  
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env

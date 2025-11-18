@@ -15,10 +15,15 @@ from robotoff.types import ProductIdentifier
 
 logger = logging.getLogger(__name__)
 
+# One queue for running ML models, it should not import insights directly
+ml_model_queue = Queue("robotoff-ml-model", connection=redis_conn)
+# Each product has a unique high-priority queue to avoid concurrent processing
+# of insights for the same product
 high_queues = [
     Queue(f"robotoff-high-{i + 1}", connection=redis_conn)
     for i in range(settings.NUM_RQ_WORKERS)
 ]
+# Low queue is for low-priority tasks
 low_queue = Queue("robotoff-low", connection=redis_conn)
 
 
