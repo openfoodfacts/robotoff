@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.83.0](https://github.com/openfoodfacts/robotoff/compare/v1.82.0...v1.83.0) (2025-11-18)
+
+
+### Features
+
+* improve worker and queue management ([#1789](https://github.com/openfoodfacts/robotoff/issues/1789)) ([b8cd7f3](https://github.com/openfoodfacts/robotoff/commit/b8cd7f3558acefb2eb49e9aee972532b785f826d))
+
+
+### Bug Fixes
+
+* accept all logos detected by the object detector model ([#1790](https://github.com/openfoodfacts/robotoff/issues/1790)) ([28af858](https://github.com/openfoodfacts/robotoff/commit/28af85870dc737107d234b3ba9f81a5b802f559e))
+* add missing `with_db` decorator ([510095f](https://github.com/openfoodfacts/robotoff/commit/510095ff70082f3895a2da21bcdb199dea13d862))
+* increase profile rate for Sentry to 100% ([#1787](https://github.com/openfoodfacts/robotoff/issues/1787)) ([ecee824](https://github.com/openfoodfacts/robotoff/commit/ecee82450f83cd940838665824e3d2003c6553b6))
+
+
+### Technical
+
+* add extra log during OFF error ([#1791](https://github.com/openfoodfacts/robotoff/issues/1791)) ([3392b07](https://github.com/openfoodfacts/robotoff/commit/3392b07630db4ad473d995c480cc49bc7e4ae5bd))
+
 ## [1.82.0](https://github.com/openfoodfacts/robotoff/compare/v1.81.0...v1.82.0) (2025-11-18)
 
 
