@@ -75,17 +75,23 @@ def add_category_insight(
 
     if async_import:
         enqueue_job(
-            import_category_predictions,
+            import_category_predictions_job,
             get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             predictions=product_predictions,
         )
     else:
-        import_category_predictions(product_id, product_predictions)
+        for prediction in product_predictions:
+            prediction.barcode = product_id.barcode
+            prediction.server_type = product_id.server_type
+
+        import_result = import_insights(product_predictions, product_id.server_type)
+        logger.info(import_result)
 
 
-def import_category_predictions(
+@with_db
+def import_category_predictions_job(
     product_id: ProductIdentifier, predictions: list[Prediction]
 ) -> None:
     """Import category predictions as insights.
