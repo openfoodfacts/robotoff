@@ -265,7 +265,7 @@ def init_sentry(integrations: list[Integration] | None = None):
             environment=robotoff_instance,
             integrations=integrations,
             release=get_package_version(),
-            traces_sample_rate=0.1,
+            traces_sample_rate=1.0,
             enable_logs=True,
         )
     elif robotoff_instance == "prod":
