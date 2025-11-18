@@ -169,6 +169,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                     description=str(e),
                 )
 
+        product_id = insight.get_product_id()
         with db.atomic() as tx:
             try:
                 return cls._annotate(insight, annotation, update, data, auth, is_vote)
@@ -177,6 +178,11 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
                     logger.warning(
                         "HTTPError occurred during OFF update: %s",
                         e.response.status_code,
+                        extra={
+                            "response_text": e.response.text,
+                            "barcode": product_id.barcode,
+                            "server_type": product_id.server_type.name,
+                        },
                     )
                     logger.info("Rolling back SQL transaction")
                     tx.rollback()
