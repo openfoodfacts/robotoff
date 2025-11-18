@@ -2426,14 +2426,14 @@ numpy = {version = ">=2,<2.3.0", markers = "python_version >= \"3.9\""}
 
 [[package]]
 name = "openfoodfacts"
-version = "3.0.0"
+version = "3.2.0"
 description = "Official Python SDK of Open Food Facts"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "openfoodfacts-3.0.0-py3-none-any.whl", hash = "sha256:ed0c28c1c90cc9f8a06f2245a2df5a41dd2e6c381d7fdfdad21351f83dfb7c27"},
-    {file = "openfoodfacts-3.0.0.tar.gz", hash = "sha256:6337a531107f02047afffe85015afb79af21fddb83ff06ec72aefcd6f8c69871"},
+    {file = "openfoodfacts-3.2.0-py3-none-any.whl", hash = "sha256:a222d9fd90a4a0269ac4288d9f78c3bc01d5ed9552459d74866f4b2145fd3ad7"},
+    {file = "openfoodfacts-3.2.0.tar.gz", hash = "sha256:c654b11d3ddbe744f9caccd2ddba0c0fb3b824f73ca37588d42a1d291e70ae59"},
 ]
 
 [package.dependencies]
@@ -5107,4 +5107,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f7d13cabd5ad90e294845f1d77f431abb091639301713f6dc6957d548c40f77f"
+content-hash = "9b842a8bce765196e342baa3745479b562def508c321f8896d452fe3da852379"
