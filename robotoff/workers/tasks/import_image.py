@@ -68,7 +68,12 @@ from robotoff.utils.image import (
     convert_bounding_box_absolute_to_relative,
     convert_image_to_array,
 )
-from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
+from robotoff.workers.queues import (
+    enqueue_job,
+    get_high_queue,
+    low_queue,
+    ml_model_queue,
+)
 from robotoff.workers.tasks.common import add_category_insight_job
 
 logger = logging.getLogger(__name__)
@@ -243,17 +248,29 @@ def run_import_image(
     )
 
     high_queue = get_high_queue(product_id) if use_high_queue else low_queue
+    selected_ml_model_queue = ml_model_queue if use_high_queue else low_queue
 
-    if ImportImageFlag.add_image_fingerprint in flags:
-        # Compute image fingerprint, this job is low priority
+    if ImportImageFlag.run_logo_object_detection in flags:
         enqueue_job(
-            add_image_fingerprint_job,
-            low_queue,
+            run_logo_object_detection,
+            selected_ml_model_queue,
             job_kwargs={"result_ttl": 0},
-            image_model_id=image_model_id,
+            product_id=product_id,
+            image_url=image_url,
+            ocr_url=ocr_url,
         )
 
     if product_id.server_type.is_food():
+        if ImportImageFlag.run_nutrition_table_object_detection in flags:
+            # Run object detection model that detects nutrition tables
+            enqueue_job(
+                run_nutrition_table_object_detection,
+                selected_ml_model_queue,
+                job_kwargs={"result_ttl": 0},
+                product_id=product_id,
+                image_url=image_url,
+            )
+
         if ImportImageFlag.import_insights_from_image in flags:
             # Currently we don't support insight generation for projects other
             # than OFF (OBF, OPF,...)
@@ -271,7 +288,7 @@ def run_import_image(
             # trained on non-food products
             enqueue_job(
                 extract_ingredients_job,
-                high_queue,
+                selected_ml_model_queue,
                 # We add a higher timeout, as we request Product Opener to
                 # parse ingredient list, which may take a while depending on
                 # the number of ingredient list (~1s per ingredient list)
@@ -283,7 +300,7 @@ def run_import_image(
         if ImportImageFlag.extract_nutrition in flags:
             enqueue_job(
                 extract_nutrition_job,
-                high_queue,
+                selected_ml_model_queue,
                 job_kwargs={"result_ttl": 0, "timeout": "2m"},
                 product_id=product_id,
                 image_url=image_url,
@@ -297,35 +314,19 @@ def run_import_image(
             # last 10 images to predict the category
             enqueue_job(
                 add_category_insight_job,
-                high_queue,
+                selected_ml_model_queue,
                 job_kwargs={"result_ttl": 0, "timeout": "2m"},
                 product_id=product_id,
             )
 
-    if ImportImageFlag.run_logo_object_detection in flags:
-        # We make sure there are no concurrent insight processing by sending
-        # the job to the same queue. The queue is selected based on the product
-        # barcode. See `get_high_queue` documentation for more details.
+    if ImportImageFlag.add_image_fingerprint in flags:
+        # Compute image fingerprint, this job is low priority
         enqueue_job(
-            run_logo_object_detection,
-            high_queue,
+            add_image_fingerprint_job,
+            low_queue,
             job_kwargs={"result_ttl": 0},
-            product_id=product_id,
-            image_url=image_url,
-            ocr_url=ocr_url,
+            image_model_id=image_model_id,
         )
-
-    if product_id.server_type.is_food():
-        if ImportImageFlag.run_nutrition_table_object_detection in flags:
-            # Run object detection model that detects nutrition tables
-            enqueue_job(
-                run_nutrition_table_object_detection,
-                high_queue,
-                job_kwargs={"result_ttl": 0},
-                product_id=product_id,
-                image_url=image_url,
-            )
-
     # Run UPC detection to detect if the image is dominated by a UPC (and thus
     # should not be a product selected image)
     # UPC detection is buggy since the upgrade to OpenCV 4.10
@@ -735,6 +736,10 @@ def run_logo_object_detection(
         )
         with db.connection_context():
             save_logo_embeddings(logos, image, triton_stub_clip)
+
+        # We make sure there are no concurrent insight processing by sending
+        # the job to the product-specific queue. The queue is selected based on the
+        # product barcode. See `get_high_queue` documentation for more details.
         enqueue_job(
             process_created_logos,
             get_high_queue(product_id),
@@ -926,32 +931,65 @@ def extract_ingredients_job(
             )
 
         if image_prediction.max_confidence is not None:
-            predictions = []
-            for entity in ingredient_prediction_data["entities"]:
-                if "ingredients_n" not in entity:
-                    logger.info("Parsing information not present in entity, skipping")
-                    continue
-                entity = copy.deepcopy(entity)
-                value_tag = entity["lang"]["lang"]
-                prediction = Prediction(
-                    barcode=product_id.barcode,
-                    type=PredictionType.ingredient_detection,
-                    # We save the language code in the value_tag field
-                    value_tag=value_tag,
-                    value=None,
-                    automatic_processing=False,
-                    predictor=ingredient_list.MODEL_NAME,
-                    predictor_version=ingredient_list.MODEL_VERSION,
-                    data=entity,
-                    # Use the % of recognized ingredients as the confidence score
-                    confidence=entity["fraction_known_ingredients"],
-                    server_type=product_id.server_type,
-                    source_image=source_image,
-                )
-                predictions.append(prediction)
+            # Enqueue job to process ingredient prediction and import insights
+            # This is done on a product-specific queue to avoid concurrent
+            # processing of insights for the same product
+            enqueue_job(
+                func=process_ingredient_prediction_job,
+                queue=get_high_queue(product_id),
+                job_kwargs={"result_ttl": 0},
+                product_id=product_id,
+                image_prediction_id=image_prediction.id,
+                source_image=source_image,
+            )
 
-            imported = import_insights(predictions, server_type=product_id.server_type)
-            logger.info(imported)
+
+@with_db
+def process_ingredient_prediction_job(
+    product_id: ProductIdentifier, image_prediction_id: int, source_image: str
+) -> None:
+    """Process an ingredient detection image prediction and import
+    ingredient insights.
+
+    :param product_id: The identifier of the product.
+    :param image_prediction_id: The ID of the image prediction to process.
+    """
+    image_prediction = ImagePrediction.get_or_none(id=image_prediction_id)
+    if image_prediction is None:
+        logger.info(
+            "Image prediction ID %s not found, skipping ingredient insight import",
+            image_prediction_id,
+        )
+        return
+
+    ingredient_prediction_data = image_prediction.data
+
+    predictions = []
+    for entity in ingredient_prediction_data["entities"]:
+        if "ingredients_n" not in entity:
+            logger.info("Parsing information not present in entity, skipping")
+            continue
+        entity = copy.deepcopy(entity)
+        value_tag = entity["lang"]["lang"]
+        prediction = Prediction(
+            barcode=product_id.barcode,
+            type=PredictionType.ingredient_detection,
+            # We save the language code in the value_tag field
+            value_tag=value_tag,
+            value=None,
+            automatic_processing=False,
+            predictor=ingredient_list.MODEL_NAME,
+            predictor_version=ingredient_list.MODEL_VERSION,
+            data=entity,
+            # Use the % of recognized ingredients as the confidence score
+            confidence=entity["fraction_known_ingredients"],
+            server_type=product_id.server_type,
+            source_image=source_image,
+        )
+        predictions.append(prediction)
+
+    imported = import_insights(predictions, server_type=product_id.server_type)
+    logger.info(imported)
 
 
 def is_valid_language_code(lang_id: str) -> bool:
@@ -1193,7 +1231,7 @@ def extract_nutrition_job(
                 "entities": dataclasses.asdict(output.entities),
             }
         logger.info("create image prediction (nutrition extraction) from %s", ocr_url)
-        ImagePrediction.create(
+        image_prediction = ImagePrediction.create(
             image=image_model,
             type="nutrition_extraction",
             model_name=nutrition_extraction.MODEL_NAME,
@@ -1204,25 +1242,58 @@ def extract_nutrition_job(
         )
 
         if "nutrients" in data and len(data["nutrients"]) > 0:
-            # Only keep 'postprocessed' entities, as they are the most
-            # relevant for the user
-            prediction_data = {
-                "nutrients": data["nutrients"],
-                "entities": {"postprocessed": data["entities"]["postprocessed"]},
-            }
-            prediction = Prediction(
-                barcode=product_id.barcode,
-                type=PredictionType.nutrient_extraction,
-                # value and value_tag are None, all data is in data field
-                value_tag=None,
-                value=None,
-                automatic_processing=False,
-                predictor=nutrition_extraction.MODEL_NAME,
-                predictor_version=nutrition_extraction.MODEL_VERSION,
-                data=prediction_data,
-                confidence=None,
-                server_type=product_id.server_type,
+            # Enqueue job to process nutrition prediction and import insights
+            # This is done on a product-specific queue to avoid concurrent
+            # processing of insights for the same product
+            enqueue_job(
+                func=process_nutrition_prediction_job,
+                queue=get_high_queue(product_id),
+                job_kwargs={"result_ttl": 0},
+                product_id=product_id,
                 source_image=source_image,
+                image_prediction_id=image_prediction.id,
             )
-            imported = import_insights([prediction], server_type=product_id.server_type)
-            logger.info(imported)
+
+
+@with_db
+def process_nutrition_prediction_job(
+    product_id: ProductIdentifier, source_image: str, image_prediction_id: int
+) -> None:
+    """Process a nutrition extraction image prediction and import
+    nutrition insights.
+
+    :param product_id: The identifier of the product.
+    :param source_image: The source image URL.
+    :param image_prediction_id: The ID of the image prediction to process.
+    """
+    image_prediction = ImagePrediction.get_or_none(id=image_prediction_id)
+    if image_prediction is None:
+        logger.info(
+            "Image prediction ID %s not found, skipping nutrition insight import",
+            image_prediction_id,
+        )
+        return
+
+    data = image_prediction.data
+    # Only keep 'postprocessed' entities, as they are the most
+    # relevant for the user
+    prediction_data = {
+        "nutrients": data["nutrients"],
+        "entities": {"postprocessed": data["entities"]["postprocessed"]},
+    }
+    prediction = Prediction(
+        barcode=product_id.barcode,
+        type=PredictionType.nutrient_extraction,
+        # value and value_tag are None, all data is in data field
+        value_tag=None,
+        value=None,
+        automatic_processing=False,
+        predictor=nutrition_extraction.MODEL_NAME,
+        predictor_version=nutrition_extraction.MODEL_VERSION,
+        data=prediction_data,
+        confidence=None,
+        server_type=product_id.server_type,
+        source_image=source_image,
+    )
+    imported = import_insights([prediction], server_type=product_id.server_type)
+    logger.info(imported)

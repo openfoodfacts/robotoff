@@ -7,7 +7,8 @@ from robotoff.models import with_db
 from robotoff.prediction.category.neural.category_classifier import CategoryClassifier
 from robotoff.products import get_product
 from robotoff.taxonomy import TaxonomyType, get_taxonomy
-from robotoff.types import JSONType, ProductIdentifier
+from robotoff.types import JSONType, Prediction, ProductIdentifier
+from robotoff.workers.queues import enqueue_job, get_high_queue
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +29,16 @@ def add_category_insight_job(
         logger.info("Product does not exist: %s", product_id)
         return
 
-    add_category_insight(product_id, product_dict, triton_uri=triton_uri)
+    add_category_insight(
+        product_id, product_dict, triton_uri=triton_uri, async_import=True
+    )
 
 
 def add_category_insight(
-    product_id: ProductIdentifier, product: JSONType, triton_uri: str | None = None
+    product_id: ProductIdentifier,
+    product: JSONType,
+    triton_uri: str | None = None,
+    async_import: bool = False,
 ) -> None:
     """Predict categories for product and import predicted category insight.
 
@@ -40,6 +46,8 @@ def add_category_insight(
     :param product: product as retrieved from MongoDB
     :param triton_uri: URI of the Triton Inference Server, defaults to
         None. If not provided, the default value from settings is used.
+    :param async_import: whether to import insights asynchronously using rq, in a
+        product-specific rq queue, defaults to False
     """
     if not product_id.server_type.is_food():
         # Category prediction is only available for Food products
@@ -65,9 +73,28 @@ def add_category_insight(
     if len(product_predictions) < 1:
         return
 
-    for prediction in product_predictions:
+    if async_import:
+        enqueue_job(
+            import_category_predictions,
+            get_high_queue(product_id),
+            job_kwargs={"result_ttl": 0},
+            product_id=product_id,
+            predictions=product_predictions,
+        )
+    else:
+        import_category_predictions(product_id, product_predictions)
+
+
+def import_category_predictions(
+    product_id: ProductIdentifier, predictions: list[Prediction]
+) -> None:
+    """Import category predictions as insights.
+
+    :param predictions: list of category predictions
+    """
+    for prediction in predictions:
         prediction.barcode = product_id.barcode
         prediction.server_type = product_id.server_type
 
-    import_result = import_insights(product_predictions, product_id.server_type)
+    import_result = import_insights(predictions, product_id.server_type)
     logger.info(import_result)

@@ -1,6 +1,7 @@
+import numpy as np
 import pytest
 
-from robotoff.models import ImagePrediction, Prediction, ProductInsight
+from robotoff.models import ImagePrediction, LogoEmbedding, Prediction, ProductInsight
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.prediction.ingredient_list import (
     IngredientPredictionAggregatedEntity,
@@ -12,7 +13,13 @@ from robotoff.prediction.nutrition_extraction import (
     NutritionEntities,
     NutritionExtractionPrediction,
 )
-from robotoff.types import PredictionType, ProductIdentifier, ServerType
+from robotoff.types import (
+    InsightImportResult,
+    PredictionType,
+    ProductIdentifier,
+    ServerType,
+)
+from robotoff.workers.queues import get_high_queue
 from robotoff.workers.tasks.import_image import (
     extract_ingredients_job,
     extract_nutrition_job,
@@ -20,12 +27,25 @@ from robotoff.workers.tasks.import_image import (
 from robotoff.workers.tasks.import_image import (
     nutrition_extraction as nutrition_extraction_module,
 )
+from robotoff.workers.tasks.import_image import (
+    process_created_logos,
+    process_ingredient_prediction_job,
+    process_nutrition_prediction_job,
+    save_logo_embeddings,
+)
 
-from ...models_utils import ImageModelFactory, ImagePredictionFactory, clean_db
+from ...models_utils import (
+    ImageModelFactory,
+    ImagePredictionFactory,
+    LogoAnnotationFactory,
+    LogoEmbeddingFactory,
+    clean_db,
+)
 
 DEFAULT_BARCODE = "1234567890123"
 DEFAULT_IMAGE_ID = "1"
 DEFAULT_SOURCE_IMAGE = "/123/456/789/0123/1.jpg"
+DEFAULT_SERVER_TYPE = ServerType.off
 
 
 @pytest.fixture(autouse=True)
@@ -96,9 +116,7 @@ def test_extract_ingredients_job(mocker, peewee_db):
     ingredient_list_mocker.MODEL_NAME = "ingredient_detection"
     ingredient_list_mocker.MODEL_VERSION = "ingredient-detection-1.1"
 
-    import_insights = mocker.patch(
-        "robotoff.workers.tasks.import_image.import_insights"
-    )
+    enqueue_job = mocker.patch("robotoff.workers.tasks.import_image.enqueue_job")
     barcode = "1234567890123"
     ocr_url = "https://images.openfoodfacts.org/images/products/123/456/789/0123/1.json"
 
@@ -146,25 +164,15 @@ def test_extract_ingredients_job(mocker, peewee_db):
         assert image_prediction.model_name == "ingredient_detection"
         assert image_prediction.model_version == "ingredient-detection-1.1"
 
-        assert import_insights.call_count == 1
-        assert len(import_insights.call_args.args) == 1
-        predictions = import_insights.call_args.args[0]
-        assert len(predictions) == 1
-        prediction = predictions[0]
-        assert prediction.type == "ingredient_detection"
-        assert prediction.data == entity
-        assert prediction.barcode == barcode
-        assert prediction.server_type == ServerType.off
-        assert prediction.confidence == 1.0
-        assert prediction.value_tag == "en"
-        assert prediction.value is None
-        assert prediction.automatic_processing is False
-        assert prediction.predictor == "ingredient_detection"
-        assert prediction.predictor_version == "ingredient-detection-1.1"
-        assert prediction.source_image == image.source_image
-
-        assert import_insights.call_args.kwargs == {
-            "server_type": ServerType.off,
+        assert enqueue_job.call_count == 1
+        assert len(enqueue_job.call_args.args) == 0
+        assert enqueue_job.call_args.kwargs == {
+            "func": process_ingredient_prediction_job,
+            "queue": get_high_queue(ProductIdentifier(barcode, ServerType.off)),
+            "job_kwargs": {"result_ttl": 0},
+            "product_id": ProductIdentifier(barcode, ServerType.off),
+            "image_prediction_id": image_prediction.id,
+            "source_image": image.source_image,
         }
 
 
@@ -195,10 +203,7 @@ def test_extract_ingredients_job_existing_image_prediction(mocker, peewee_db):
     )
     ingredient_list_mocker.MODEL_NAME = "ingredient_detection"
     ingredient_list_mocker.MODEL_VERSION = "ingredient-detection-1.1"
-
-    import_insights = mocker.patch(
-        "robotoff.workers.tasks.import_image.import_insights"
-    )
+    enqueue_job = mocker.patch("robotoff.workers.tasks.import_image.enqueue_job")
 
     barcode = "1234567890123"
     ocr_url = "https://images.openfoodfacts.org/images/products/123/456/789/0123/1.json"
@@ -261,18 +266,15 @@ def test_extract_ingredients_job_existing_image_prediction(mocker, peewee_db):
         # We check that the bounding box is converted to relative coordinates
         assert entity["bounding_box"] == [0, 0, 0.8, 0.8]
 
-        assert import_insights.call_count == 1
-        assert len(import_insights.call_args.args) == 1
-        predictions = import_insights.call_args.args[0]
-        assert len(predictions) == 1
-        prediction = predictions[0]
-        assert prediction.type == "ingredient_detection"
-        assert prediction.data == entity
-        assert prediction.barcode == barcode
-        assert prediction.server_type == ServerType.off
-
-        assert import_insights.call_args.kwargs == {
-            "server_type": ServerType.off,
+        assert enqueue_job.call_count == 1
+        assert enqueue_job.call_args.args == ()
+        assert enqueue_job.call_args.kwargs == {
+            "func": process_ingredient_prediction_job,
+            "queue": get_high_queue(ProductIdentifier(barcode, ServerType.off)),
+            "job_kwargs": {"result_ttl": 0},
+            "product_id": ProductIdentifier(barcode, ServerType.off),
+            "image_prediction_id": image_prediction.id,
+            "source_image": image.source_image,
         }
 
 
@@ -304,9 +306,7 @@ def test_extract_ingredients_job_product_opener_api_failed(mocker, peewee_db):
     ingredient_list_mocker.MODEL_NAME = "ingredient_detection"
     ingredient_list_mocker.MODEL_VERSION = "ingredient-detection-1.1"
 
-    import_insights = mocker.patch(
-        "robotoff.workers.tasks.import_image.import_insights"
-    )
+    enqueue_job = mocker.patch("robotoff.workers.tasks.import_image.enqueue_job")
     barcode = "1234567890123"
     ocr_url = "https://images.openfoodfacts.org/images/products/123/456/789/0123/1.json"
 
@@ -347,13 +347,75 @@ def test_extract_ingredients_job_product_opener_api_failed(mocker, peewee_db):
         assert image_prediction.model_name == "ingredient_detection"
         assert image_prediction.model_version == "ingredient-detection-1.1"
 
-        assert import_insights.call_count == 1
-        assert len(import_insights.call_args.args) == 1
-        predictions = import_insights.call_args.args[0]
-        assert len(predictions) == 0
-        assert import_insights.call_args.kwargs == {
-            "server_type": ServerType.off,
+        assert enqueue_job.call_count == 1
+        assert len(enqueue_job.call_args.args) == 0
+        assert enqueue_job.call_args.kwargs == {
+            "func": process_ingredient_prediction_job,
+            "queue": get_high_queue(ProductIdentifier(barcode, ServerType.off)),
+            "job_kwargs": {"result_ttl": 0},
+            "product_id": ProductIdentifier(barcode, ServerType.off),
+            "image_prediction_id": image_prediction.id,
+            "source_image": image.source_image,
         }
+
+
+def test_process_ingredient_prediction_job(mocker, peewee_db):
+    import_insights = mocker.patch(
+        "robotoff.workers.tasks.import_image.import_insights"
+    )
+    entity = {
+        "end": 51,
+        "lang": {"lang": "en", "confidence": 0.9},
+        "text": "water, salt, sugar.",
+        "score": 0.9,
+        "start": 19,
+        "raw_end": 51,
+        "ingredients_n": 3,
+        "known_ingredients_n": 3,
+        "unknown_ingredients_n": 0,
+        "fraction_known_ingredients": 1.0,
+        "ingredients": [],
+        "bounding_box": [0.0, 0.0, 0.25, 0.25],
+    }
+
+    with peewee_db:
+        image_prediction = ImagePredictionFactory(
+            type="ner",
+            model_name="ingredient_detection",
+            model_version="ingredient-detection-1.1",
+            data={
+                "entities": [entity],
+            },
+            max_confidence=0.9,
+        )
+        barcode = image_prediction.image.barcode
+        server_type = image_prediction.image.server_type
+        source_image = image_prediction.image.source_image
+        process_ingredient_prediction_job(
+            ProductIdentifier(barcode, server_type),
+            image_prediction.id,
+            source_image=source_image,
+        )
+
+    assert import_insights.call_count == 1
+    predictions = import_insights.call_args.args[0]
+    assert len(predictions) == 1
+    prediction = predictions[0]
+    assert prediction.type == "ingredient_detection"
+    assert prediction.data == entity
+    assert prediction.barcode == barcode
+    assert prediction.server_type == ServerType.off
+    assert prediction.confidence == 1.0
+    assert prediction.value_tag == "en"
+    assert prediction.value is None
+    assert prediction.automatic_processing is False
+    assert prediction.predictor == "ingredient_detection"
+    assert prediction.predictor_version == "ingredient-detection-1.1"
+    assert prediction.source_image == source_image
+
+    assert import_insights.call_args.kwargs == {
+        "server_type": server_type,
+    }
 
 
 class TestExtractNutritionJob:
@@ -542,9 +604,7 @@ class TestExtractNutritionJob:
             return_value=nutrition_extraction_prediction,
         )
         OCRResult = mocker.patch("robotoff.workers.tasks.import_image.OCRResult")
-        import_insights_mocker = mocker.patch(
-            "robotoff.workers.tasks.import_image.import_insights"
-        )
+        enqueue_job = mocker.patch("robotoff.workers.tasks.import_image.enqueue_job")
         product_id = ProductIdentifier(DEFAULT_BARCODE, ServerType.off)
 
         with peewee_db:
@@ -584,52 +644,17 @@ class TestExtractNutritionJob:
             assert Prediction.select().count() == 0
             assert ProductInsight.select().count() == 0
 
-            assert import_insights_mocker.call_count == 1
-            args = import_insights_mocker.call_args.args
-            assert len(args) == 1
-            predictions = args[0]
-            assert len(predictions) == 1
-            prediction = predictions[0]
-            assert prediction.barcode == DEFAULT_BARCODE
-            assert prediction.type == PredictionType.nutrient_extraction
-            assert prediction.value_tag is None
-            assert prediction.value is None
-            assert prediction.automatic_processing is False
-            assert prediction.predictor == "nutrition_extractor"
-            assert prediction.predictor_version == "nutrition_extractor-2.0"
-            assert prediction.confidence is None
-            assert prediction.source_image == DEFAULT_SOURCE_IMAGE
-            assert prediction.server_type == ServerType.off
-            assert prediction.data == {
-                "entities": {
-                    "postprocessed": [
-                        {
-                            "end": 15,
-                            "text": "883 kJ",
-                            "unit": "kj",
-                            "score": 0.9993564486503601,
-                            "start": 13,
-                            "valid": True,
-                            "value": "883",
-                            "entity": "energy-kj_100g",
-                            "char_end": 98,
-                            "char_start": 92,
-                        }
-                    ],
-                },
-                "nutrients": {
-                    "energy-kj_100g": {
-                        "end": 15,
-                        "text": "883 kJ",
-                        "unit": "kj",
-                        "score": 0.9993564486503601,
-                        "start": 13,
-                        "value": "883",
-                        "entity": "energy-kj_100g",
-                        "char_end": 98,
-                        "char_start": 92,
-                    }
-                },
+            assert enqueue_job.call_count == 1
+            assert len(enqueue_job.call_args.args) == 0
+            assert enqueue_job.call_args.kwargs == {
+                "func": process_nutrition_prediction_job,
+                "queue": get_high_queue(
+                    ProductIdentifier(DEFAULT_BARCODE, ServerType.off)
+                ),
+                "job_kwargs": {"result_ttl": 0},
+                "product_id": ProductIdentifier(DEFAULT_BARCODE, ServerType.off),
+                "image_prediction_id": image_prediction.id,
+                "source_image": image_model.source_image,
             }
 
     def test_extract_nutrition_job_no_valid_nutrient_extracted(self, mocker, peewee_db):
@@ -679,3 +704,144 @@ class TestExtractNutritionJob:
             assert Prediction.select().count() == 0
             assert ProductInsight.select().count() == 0
             assert import_insights_mocker.call_count == 0
+
+    def test_process_nutrition_prediction_job(self, mocker, peewee_db):
+        import_insights = mocker.patch(
+            "robotoff.workers.tasks.import_image.import_insights"
+        )
+        data = {
+            "entities": {
+                "postprocessed": [
+                    {
+                        "end": 15,
+                        "text": "883 kJ",
+                        "unit": "kj",
+                        "score": 0.9993564486503601,
+                        "start": 13,
+                        "valid": True,
+                        "value": "883",
+                        "entity": "energy-kj_100g",
+                        "char_end": 98,
+                        "char_start": 92,
+                    }
+                ],
+            },
+            "nutrients": {
+                "energy-kj_100g": {
+                    "end": 15,
+                    "text": "883 kJ",
+                    "unit": "kj",
+                    "score": 0.9993564486503601,
+                    "start": 13,
+                    "value": "883",
+                    "entity": "energy-kj_100g",
+                    "char_end": 98,
+                    "char_start": 92,
+                }
+            },
+        }
+        with peewee_db:
+            image_prediction = ImagePredictionFactory(
+                type="nutrition_extraction",
+                model_name="nutrition_extractor",
+                model_version="nutrition_extractor-2.0",
+                data=data,
+                max_confidence=0.99935645,
+            )
+            source_image = image_prediction.image.source_image
+            barcode = image_prediction.image.barcode
+            server_type = image_prediction.image.server_type
+
+            process_nutrition_prediction_job(
+                ProductIdentifier(barcode, server_type),
+                source_image=source_image,
+                image_prediction_id=image_prediction.id,
+            )
+
+        assert import_insights.call_count == 1
+        predictions = import_insights.call_args.args[0]
+        assert len(predictions) == 1
+        prediction = predictions[0]
+        assert prediction.barcode == barcode
+        assert prediction.type == PredictionType.nutrient_extraction
+        assert prediction.value_tag is None
+        assert prediction.value is None
+        assert prediction.automatic_processing is False
+        assert prediction.predictor == "nutrition_extractor"
+        assert prediction.predictor_version == "nutrition_extractor-2.0"
+        assert prediction.confidence is None
+        assert prediction.source_image == source_image
+        assert prediction.server_type == server_type
+        assert prediction.data == data
+
+
+def test_process_created_logos(peewee_db, mocker):
+    add_logos_to_ann_mock = mocker.patch(
+        "robotoff.workers.tasks.import_image.add_logos_to_ann",
+        return_value=None,
+    )
+    save_nearest_neighbors_mock = mocker.patch(
+        "robotoff.workers.tasks.import_image.save_nearest_neighbors",
+        return_value=None,
+    )
+    get_logo_confidence_thresholds_mock = mocker.patch(
+        "robotoff.workers.tasks.import_image.get_logo_confidence_thresholds",
+        return_value=dict,
+    )
+    import_logo_insights_mock = mocker.patch(
+        "robotoff.workers.tasks.import_image.import_logo_insights",
+        return_value=InsightImportResult(),
+    )
+
+    with peewee_db:
+        image_prediction = ImagePredictionFactory()
+        logos = [
+            LogoAnnotationFactory(image_prediction=image_prediction, index=i)
+            for i in range(5)
+        ]
+        logo_embeddings = [LogoEmbeddingFactory(logo=logo) for logo in logos]
+        process_created_logos(image_prediction.id, DEFAULT_SERVER_TYPE)
+        add_logos_to_ann_mock.assert_called()
+        mock_call = add_logos_to_ann_mock.mock_calls[0]
+        embedding_args = mock_call.args[1]
+        server_type = mock_call.args[2]
+        assert server_type == DEFAULT_SERVER_TYPE
+        assert sorted(embedding_args, key=lambda x: x.logo_id) == logo_embeddings
+        save_nearest_neighbors_mock.assert_called()
+        get_logo_confidence_thresholds_mock.assert_called()
+        import_logo_insights_mock.assert_called()
+
+
+def test_save_logo_embeddings(peewee_db, mocker):
+    expected_embeddings = np.random.rand(5, 512).astype(np.float32)
+    generate_clip_embedding_mock = mocker.patch(
+        "robotoff.workers.tasks.import_image.generate_clip_embedding",
+        return_value=expected_embeddings,
+    )
+    triton_stub = mocker.MagicMock()
+
+    image_array = np.random.rand(800, 800, 3) * 255
+    image = image_array.astype("uint8")
+    with peewee_db:
+        image_prediction = ImagePredictionFactory()
+        logos = [
+            LogoAnnotationFactory(image_prediction=image_prediction, index=i)
+            for i in range(5)
+        ]
+        save_logo_embeddings(logos, image, triton_stub)
+        logo_embedding_instances = LogoEmbedding.select().where(
+            LogoEmbedding.logo_id.in_([logo.id for logo in logos])
+        )
+
+        assert len(logo_embedding_instances) == 5
+        assert generate_clip_embedding_mock.called
+        logo_id_to_logo_embedding = {
+            instance.logo_id: instance for instance in logo_embedding_instances
+        }
+
+        for i, logo in enumerate(logos):
+            assert logo.id in logo_id_to_logo_embedding
+            embedding = np.frombuffer(
+                logo_id_to_logo_embedding[logo.id].embedding, dtype=np.float32
+            ).reshape((1, 512))
+            assert (embedding == expected_embeddings[i]).all()
