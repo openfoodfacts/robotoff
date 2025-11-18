@@ -7,18 +7,21 @@ from typing import Iterable
 
 import peewee
 from peewee_migrate import Router
-from playhouse.postgres_ext import ArrayField, BinaryJSONField, PostgresqlExtDatabase
+from playhouse.pool import PooledPostgresqlExtDatabase
+from playhouse.postgres_ext import ArrayField, BinaryJSONField
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
 from robotoff.off import generate_image_url
 from robotoff.types import ProductIdentifier, ServerType
 
-db = PostgresqlExtDatabase(
+db = PooledPostgresqlExtDatabase(
     settings.POSTGRES_DB,
     user=settings.POSTGRES_USER,
     password=settings.POSTGRES_PASSWORD,
     host=settings.POSTGRES_HOST,
+    max_connections=16,
+    stale_timeout=300,  # 5 minutes
     port=5432,
     autoconnect=False,
 )
