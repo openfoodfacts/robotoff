@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.82.0](https://github.com/openfoodfacts/robotoff/compare/v1.81.0...v1.82.0) (2025-11-18)
+
+
+### Features
+
+* enable sentry logging ([#1786](https://github.com/openfoodfacts/robotoff/issues/1786)) ([f7cdcb3](https://github.com/openfoodfacts/robotoff/commit/f7cdcb3861d5c7c9551ee22461622b1c629dac1f))
+* use Peewee DB connection pool ([#1785](https://github.com/openfoodfacts/robotoff/issues/1785)) ([0f859b5](https://github.com/openfoodfacts/robotoff/commit/0f859b5859b12b75aed14171550e1be755e3c676))
+
+
+### Technical
+
+* improve sentry monitoring ([#1783](https://github.com/openfoodfacts/robotoff/issues/1783)) ([eb538e9](https://github.com/openfoodfacts/robotoff/commit/eb538e9ce9f4dd3cb71c489decc67f3c22331243))
+
 ## [1.81.0](https://github.com/openfoodfacts/robotoff/compare/v1.80.0...v1.81.0) (2025-11-17)
 
 
