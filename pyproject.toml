@@ -88,7 +88,7 @@ backoff = "^2.2.1"
 albumentations = "^2.0.8"
 
 [tool.poetry.dependencies.sentry-sdk]
-version = ">=2.0,<3.0"
+version = ">=2.44.0,<3.0"
 extras = ["falcon"]
 
 [tool.poetry.group.dev.dependencies]
