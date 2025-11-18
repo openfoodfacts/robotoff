@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.83.1](https://github.com/openfoodfacts/robotoff/compare/v1.83.0...v1.83.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* don't load all logo annotation in memory ([#1794](https://github.com/openfoodfacts/robotoff/issues/1794)) ([04e055c](https://github.com/openfoodfacts/robotoff/commit/04e055cbdb4b59f6b254e9fc2bec44d7db86184b))
+* don't log a warning when downloading OCRs for category detection ([#1797](https://github.com/openfoodfacts/robotoff/issues/1797)) ([22c12e1](https://github.com/openfoodfacts/robotoff/commit/22c12e1da106cc36a98e52290244e171a2e8abc2))
+* prevent concurrent insert for image embeddings ([#1796](https://github.com/openfoodfacts/robotoff/issues/1796)) ([ca02ef0](https://github.com/openfoodfacts/robotoff/commit/ca02ef077bc2d954902b1cf2777c711af5806ddb))
+
 ## [1.83.0](https://github.com/openfoodfacts/robotoff/compare/v1.82.0...v1.83.0) (2025-11-18)
 
 
