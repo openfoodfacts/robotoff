@@ -244,7 +244,9 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
     image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
     for image_id in image_ids:
         ocr_url = generate_json_ocr_url(product_id, image_id)
-        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+        ocr_result = OCRResult.from_url(
+            ocr_url, http_session, error_raise=False, warning_missing=False
+        )
         if ocr_result:
             ocr_texts.append(ocr_result.get_full_text_contiguous())
 
