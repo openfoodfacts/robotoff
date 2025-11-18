@@ -25,7 +25,6 @@ from robotoff.insights.extraction import (
 from robotoff.insights.importer import import_insights
 from robotoff.logos import (
     add_logos_to_ann,
-    filter_logos,
     get_logo_confidence_thresholds,
     import_logo_insights,
     save_nearest_neighbors,
@@ -694,11 +693,9 @@ def run_logo_object_detection(
 
         if not existing_logos:
             logos: list[LogoAnnotation] = []
-            for i, item in filter_logos(
-                image_prediction.data["objects"],
-                score_threshold=0.5,
-                iou_threshold=0.95,
-            ):
+            # We keep all logos that were detected with the default settings
+            # (score above 0.25 and NMS with IoU < 0.70)
+            for i, item in enumerate(image_prediction.data["objects"]):
                 text = None
                 if ocr_result:
                     # We try to find the text in the bounding box of the logo
