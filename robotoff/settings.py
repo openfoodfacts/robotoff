@@ -265,6 +265,7 @@ def init_sentry(integrations: list[Integration] | None = None):
             environment=robotoff_instance,
             integrations=integrations,
             release=get_package_version(),
+            traces_sample_rate=0.1,
         )
     elif robotoff_instance == "prod":
         raise ValueError("No SENTRY_DSN specified for prod Robotoff")
