@@ -5,7 +5,6 @@ import pathlib
 import tqdm
 from more_itertools import chunked
 
-from robotoff.logos import filter_logos
 from robotoff.models import ImageModel, ImagePrediction, LogoAnnotation, db
 from robotoff.off import generate_image_path
 from robotoff.types import ProductIdentifier, ServerType
@@ -77,11 +76,7 @@ def import_logos(
                     data=data,
                     max_confidence=max_confidence,
                 )
-                for i, item in filter_logos(
-                    image_prediction.data["objects"],
-                    score_threshold=0.5,
-                    iou_threshold=0.95,
-                ):
+                for i, item in enumerate(image_prediction.data["objects"]):
                     LogoAnnotation.create(
                         image_prediction=image_prediction,
                         index=i,
