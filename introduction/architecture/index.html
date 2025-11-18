@@ -891,12 +891,15 @@
 <li>the redis instance of Product Opener, where all product updates are sent to an event queue (as a <a href="https://redis.io/docs/data-types/streams/">Redis Stream</a>)</li>
 </ul>
 <p>Communication between API and workers happens through Robotoff Redis DB using <a href="https://python-rq.org">rq</a>. <sup id="fnref:worker_job"><a class="footnote-ref" href="#fn:worker_job">4</a></sup></p>
-<p>Jobs are sent through rq messaging queues. We currently have two types of queues:</p>
+<p>Jobs are sent through rq messaging queues. We currently have three types of queues:</p>
 <ul>
-<li>High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode <sup id="fnref:product_specific_queue"><a class="footnote-ref" href="#fn:product_specific_queue">5</a></sup>. This way, we greatly reduce the risk of concurrent processing for the same product (DB deadlocks or integrity errors).</li>
+<li>High-priority queues, used when a product is updated/deleted, or when a new image is uploaded. All jobs associated with a product are always sent to the same queue, based on the product barcode <sup id="fnref:product_specific_queue"><a class="footnote-ref" href="#fn:product_specific_queue">5</a></sup>. This way, we prevent concurrent processing for the same product (DB deadlocks or integrity errors).</li>
 <li>Low priority queue <code>robotoff-low</code>, which is used for all lower-priority jobs.</li>
+<li>A machine learning queue (<code>robotoff-ml-model</code>): this is used to run ML models (logo detection, ingredient extraction,...) on product images. Tasks published on this queue should not directly import insights into the database, they should only create image predictions. Insights import should be done in a separate job using high-priority queues.</li>
 </ul>
-<p>Each worker listens to a single high priority queue. It handles high-priority jobs first, then low-priority jobs if the high-priority queue it's listening to is empty. This way, we ensure low priority jobs don't use excessive system resources, due to the limited number of workers that can handle such jobs.</p>
+<p>Currently, we have 4 workers that can process jobs on high priority queues (<code>robotoff-worker-{1,4}</code>). These workers listen to a single high priority queue each. Then can also process jobs published on the ML and low queues.</p>
+<p>By order of priority, they handle high-priority jobs first, then <code>robotoff-ml-models</code> jobs, then low-priority jobs. This way, we ensure low priority jobs don't use excessive system resources, by limiting the number of workers that can handle such jobs.</p>
+<p>Two workers (<code>robotoff-worker-ml-1</code> and <code>robotoff-worker-ml-2</code>) are dedicated to the ML model queue, to ensure a good throughput for ML inference.</p>
 <p>Robotoff allows to predict many information (also called <em>insights</em>), mostly from the product images or OCR.</p>
 <p>Each time a contributor uploads a new image on Open Food Facts, the text on this image is extracted using Google Cloud Vision, an OCR (Optical Character Recognition) service. Robotoff receives a new event through a webhook each time this occurs, with the URLs of the image and the resulting OCR (as a JSON file).
 We use simple string matching algorithms to find patterns in the OCR text to generate new predictions <sup id="fnref:predictions"><a class="footnote-ref" href="#fn:predictions">6</a></sup>. To have a more in-depth understanding of the difference between predictions and insights, see the <a href="../../explanations/predictions/">predictions</a> page.</p>
