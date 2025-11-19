@@ -86,6 +86,7 @@ def get_insights(
     campaigns: list[str] | None = None,
     predictor: str | None = None,
     lc: list[str] | None = None,
+    with_image: bool | None = None,
 ) -> Iterable[ProductInsight]:
     """Fetch insights that meet the criteria passed as parameters.
 
@@ -137,6 +138,8 @@ def get_insights(
     :param lc: only keep insights that have any `insight.lc` in this
         list of language codes, defaults to None
         It is used to filter lang of ingredient_spellcheck
+    :param with_image: only keep insights that have an associated image (True)
+        or not (False), defaults to None
     :return: the return value is either:
         - an iterable of ProductInsight objects or dict (if `as_dict=True`)
         - the number of products (if `count=True`)
@@ -186,6 +189,9 @@ def get_insights(
 
     if lc is not None:
         where_clauses.append(ProductInsight.lc.contains_any(*lc))
+    
+    if with_image is not None:
+        where_clauses.append(ProductInsight.source_image.is_null(not with_image))
 
     if avoid_voted_on:
         where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))
