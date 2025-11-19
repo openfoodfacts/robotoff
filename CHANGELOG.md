@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.83.2](https://github.com/openfoodfacts/robotoff/compare/v1.83.1...v1.83.2) (2025-11-19)
+
+
+### Bug Fixes
+
+* use transaction in save_image_embeddings ([#1798](https://github.com/openfoodfacts/robotoff/issues/1798)) ([cebd5a0](https://github.com/openfoodfacts/robotoff/commit/cebd5a0d4cb7245bde4a72006564122b65879c48))
+
 ## [1.83.1](https://github.com/openfoodfacts/robotoff/compare/v1.83.0...v1.83.1) (2025-11-18)
 
 
