@@ -101,20 +101,18 @@ def save_image_embeddings(
     created = 0
     for image_id, embedding in embeddings.items():
         if image_id in image_id_to_model_id:
-            with db.atomic():
-                try:
+            try:
+                with db.atomic():
                     ImageEmbedding.create(
                         image_id=image_id_to_model_id[image_id],
                         embedding=embedding.tobytes(),
                     )
-                    created += 1
-                except peewee.IntegrityError:
-                    # save_image_embeddings may be called concurrently for the
-                    # same product, in this case another process may have already
-                    # created the embedding, we can safely ignore this error
-                    logger.debug(
-                        "Image embedding for image_id %s already exists", image_id
-                    )
+                created += 1
+            except peewee.IntegrityError:
+                # save_image_embeddings may be called concurrently for the
+                # same product, in this case another process may have already
+                # created the embedding, we can safely ignore this error
+                logger.debug("Image embedding for image_id %s already exists", image_id)
 
     logger.info("%d image embeddings created in db", created)
 
