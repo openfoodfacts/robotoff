@@ -10,7 +10,7 @@ from PIL import Image
 from tritonclient.grpc import service_pb2
 
 from robotoff.images import refresh_images_in_db
-from robotoff.models import ImageEmbedding, ImageModel, with_db
+from robotoff.models import ImageEmbedding, ImageModel, db, with_db
 from robotoff.off import generate_image_url, generate_json_ocr_url
 from robotoff.taxonomy import Taxonomy
 from robotoff.triton import (
@@ -101,17 +101,20 @@ def save_image_embeddings(
     created = 0
     for image_id, embedding in embeddings.items():
         if image_id in image_id_to_model_id:
-            try:
-                ImageEmbedding.create(
-                    image_id=image_id_to_model_id[image_id],
-                    embedding=embedding.tobytes(),
-                )
-                created += 1
-            except peewee.IntegrityError:
-                # save_image_embeddings may be called concurrently for the
-                # same product, in this case another process may have already
-                # created the embedding, we can safely ignore this error
-                logger.debug("Image embedding for image_id %s already exists", image_id)
+            with db.atomic():
+                try:
+                    ImageEmbedding.create(
+                        image_id=image_id_to_model_id[image_id],
+                        embedding=embedding.tobytes(),
+                    )
+                    created += 1
+                except peewee.IntegrityError:
+                    # save_image_embeddings may be called concurrently for the
+                    # same product, in this case another process may have already
+                    # created the embedding, we can safely ignore this error
+                    logger.debug(
+                        "Image embedding for image_id %s already exists", image_id
+                    )
 
     logger.info("%d image embeddings created in db", created)
 
