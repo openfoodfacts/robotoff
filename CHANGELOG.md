@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.84.0](https://github.com/openfoodfacts/robotoff/compare/v1.83.2...v1.84.0) (2025-11-20)
+
+
+### Features
+
+* **object-detection:** log inference metrics in Sentry ([#1807](https://github.com/openfoodfacts/robotoff/issues/1807)) ([b11afcc](https://github.com/openfoodfacts/robotoff/commit/b11afcc155967bbf201d77156261781cf4b40c55))
+
+
+### Technical
+
+* **object-detection:** remove PIL-based preprocessing ([#1805](https://github.com/openfoodfacts/robotoff/issues/1805)) ([a7bdead](https://github.com/openfoodfacts/robotoff/commit/a7bdead02dd92190e0c05652ad2e6f85e676041c))
+* **object-detection:** use ObjectDetector class from SDK ([#1806](https://github.com/openfoodfacts/robotoff/issues/1806)) ([78a90db](https://github.com/openfoodfacts/robotoff/commit/78a90db705d33266c65899fd5fa234588c7de449))
+* **triton:** update model configs ([#1800](https://github.com/openfoodfacts/robotoff/issues/1800)) ([eaa8a23](https://github.com/openfoodfacts/robotoff/commit/eaa8a2338cd0b42d9fae2eacd47c6e555bb5a6aa))
+
 ## [1.83.2](https://github.com/openfoodfacts/robotoff/compare/v1.83.1...v1.83.2) (2025-11-19)
 
 
