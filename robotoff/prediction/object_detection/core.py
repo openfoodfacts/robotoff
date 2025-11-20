@@ -2,6 +2,7 @@ import dataclasses
 import logging
 
 import numpy as np
+import sentry_sdk
 from openfoodfacts.ml.object_detection import ObjectDetectionRawResult, ObjectDetector
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -164,6 +165,12 @@ class RemoteModel:
                 self.config.triton_model_name,
                 metric_name,
                 duration * 1000,
+            )
+            sentry_sdk.metrics.distribution(
+                f"ml.object_detection.{metric_name}",
+                duration * 1000,
+                unit="ms",
+                attributes={"model": self.config.triton_model_name},
             )
 
         result = ObjectDetectionResult(**dataclasses.asdict(result))
