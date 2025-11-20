@@ -2426,14 +2426,14 @@ numpy = {version = ">=2,<2.3.0", markers = "python_version >= \"3.9\""}
 
 [[package]]
 name = "openfoodfacts"
-version = "3.2.0"
+version = "3.3.0"
 description = "Official Python SDK of Open Food Facts"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "openfoodfacts-3.2.0-py3-none-any.whl", hash = "sha256:a222d9fd90a4a0269ac4288d9f78c3bc01d5ed9552459d74866f4b2145fd3ad7"},
-    {file = "openfoodfacts-3.2.0.tar.gz", hash = "sha256:c654b11d3ddbe744f9caccd2ddba0c0fb3b824f73ca37588d42a1d291e70ae59"},
+    {file = "openfoodfacts-3.3.0-py3-none-any.whl", hash = "sha256:cdca761569a17266a80d2e93bdc863090bfa51c1c5548c6c8582c3351abc24a3"},
+    {file = "openfoodfacts-3.3.0.tar.gz", hash = "sha256:656dd98a4e620dc70899528359e75b7a773773cf8e420edcc352c31f5fa2aec1"},
 ]
 
 [package.dependencies]
@@ -2442,7 +2442,7 @@ requests = ">=2.20.0"
 tqdm = ">=4.0.0,<5.0.0"
 
 [package.extras]
-ml = ["Pillow", "opencv-python-headless", "tritonclient[grpc]"]
+ml = ["Pillow", "albumentations (>=2.0.0)", "opencv-python-headless", "tritonclient[grpc]"]
 pillow = ["Pillow"]
 redis = ["redis"]
 
@@ -5107,4 +5107,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "9b842a8bce765196e342baa3745479b562def508c321f8896d452fe3da852379"
+content-hash = "6f4c76fffadff5afec549735c22b36cb32826409968755fa96fdec515043d1c5"
