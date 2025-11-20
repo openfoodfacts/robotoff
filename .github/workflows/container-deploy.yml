@@ -173,7 +173,7 @@ jobs:
           echo "BATCH_JOB_KEY=${{ secrets.BATCH_JOB_KEY }}" >> .env
 
           # Specific logging settings
-          echo "LOG_ML_METRICS_ENABLED=1" >> .env
+          echo "LOG_ML_METRICS_ENABLED=0" >> .env
 
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
