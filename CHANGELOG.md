@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.84.1](https://github.com/openfoodfacts/robotoff/compare/v1.84.0...v1.84.1) (2025-11-20)
+
+
+### Bug Fixes
+
+* fix db.atomic() wrapper ([#1802](https://github.com/openfoodfacts/robotoff/issues/1802)) ([9b83025](https://github.com/openfoodfacts/robotoff/commit/9b830256e18603efb62818b2ae6929d79461fcb6))
+
 ## [1.84.0](https://github.com/openfoodfacts/robotoff/compare/v1.83.2...v1.84.0) (2025-11-20)
 
 
