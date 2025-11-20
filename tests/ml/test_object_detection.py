@@ -1,9 +1,9 @@
 import typing
 from pathlib import Path
 
+import numpy as np
 import pytest
 import requests
-from PIL import Image
 
 from robotoff.images import get_image_from_url
 from robotoff.prediction.object_detection.core import MODELS_CONFIG, RemoteModel
@@ -127,7 +127,9 @@ def test_detect_from_image(
     pytest tests/ml/test_object_detection.py --triton-uri <URI>
     ```
     """
-    image = typing.cast(Image.Image, get_image_from_url(image_url, error_raise=True))
+    image = typing.cast(
+        np.ndarray, get_image_from_url(image_url, error_raise=True, return_type="np")
+    )
     result = RemoteModel(MODELS_CONFIG[model_enum]).detect_from_image(
         image, triton_uri=triton_uri
     )

@@ -178,7 +178,7 @@ class ObjectDetector:
     def __init__(self, model_name: str, label_names: list[str], image_size: int = 640):
         """An object detection detector based on Yolo models.
 
-        We support models trained with Yolov8, v9, v10 and v11.
+        We support models trained with Yolov8, v9, v10, v11 and v12 from Ultralytics.
 
         :param model_name: the name of the model, as registered in Triton
         :param label_names: the list of label names
@@ -190,7 +190,7 @@ class ObjectDetector:
 
     def detect_from_image(
         self,
-        image: Image.Image | np.ndarray,
+        image: np.ndarray,
         triton_uri: str,
         threshold: float = 0.5,
         nms_threshold: float | None = None,
@@ -201,7 +201,7 @@ class ObjectDetector:
 
         The model must have been trained with Ultralytics library.
 
-        :param image: the input Pillow image
+        :param image: the input numpy image
         :param triton_uri: URI of the Triton Inference Server, defaults to
             None. If not provided, the default value from settings is used.
         :param threshold: the minimum score for a detection to be considered,
@@ -215,12 +215,8 @@ class ObjectDetector:
         :return: the detection result
         """
         start_time = time.monotonic()
-        original_shape = None if isinstance(image, Image.Image) else image.shape[:2]
-        if isinstance(image, np.ndarray):
-            image_array = self.preprocess_albumentations(image_array=image)
-            scale_x = scale_y = None
-        else:
-            image_array, scale_x, scale_y = self.preprocess(image)
+        original_shape = image.shape[:2]
+        image_array = self.preprocess(image_array=image)
         request = service_pb2.ModelInferRequest()
         request.model_name = self.model_name
         if model_version:
@@ -245,8 +241,6 @@ class ObjectDetector:
         response = self.postprocess(
             response,
             threshold=threshold,
-            scale_x=scale_x,
-            scale_y=scale_y,
             original_shape=original_shape,
             nms_threshold=nms_threshold,
             nms_eta=nms_eta,
@@ -258,7 +252,7 @@ class ObjectDetector:
         )
         return response
 
-    def preprocess_albumentations(self, image_array: np.ndarray) -> np.ndarray:
+    def preprocess(self, image_array: np.ndarray) -> np.ndarray:
         start_time = time.monotonic()
         # Apply the transform to the image
         image_array = object_detection_transform(image_size=self.image_size)(
@@ -277,46 +271,11 @@ class ObjectDetector:
         )
         return image_array
 
-    def preprocess(self, image: Image.Image) -> tuple[np.ndarray, float, float]:
-        # Yolo object detection models expect a specific image dimension
-        width, height = image.size
-        # Prepare a square image for inference
-        max_size = max(height, width)
-        # We paste the original image into a larger square image,
-        # in the upper-left corner, on a black background.
-        squared_image = Image.new("RGB", (max_size, max_size), color=(114, 114, 114))
-        squared_image.paste(image, (0, 0))
-        resized_image = squared_image.resize((self.image_size, self.image_size))
-
-        # As we don't process the original image but a modified version of it,
-        # we need to compute the scale factor for the x and y axis.
-        image_ratio = width / height
-        scale_x: float
-        scale_y: float
-        if image_ratio < 1:  # portrait, height > width
-            scale_x = self.image_size * image_ratio
-            scale_y = self.image_size
-        else:  # landscape, width > height
-            scale_x = self.image_size
-            scale_y = self.image_size / image_ratio
-
-        # Preprocess the image and prepare blob for model
-        image_array = (
-            convert_image_to_array(resized_image)
-            .transpose((2, 0, 1))
-            .astype(np.float32)
-        )
-        image_array = image_array / 255.0
-        image_array = np.expand_dims(image_array, axis=0)
-        return image_array, scale_x, scale_y
-
     def postprocess(
         self,
         response,
         threshold: float,
-        scale_x: float | None,
-        scale_y: float | None,
-        original_shape: tuple[int, int] | None,
+        original_shape: tuple[int, int],
         nms_threshold: float | None = None,
         nms_eta: float | None = None,
     ) -> ObjectDetectionRawResult:
@@ -368,22 +327,15 @@ class ObjectDetector:
             # (y_min, x_min, y_max, x_max) in relative coordinates
             # Scale the bounding boxes back to the original image size
 
-            if original_shape is None:
-                # Alternative method without Albumentations
-                raw_detection_boxes[i, 0] = max(0.0, min(1.0, y_min / scale_y))
-                raw_detection_boxes[i, 1] = max(0.0, min(1.0, x_min / scale_x))
-                raw_detection_boxes[i, 2] = max(0.0, min(1.0, y_max / scale_y))
-                raw_detection_boxes[i, 3] = max(0.0, min(1.0, x_max / scale_x))
-            else:
-                reversed_bboxes = reverse_bbox_transform(
-                    augmented_bbox=[y_min, x_min, y_max, x_max],
-                    original_shape=original_shape,
-                    image_size=self.image_size,
-                )
-                raw_detection_boxes[i, 0] = max(0.0, min(1.0, reversed_bboxes[0]))
-                raw_detection_boxes[i, 1] = max(0.0, min(1.0, reversed_bboxes[1]))
-                raw_detection_boxes[i, 2] = max(0.0, min(1.0, reversed_bboxes[2]))
-                raw_detection_boxes[i, 3] = max(0.0, min(1.0, reversed_bboxes[3]))
+            reversed_bboxes = reverse_bbox_transform(
+                augmented_bbox=[y_min, x_min, y_max, x_max],
+                original_shape=original_shape,
+                image_size=self.image_size,
+            )
+            raw_detection_boxes[i, 0] = max(0.0, min(1.0, reversed_bboxes[0]))
+            raw_detection_boxes[i, 1] = max(0.0, min(1.0, reversed_bboxes[1]))
+            raw_detection_boxes[i, 2] = max(0.0, min(1.0, reversed_bboxes[2]))
+            raw_detection_boxes[i, 3] = max(0.0, min(1.0, reversed_bboxes[3]))
 
         start_time = time.monotonic()
         # Perform NMS (Non Maximum Suppression)
@@ -444,7 +396,7 @@ class RemoteModel:
 
     def detect_from_image(
         self,
-        image: Image.Image | np.ndarray,
+        image: np.ndarray,
         output_image: bool = False,
         triton_uri: str | None = None,
         threshold: float | None = None,
@@ -455,7 +407,7 @@ class RemoteModel:
 
         The model must have been trained with Ultralytics library.
 
-        :param image: the input image (Pillow image or numpy uint8 array with
+        :param image: the input image, a numpy uint8 array with
             shape (height, width, 3) and RGB channels)
         :param output_image: if True, the image with boxes and labels is
             returned in the result
