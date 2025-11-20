@@ -949,6 +949,35 @@ def test_get_unanswered_questions_api_with_country_filter(client, peewee_db):
     assert data["status"] == "found"
 
 
+def test_get_unanswered_questions_api_with_image_filter(client, peewee_db):
+    with peewee_db:
+        ProductInsight.delete().execute()  # remove default sample
+        # test for filter with "with_image"
+        ProductInsightFactory(
+            type="location",
+            value_tag="en:dates",
+            barcode="00000032",
+            source_image="/test.jpg",
+        )
+        ProductInsightFactory(
+            type="location",
+            value_tag="en:dates",
+            barcode="00000033",
+            source_image=None,
+        )
+
+    result = client.simulate_get(
+        "/api/v1/questions/unanswered", params={"with_image": 1}
+    )
+    assert result.status_code == 200
+    data = result.json
+    print(data)
+    assert len(data) == 3
+    assert len(data["questions"]) == 1
+    assert data["questions"] == [["en:dates", 2]]
+    assert data["status"] == "found"
+
+
 def test_get_unanswered_questions_pagination(client, peewee_db):
     with peewee_db:
         ProductInsight.delete().execute()  # remove default sample
