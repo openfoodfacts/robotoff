@@ -189,7 +189,7 @@ def get_insights(
 
     if lc is not None:
         where_clauses.append(ProductInsight.lc.contains_any(*lc))
-    
+
     if with_image is not None:
         where_clauses.append(ProductInsight.source_image.is_null(not with_image))
 

@@ -1420,9 +1420,7 @@ def get_questions_resource_on_get(
     countries = get_countries_from_req(req)
     # filter by annotation campaigns
     campaigns: list[str] | None = req.get_param_as_list("campaigns") or None
-    with_image: bool | None = req.get_param_as_bool(
-        "with_image", default=False
-    )
+    with_image: bool | None = req.get_param_as_bool("with_image", default=None)
 
     if campaigns is None:
         # `campaign` is a deprecated field, use campaigns now instead
