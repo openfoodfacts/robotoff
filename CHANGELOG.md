@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.0](https://github.com/openfoodfacts/robotoff/compare/v1.84.1...v1.85.0) (2025-11-27)
+
+
+### Features
+
+* Add parameter with_image to the API route questions ([#1804](https://github.com/openfoodfacts/robotoff/issues/1804)) ([c197349](https://github.com/openfoodfacts/robotoff/commit/c197349a5a34dea4bfe81f7814edf39b431bad7b))
+
 ## [1.84.1](https://github.com/openfoodfacts/robotoff/compare/v1.84.0...v1.84.1) (2025-11-20)
 
 
