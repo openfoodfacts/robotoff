@@ -616,6 +616,14 @@ def match_nutrient_value(
             # and "kJ" for "energy_kj_100g", mark the entity as invalid
             is_valid = False
 
+        # Check the reverse: kcal/kj units should only be used for energy entities
+        if (unit == "kcal" and not entity_label.startswith("energy_kcal")) or (
+            unit == "kj" and not entity_label.startswith("energy_kj")
+        ):
+            # Energy units should only be used for energy entities
+            # (e.g., sodium_100g should not have kcal as unit)
+            is_valid = False
+
     return value, unit, is_valid
 
 
