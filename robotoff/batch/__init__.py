@@ -1,5 +1,6 @@
 import base64
 import datetime
+import html
 import json
 import logging
 import os
@@ -50,7 +51,11 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
     for batch in chunked((row for _, row in df.iterrows()), 100):
         predictions = []
         for row in batch:
-            lang_predictions = predict_lang(row["text"], k=1)
+            # Decode HTML entities (e.g. &quot;) from dataset before storing
+            original_text = html.unescape(row["text"])
+            correction_text = html.unescape(row["correction"])
+
+            lang_predictions = predict_lang(original_text, k=1)
             lang, lang_confidence = lang_predictions[0].lang, (
                 lang_predictions[0].confidence if lang_predictions else None
             )
@@ -58,8 +63,8 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
                 Prediction(
                     type=PredictionType.ingredient_spellcheck,
                     data={
-                        "original": row["text"],
-                        "correction": row["correction"],
+                        "original": original_text,
+                        "correction": correction_text,
                         "lang": lang,
                         "lang_confidence": lang_confidence,
                     },
