@@ -696,6 +696,15 @@ def run_logo_object_detection(
             # We keep all logos that were detected with the default settings
             # (score above 0.25 and NMS with IoU < 0.70)
             for i, item in enumerate(image_prediction.data["objects"]):
+                # Validate bounding box produces valid dimensions
+                y_min, x_min, y_max, x_max = item["bounding_box"]
+                height = int(y_max * image.shape[0]) - int(y_min * image.shape[0])
+                width = int(x_max * image.shape[1]) - int(x_min * image.shape[1])
+
+                # Skip logos with zero or negative dimensions
+                if height <= 0 or width <= 0:
+                    continue
+
                 text = None
                 if ocr_result:
                     # We try to find the text in the bounding box of the logo
@@ -779,7 +788,6 @@ def save_logo_embeddings(
     """Generate logo embeddings using CLIP model and save them in
     logo_embedding table."""
     resized_cropped_images = []
-    valid_logos = []
     image_height = image.shape[0]
     image_width = image.shape[1]
     for logo in logos:
@@ -790,47 +798,15 @@ def save_logo_embeddings(
             int(y_min * image_height),
             int(y_max * image_height),
         )
-        # validate that the bounding box produces a valid crop
-        if top >= bottom or left >= right:
-            logger.warning(
-                "Invalid bounding box for logo %s: top=%d, bottom=%d, left=%d, right=%d. Skipping.",
-                logo.id,
-                top,
-                bottom,
-                left,
-                right,
-            )
-            continue
-
         cropped_image = image[top:bottom, left:right]
-
-        # additional check to ensure the cropped image is not empty
-        if cropped_image.size == 0:
-            logger.warning(
-                "Empty cropped image for logo %s with bounding box (%d, %d, %d, %d). Skipping.",
-                logo.id,
-                top,
-                bottom,
-                left,
-                right,
-            )
-            continue
-
         resized_cropped_images.append(
             cv2.resize(cropped_image, (224, 224), interpolation=cv2.INTER_LINEAR)
         )
-        valid_logos.append(logo)
-
-    # only generate embeddings if we have valid logos
-    if not valid_logos:
-        logger.warning("No valid logos to generate embeddings for")
-        return
-
     embeddings = generate_clip_embedding(resized_cropped_images, triton_stub)
 
     with db.atomic():
-        for i in range(len(valid_logos)):
-            logo_id = valid_logos[i].id
+        for i in range(len(logos)):
+            logo_id = logos[i].id
             logo_embedding = embeddings[i]
             LogoEmbedding.create(logo_id=logo_id, embedding=logo_embedding.tobytes())
 
