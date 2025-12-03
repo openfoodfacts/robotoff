@@ -89,14 +89,14 @@ Start PostgreSQL container and copy the dump inside the container:
 
 ```bash
 make up service=postgres
-docker cp -a robotoff_postgres_latest.dump robotoff_postgres_1:/tmp/
+docker cp -a robotoff_postgres_latest.dump robotoff-postgres-1:/tmp/
 ```
 
 Then launch dump restore:
 
 
 ```bash
-docker exec -it robotoff_postgres_1 pg_restore -v -d postgres -U postgres -c -j 8 --if-exists /tmp/robotoff_postgres_latest.dump
+docker exec -it robotoff-postgres-1 pg_restore -v -d postgres -U postgres -c -j 8 --if-exists /tmp/robotoff_postgres_latest.dump
 ```
 
 This command drops all existing tables (`-c` command) and perform restore using 8 cores. The database is huge, it may take several hours to run depending on your hardware.
