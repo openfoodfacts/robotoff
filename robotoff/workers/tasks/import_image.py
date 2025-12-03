@@ -696,13 +696,9 @@ def run_logo_object_detection(
             # We keep all logos that were detected with the default settings
             # (score above 0.25 and NMS with IoU < 0.70)
             for i, item in enumerate(image_prediction.data["objects"]):
-                # Validate bounding box produces valid dimensions
-                y_min, x_min, y_max, x_max = item["bounding_box"]
-                height = int(y_max * image.shape[0]) - int(y_min * image.shape[0])
-                width = int(x_max * image.shape[1]) - int(x_min * image.shape[1])
-
                 # Skip logos with zero or negative dimensions
-                if height <= 0 or width <= 0:
+                y_min, x_min, y_max, x_max = item["bounding_box"]
+                if (y_max - y_min) <= 0 or (x_max - x_min) <= 0:
                     continue
 
                 text = None
