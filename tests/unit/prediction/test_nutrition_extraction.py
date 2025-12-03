@@ -410,6 +410,12 @@ class TestAggregateEntities:
         ("525 g", "energy_kcal_100g", ("525", "g", False)),
         ("525 kJ", "energy_kcal_100g", ("525", "kj", False)),
         ("525 g", "energy_kj_100g", ("525", "g", False)),
+        # Reverse: kcal/kj units should only be used for energy entities
+        ("66.3 kcal", "sodium_100g", ("66.3", "kcal", False)),
+        ("100 kcal", "proteins_100g", ("100", "kcal", False)),
+        ("200 kj", "carbohydrates_100g", ("200", "kj", False)),
+        ("50 kcal", "salt_100g", ("50", "kcal", False)),
+        ("75 kJ", "fat_100g", ("75", "kj", False)),
     ],
 )
 def test_match_nutrient_value(words_str: str, entity_label: str, expected_output):
