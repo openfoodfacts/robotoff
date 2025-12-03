@@ -1055,10 +1055,10 @@ The expected response is <code>{"status":"running"}</code>.</p>
 </code></pre></div>
 <p>Start PostgreSQL container and copy the dump inside the container:</p>
 <div class="highlight"><pre><span></span><code>make<span class="w"> </span>up<span class="w"> </span><span class="nv">service</span><span class="o">=</span>postgres
-docker<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>robotoff_postgres_latest.dump<span class="w"> </span>robotoff_postgres_1:/tmp/
+docker<span class="w"> </span>cp<span class="w"> </span>-a<span class="w"> </span>robotoff_postgres_latest.dump<span class="w"> </span>robotoff-postgres-1:/tmp/
 </code></pre></div>
 <p>Then launch dump restore:</p>
-<div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>robotoff_postgres_1<span class="w"> </span>pg_restore<span class="w"> </span>-v<span class="w"> </span>-d<span class="w"> </span>postgres<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-c<span class="w"> </span>-j<span class="w"> </span><span class="m">8</span><span class="w"> </span>--if-exists<span class="w"> </span>/tmp/robotoff_postgres_latest.dump
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>robotoff-postgres-1<span class="w"> </span>pg_restore<span class="w"> </span>-v<span class="w"> </span>-d<span class="w"> </span>postgres<span class="w"> </span>-U<span class="w"> </span>postgres<span class="w"> </span>-c<span class="w"> </span>-j<span class="w"> </span><span class="m">8</span><span class="w"> </span>--if-exists<span class="w"> </span>/tmp/robotoff_postgres_latest.dump
 </code></pre></div>
 <p>This command drops all existing tables (<code>-c</code> command) and perform restore using 8 cores. The database is huge, it may take several hours to run depending on your hardware.</p>
 <h3 id="mongodb-dump">MongoDB dump</h3>
