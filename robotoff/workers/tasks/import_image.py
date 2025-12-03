@@ -696,6 +696,11 @@ def run_logo_object_detection(
             # We keep all logos that were detected with the default settings
             # (score above 0.25 and NMS with IoU < 0.70)
             for i, item in enumerate(image_prediction.data["objects"]):
+                # Skip logos with zero or negative dimensions
+                y_min, x_min, y_max, x_max = item["bounding_box"]
+                if (y_max - y_min) <= 0 or (x_max - x_min) <= 0:
+                    continue
+
                 text = None
                 if ocr_result:
                     # We try to find the text in the bounding box of the logo
