@@ -4,11 +4,11 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# -----------------------------------
-# First step: copy-paste README.md to doc
-# -----------------------------------
+# -----------------------------------------------
+# First step: copy-paste README.md to docs folder
+# -----------------------------------------------
 
-cp ./README.md ./doc/README.md
+cp ./README.md ./docs/README.md
 
 # Build mkdocs
 poetry run mkdocs build --strict

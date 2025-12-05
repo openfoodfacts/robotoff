@@ -3,11 +3,11 @@ name: API Specification Linting
 on:
   push:
     paths:
-      - 'doc/references/api.yml'
+      - 'docs/references/api.yml'
       - '.spectral.yml'
   pull_request:
     paths:
-      - 'doc/references/api.yml'
+      - 'docs/references/api.yml'
       - '.spectral.yml'
 
 jobs:
@@ -23,5 +23,5 @@ jobs:
         continue-on-error: true
         uses: stoplightio/spectral-action@latest
         with:
-          file_glob: 'doc/references/api.yml'
+          file_glob: 'docs/references/api.yml'
           spectral_ruleset: '.spectral.yml'

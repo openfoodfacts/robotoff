@@ -8,7 +8,7 @@ on:
     # on pull request we just want to build to see nothing is broken
     paths:
     - "README.md"
-    - "doc/**"
+    - "docs/**"
     - ".github/workflows/generate-docs.yml"
     - "mkdocs.yml"
   push:
@@ -56,7 +56,7 @@ jobs:
         run: |
           set -e
           docker run --rm \
-            -v $(pwd)/doc/references:/data -v $(pwd)/gh_pages/:/output \
+            -v $(pwd)/docs/references:/data -v $(pwd)/gh_pages/:/output \
             ghcr.io/redocly/redoc/cli:latest \
             build -o /output/references/api/index.html api.yml && \
           sudo chown $UID -R gh_pages

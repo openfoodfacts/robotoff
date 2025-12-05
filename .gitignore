@@ -41,5 +41,5 @@ coverage.xml
 
 site/
 gh_pages/
-doc/README.md
-doc/references/cli.md
+docs/README.md
+docs/references/cli.md

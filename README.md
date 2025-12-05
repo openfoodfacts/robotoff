@@ -52,7 +52,7 @@ Robotoff works together with [Product Opener](https://github.com/openfoodfacts/o
 
 ### API Specification Linting
 
-Robotoff uses [Spectral](https://stoplight.io/open-source/spectral) to lint the OpenAPI specification file located at `doc/references/api.yml`. This ensures the API documentation follows best practices and remains consistent.
+Robotoff uses [Spectral](https://stoplight.io/open-source/spectral) to lint the OpenAPI specification file located at `docs/references/api.yml`. This ensures the API documentation follows best practices and remains consistent.
 
 #### Running API Linting
 
@@ -73,7 +73,7 @@ The linting rules are configured in `.spectral.yml` at the root of the repositor
 #### CI Integration
 
 API linting runs automatically on GitHub Actions when:
-- Changes are made to `doc/references/api.yml`
+- Changes are made to `docs/references/api.yml`
 - Changes are made to `.spectral.yml`
 
 The workflow will fail if there are any linting errors, ensuring the API specification maintains high quality.
