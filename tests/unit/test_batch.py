@@ -1,8 +1,10 @@
 import os
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import duckdb
+import pandas as pd
 import pytest
 
 from robotoff import settings
@@ -52,3 +54,50 @@ def test_batch_extraction():
             "fr",
             0.375,
         )
+
+
+@patch("robotoff.batch.predict_lang")
+@patch("robotoff.batch.fetch_dataframe_from_gcs")
+@patch("robotoff.batch.import_insights")
+@patch("robotoff.batch.check_google_credentials")
+def test_spellcheck_html_entity_decoding(
+    _mock_check_creds, mock_import_insights, mock_fetch_df, mock_predict_lang
+):
+    """Test HTML entities (e.g. &quot;) are decoded in spellcheck predictions."""
+    from robotoff.batch import import_spellcheck_batch_predictions
+    from robotoff.prediction.langid import LanguagePrediction
+
+    mock_df = pd.DataFrame(
+        {
+            "code": ["4025500283148"],
+            "text": [
+                "Buttermilch, Zucker, Wasser, 3% Heidelbeersaft&quot; aus Heidelbeersaftkonzentrat"
+            ],
+            "correction": [
+                'Buttermilch, Zucker, Wasser, 3% Heidelbeersaft" aus Heidelbeersaftkonzentrat'
+            ],
+            "lang": ["de"],
+        }
+    )
+    mock_fetch_df.return_value = mock_df
+    mock_predict_lang.return_value = [LanguagePrediction(lang="de", confidence=0.99)]
+
+    import_spellcheck_batch_predictions("test_batch_dir")
+
+    assert mock_import_insights.called
+    call_args = mock_import_insights.call_args
+    predictions = call_args[1]["predictions"]
+
+    assert len(predictions) == 1
+    prediction = predictions[0]
+
+    assert "&quot;" not in prediction.data["original"]
+    assert '"' in prediction.data["original"]
+    assert (
+        prediction.data["original"]
+        == 'Buttermilch, Zucker, Wasser, 3% Heidelbeersaft" aus Heidelbeersaftkonzentrat'
+    )
+    assert (
+        prediction.data["correction"]
+        == 'Buttermilch, Zucker, Wasser, 3% Heidelbeersaft" aus Heidelbeersaftkonzentrat'
+    )
