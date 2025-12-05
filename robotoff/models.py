@@ -223,6 +223,18 @@ class ProductInsight(BaseModel):
         index=True,
     )
 
+    # whether we have an image to display to illustrate the insight
+    # for brand and category insights, this is True if the product has
+    # at least one image, as we display a generic product image for those insights
+    # (see robotoff/insights/question.py:get_source_image_url)
+    # For other insight types, this is True if source_image is not null
+    with_image = peewee.BooleanField(
+        null=True,
+        index=True,
+        default=None,
+        help_text="Whether we have an image to display to illustrate the insight",
+    )
+
     def get_product_id(self) -> ProductIdentifier:
         return ProductIdentifier(self.barcode, ServerType[self.server_type])
 

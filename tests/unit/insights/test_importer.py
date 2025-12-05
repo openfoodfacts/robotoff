@@ -688,6 +688,79 @@ class TestInsightImporter:
         batch_insert_mock.assert_called_once()
         product_insight_delete_mock.assert_called_once()
 
+    def test_add_fields(self):
+        product = Product({"code": DEFAULT_BARCODE})
+        insight = ProductInsight(type=InsightType.label.name, barcode=DEFAULT_BARCODE)
+        now = datetime.datetime.now()
+        InsightImporter.add_fields(insight, product, now)
+
+        assert insight.id is not None
+        assert insight.timestamp == now
+        assert insight.n_votes == 0
+        # No source image
+        assert insight.with_image is False
+
+    def test_add_fields_check_with_image(self):
+        insight_1 = ProductInsight(
+            type=InsightType.category.name, barcode=DEFAULT_BARCODE
+        )
+        InsightImporter.add_fields(
+            insight_1,
+            Product({"code": DEFAULT_BARCODE, "images": {"1": {}}}),
+            datetime.datetime.now(),
+        )
+        # Product has images, type is category -> with_image is True
+        assert insight_1.with_image is True
+
+        insight_2 = ProductInsight(
+            type=InsightType.category.name, barcode=DEFAULT_BARCODE
+        )
+        InsightImporter.add_fields(
+            insight_2,
+            Product({"code": DEFAULT_BARCODE, "image_ids": ["1"]}),
+            datetime.datetime.now(),
+        )
+        # Product has image_ids, type is category -> with_image is True
+        assert insight_2.with_image is True
+
+        insight_3 = ProductInsight(
+            type=InsightType.category.name, barcode=DEFAULT_BARCODE
+        )
+        InsightImporter.add_fields(
+            insight_3,
+            Product({"code": DEFAULT_BARCODE, "image_ids": []}),
+            datetime.datetime.now(),
+        )
+        # Product has no images, type is category -> with_image is False
+        assert insight_3.with_image is False
+
+        insight_4 = ProductInsight(
+            type=InsightType.ingredient_detection.name,
+            barcode=DEFAULT_BARCODE,
+            source_image=DEFAULT_SOURCE_IMAGE,
+        )
+        InsightImporter.add_fields(
+            insight_4,
+            Product({"code": DEFAULT_BARCODE}),
+            datetime.datetime.now(),
+        )
+        # Insight has a source image, type is ingredient_detection -> with_image is True
+        assert insight_4.with_image is True
+
+        insight_5 = ProductInsight(
+            type=InsightType.ingredient_detection.name,
+            barcode=DEFAULT_BARCODE,
+            source_image=None,
+        )
+        InsightImporter.add_fields(
+            insight_5,
+            Product({"code": DEFAULT_BARCODE}),
+            datetime.datetime.now(),
+        )
+        # Insight has no source image, type is ingredient_detection -> with_image is
+        # False
+        assert insight_5.with_image is False
+
 
 class TestPackagerCodeInsightImporter:
     def test_get_type(self):
