@@ -1,9 +1,9 @@
 # Where to find documentation
-docs_dir: doc
+docs_dir: docs
 
 # Link to Github on every page
 repo_url: https://github.com/openfoodfacts/robotoff
-edit_uri: blob/main/doc/
+edit_uri: blob/main/docs/
 
 site_name: Robotoff
 site_dir: gh_pages
@@ -11,26 +11,26 @@ site_dir: gh_pages
 theme:
   name: material
   features:
-    - content.action.edit
+  - content.action.edit
   logo: https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg
   favicon: https://static.openfoodfacts.org/images/logos/off-logo-favicon-light.png
-  palette: 
-    # Palette toggle for light mode
-    - scheme: default
-      toggle:
-        icon: material/brightness-7 
-        name: Switch to dark mode
-    # Palette toggle for dark mode
-    - scheme: slate
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
+  palette:
+  # Palette toggle for light mode
+  - scheme: default
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  # Palette toggle for dark mode
+  - scheme: slate
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
 markdown_extensions:
-  - footnotes
-  - mdx_truly_sane_lists
-  - pymdownx.highlight
-  - pymdownx.superfences
+- footnotes
+- mdx_truly_sane_lists
+- pymdownx.highlight
+- pymdownx.superfences
 
 plugins:
-  - awesome-pages
-  - search
+- awesome-pages
+- search

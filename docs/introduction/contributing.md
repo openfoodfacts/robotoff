@@ -26,7 +26,7 @@ Look through the Github issues for features. Anything tagged with "enhancement" 
 
 ### Write Documentation
 
-Robotoff could always use more documentation, whether as part of the official [Robotoff docs](https://github.com/openfoodfacts/robotoff/tree/main/doc) or in docstrings.
+Robotoff could always use more documentation, whether as part of the official [Robotoff docs](https://github.com/openfoodfacts/robotoff/tree/main/docs) or in docstrings.
 
 ### Submit Feedback
 

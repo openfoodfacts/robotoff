@@ -86,7 +86,7 @@ COPY .flake8 pyproject.toml ./
 # create folders that we mount in dev to avoid permission problems
 USER root
 RUN \
-    mkdir -p /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov && \
-    chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/doc /opt/robotoff/.cov
+    mkdir -p /opt/robotoff/gh_pages /opt/robotoff/docs /opt/robotoff/.cov && \
+    chown -R off:off /opt/robotoff/gh_pages /opt/robotoff/docs /opt/robotoff/.cov
 USER off
 CMD [ "gunicorn", "--reload", "--config /opt/robotoff/gunicorn.py", "--log-file=-", "robotoff.app.api:api"]

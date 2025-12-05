@@ -163,7 +163,7 @@ def normalize_req_barcode(barcode: str | None) -> str | None:
 
 
 ###########
-# IMPORTANT: remember to update documentation at doc/references/api.yml if you
+# IMPORTANT: remember to update documentation at docs/references/api.yml if you
 # change API
 ###########
 
@@ -1321,7 +1321,7 @@ def question_insight_type_sort_func(insight: ProductInsight) -> int:
 class ProductQuestionsResource:
     """Get questions about a product to confirm/infirm an insight
 
-    see also doc/explanation/questions.md
+    see also docs/explanation/questions.md
     """
 
     def on_get(self, req: falcon.Request, resp: falcon.Response, barcode: str):

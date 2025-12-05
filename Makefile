@@ -149,18 +149,18 @@ isort:
 	${DOCKER_COMPOSE} run --rm --no-deps api isort .
 
 docs:
-	@echo "🥫 Generationg doc…"
+	@echo "🥫 Generationg docs…"
 	${DOCKER_COMPOSE} run --rm --no-deps api ./build_mkdocs.sh
 
 api-lint:
 	@echo "🥫 Linting OpenAPI specification…"
-	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint doc/references/api.yml --format=pretty
+	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint docs/references/api.yml --format=pretty
 
 api-lint-check:
 	@echo "🥫 Checking OpenAPI specification…"
-	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint doc/references/api.yml --fail-severity=error
+	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint docs/references/api.yml --fail-severity=error
 
-checks: create_external_networks toml-check flake8 black-check mypy isort-check docs 
+checks: create_external_networks toml-check flake8 black-check mypy isort-check docs
 
 lint: toml-lint isort black
 
