@@ -191,7 +191,7 @@ def get_insights(
         where_clauses.append(ProductInsight.lc.contains_any(*lc))
 
     if with_image is not None:
-        where_clauses.append(ProductInsight.source_image.is_null(not with_image))
+        where_clauses.append(ProductInsight.with_image == with_image)
 
     if avoid_voted_on:
         where_clauses.append(_add_vote_exclusion_clause(avoid_voted_on))

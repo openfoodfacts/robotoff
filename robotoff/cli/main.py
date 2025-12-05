@@ -1327,5 +1327,53 @@ def launch_normalize_barcode_job(
                 logger.info("Updated %d images", updated)
 
 
+@app.command()
+def update_insight_with_image_field() -> None:
+    """Refresh the `with_image` field of all insights."""
+    import tqdm
+
+    from robotoff.models import ImageModel, ProductInsight, db
+    from robotoff.types import InsightType
+    from robotoff.utils.logger import get_logger
+
+    get_logger()
+
+    with db.connection_context():
+        with db.atomic() as tsx:
+            for insight in tqdm.tqdm(
+                ProductInsight.select()
+                .where(
+                    ProductInsight.type.in_(
+                        [InsightType.brand.name, InsightType.category.name]
+                    ),
+                    # Only non-annotated insights
+                    ProductInsight.annotation.is_null(True),
+                )
+                .iterator(),
+                desc="insight",
+            ):
+                has_image = (
+                    ImageModel.select()
+                    .where(
+                        (ImageModel.barcode == insight.barcode)
+                        & (ImageModel.server_type == insight.server_type)
+                        & (ImageModel.deleted == False)  # noqa: E712
+                    )
+                    .exists()
+                )
+                if insight.with_image != has_image:
+                    insight.with_image = has_image
+                    insight.save()
+                    tsx.commit()
+
+            ProductInsight.update(
+                with_image=ProductInsight.source_image.is_null(False)
+            ).where(
+                ProductInsight.type.not_in(
+                    [InsightType.category.name, InsightType.brand.name]
+                ),
+            ).execute()
+
+
 def main() -> None:
     app()

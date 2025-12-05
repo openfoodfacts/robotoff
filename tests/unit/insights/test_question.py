@@ -10,6 +10,7 @@ from robotoff.insights.question import (
     Question,
     generate_selected_images,
     get_display_image,
+    get_source_image_url,
 )
 from robotoff.models import ProductInsight
 from robotoff.settings import TEST_DATA_DIR
@@ -255,3 +256,34 @@ class TestImageOrientationQuestionFormatter:
             "server_type": ServerType.off.name,
             "source_image_url": "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.10.400.jpg",
         }
+
+
+class TestGetSourceImageUrl:
+    def test_get_source_image_url(self, mocker):
+        mocker.patch(
+            "robotoff.insights.question.get_product",
+            return_value={
+                "images": {
+                    "1": {"sizes": {"400": {}}},
+                    "front_fr": {"rev": "8", "sizes": {"400": {}}},
+                }
+            },
+        )
+        product_id = ProductIdentifier("1111111111", ServerType.off)
+        assert (
+            get_source_image_url(product_id=product_id, field_types=None)
+            == "https://images.openfoodfacts.net/images/products/000/111/111/1111/front_fr.8.400.jpg"
+        )
+
+    def test_get_source_image_url_with_fallback(self, mocker):
+        mocker.patch(
+            "robotoff.insights.question.get_product",
+            return_value={
+                "images": {"1": {"sizes": {"400": {}}}, "2": {"sizes": {"400": {}}}}
+            },
+        )
+        product_id = ProductIdentifier("1111111111", ServerType.off)
+        assert (
+            get_source_image_url(product_id=product_id, field_types=None)
+            == "https://images.openfoodfacts.net/images/products/000/111/111/1111/2.400.jpg"
+        )
