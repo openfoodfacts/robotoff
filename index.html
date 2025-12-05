@@ -1046,7 +1046,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/doc/README.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/openfoodfacts/robotoff/blob/main/docs/README.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -1096,7 +1096,7 @@
 </ul>
 <h2 id="development">🔧 Development</h2>
 <h3 id="api-specification-linting">API Specification Linting</h3>
-<p>Robotoff uses <a href="https://stoplight.io/open-source/spectral">Spectral</a> to lint the OpenAPI specification file located at <code>doc/references/api.yml</code>. This ensures the API documentation follows best practices and remains consistent.</p>
+<p>Robotoff uses <a href="https://stoplight.io/open-source/spectral">Spectral</a> to lint the OpenAPI specification file located at <code>docs/references/api.yml</code>. This ensures the API documentation follows best practices and remains consistent.</p>
 <h4 id="running-api-linting">Running API Linting</h4>
 <p>All linting commands use Docker, so you don't need to install Spectral locally:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Lint the API specification with pretty formatting</span>
@@ -1109,7 +1109,7 @@ make<span class="w"> </span>api-lint-check
 <p>The linting rules are configured in <code>.spectral.yml</code> at the root of the repository. The configuration extends the standard OpenAPI ruleset with custom rules specific to the Robotoff API.</p>
 <h4 id="ci-integration">CI Integration</h4>
 <p>API linting runs automatically on GitHub Actions when:
-- Changes are made to <code>doc/references/api.yml</code>
+- Changes are made to <code>docs/references/api.yml</code>
 - Changes are made to <code>.spectral.yml</code></p>
 <p>The workflow will fail if there are any linting errors, ensuring the API specification maintains high quality.</p>
 <p><strong>NOTE:</strong> This documentation tries to follow as much as possible the documentation system from <a href="https://diataxis.fr/">Diátaxis</a>.</p>
