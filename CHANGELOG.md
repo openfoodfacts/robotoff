@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.85.1](https://github.com/openfoodfacts/robotoff/compare/v1.85.0...v1.85.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* add field `with_image` to ProductInsight table ([#1820](https://github.com/openfoodfacts/robotoff/issues/1820)) ([f219afb](https://github.com/openfoodfacts/robotoff/commit/f219afbb31ba16cd58a45e02eac2e6e1af2f0724))
+* Typo in the markdown installation ([#1817](https://github.com/openfoodfacts/robotoff/issues/1817)) ([d8b4886](https://github.com/openfoodfacts/robotoff/commit/d8b48863cda75a0258c963bd92947ca7123348df))
+* validate bounding box before cv2.resize in save_logo_embeddings ([#1812](https://github.com/openfoodfacts/robotoff/issues/1812)) ([5f0930e](https://github.com/openfoodfacts/robotoff/commit/5f0930e01e21638b1f160884f510da7ca3e75586)), closes [#1810](https://github.com/openfoodfacts/robotoff/issues/1810)
+* validate energy units only used for energy entities in nutrient extraction ([#1813](https://github.com/openfoodfacts/robotoff/issues/1813)) ([4a4d8c9](https://github.com/openfoodfacts/robotoff/commit/4a4d8c91fc36acf7a219b12596d172a73acd6d9d)), closes [#1764](https://github.com/openfoodfacts/robotoff/issues/1764)
+
+
+### Technical
+
+* move category prediction to right folder ([63647ef](https://github.com/openfoodfacts/robotoff/commit/63647ef4f85c855dac495b1bf0f0d1d32cd10010))
+* rename doc into docs ([#1819](https://github.com/openfoodfacts/robotoff/issues/1819)) ([b155bb3](https://github.com/openfoodfacts/robotoff/commit/b155bb39e78d81b1e369fda312a773399f2e30b9))
+
 ## [1.85.0](https://github.com/openfoodfacts/robotoff/compare/v1.84.1...v1.85.0) (2025-11-27)
 
 
