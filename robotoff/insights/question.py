@@ -101,6 +101,14 @@ def get_source_image_url(
                 if display_images:
                     return display_images[0]
 
+    # No match image found, fallback to any raw image, starting from the
+    # most recent one (highest id)
+    for raw_image_id in sorted(
+        (image_key for image_key in product["images"].keys() if image_key.isdigit()),
+        key=int,
+        reverse=True,
+    ):
+        return generate_image_url(product_id, f"{raw_image_id}.{DISPLAY_IMAGE_SIZE}")
     return None
 
 

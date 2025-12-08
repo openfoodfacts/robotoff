@@ -567,11 +567,10 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insight: ProductInsight,
         product: Product | None,
         timestamp: datetime.datetime,
-    ):
-        """Add mandatory insight fields (`id`, `timestamp`,
-        `automatic_processing`,...).
+    ) -> None:
+        """Add mandatory insight fields (`id`, `timestamp`, `automatic_processing`,...).
 
-        :param insight: the insight to update
+        :param insight: the insight to create or update
         :param product: the `Product` associated with the insight
         :param timestamp: insight creation datetime
         """
@@ -581,10 +580,21 @@ class InsightImporter(metaclass=abc.ABCMeta):
         insight.timestamp = timestamp
         insight.n_votes = 0
 
+        # For label and category insights, `with_image` is not set according to
+        # the `source_image` field, as those insights are displayed with "generic"
+        # images
+        if insight.type not in (InsightType.label.name, InsightType.category.name):
+            insight.with_image = insight.source_image is not None
+
         if product:
             insight.countries = product.countries_tags
             insight.brands = product.brands_tags
             insight.unique_scans_n = product.unique_scans_n
+            # If insight.with_image is None (default value), it means the insight
+            # type is not handled specifically above, so we set it to True if
+            # the product has at least one image, False otherwise
+            if insight.with_image is None:
+                insight.with_image = len(product.image_ids) > 0
 
         if insight.automatic_processing:
             insight.process_after = timestamp + datetime.timedelta(
