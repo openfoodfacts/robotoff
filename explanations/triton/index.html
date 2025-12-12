@@ -14,7 +14,7 @@
     
     
       
-        <title>Triton - Robotoff</title>
+        <title>Triton inference server - Robotoff</title>
       
     
     
@@ -94,7 +94,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Triton
+              Triton inference server
             
           </span>
         </div>
@@ -498,11 +498,50 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_6" type="checkbox" id="__nav_4_6" >
       
       <label class="md-nav__link" for="__nav_4_6">
+        Datasets
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Datasets" data-md-level="2">
+        <label class="md-nav__title" for="__nav_4_6">
+          <span class="md-nav__icon md-icon"></span>
+          Datasets
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../references/datasets/object-detection/" class="md-nav__link">
+        Object detection datasets
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4_7" type="checkbox" id="__nav_4_7" >
+      
+      <label class="md-nav__link" for="__nav_4_7">
         Predictions
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Predictions" data-md-level="2">
-        <label class="md-nav__title" for="__nav_4_6">
+        <label class="md-nav__title" for="__nav_4_7">
           <span class="md-nav__icon md-icon"></span>
           Predictions
         </label>
@@ -677,20 +716,24 @@
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Triton
+          Triton inference server
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Triton
+        Triton inference server
       </a>
       
         
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">
@@ -700,26 +743,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#triton-inference-server" class="md-nav__link">
-    Triton inference server
-  </a>
-  
-    <nav class="md-nav" aria-label="Triton inference server">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#triton-deployment" class="md-nav__link">
     Triton deployment
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#model-management" class="md-nav__link">
-    Model management
+      
+        <li class="md-nav__item">
+  <a href="#triton-model-management" class="md-nav__link">
+    Triton model management
   </a>
   
-    <nav class="md-nav" aria-label="Model management">
+    <nav class="md-nav" aria-label="Triton model management">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -768,9 +803,11 @@
     </nav>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#reference-on-triton-model-management-configuration" class="md-nav__link">
+    Reference on Triton model management &amp; configuration
+  </a>
   
 </li>
       
@@ -948,6 +985,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -956,26 +995,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#triton-inference-server" class="md-nav__link">
-    Triton inference server
-  </a>
-  
-    <nav class="md-nav" aria-label="Triton inference server">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
   <a href="#triton-deployment" class="md-nav__link">
     Triton deployment
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#model-management" class="md-nav__link">
-    Model management
+      
+        <li class="md-nav__item">
+  <a href="#triton-model-management" class="md-nav__link">
+    Triton model management
   </a>
   
-    <nav class="md-nav" aria-label="Model management">
+    <nav class="md-nav" aria-label="Triton model management">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1024,9 +1055,11 @@
     </nav>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#reference-on-triton-model-management-configuration" class="md-nav__link">
+    Reference on Triton model management &amp; configuration
+  </a>
   
 </li>
       
@@ -1047,36 +1080,28 @@
                   </a>
                 
                 
-                  <h1>Triton</h1>
-                
-                <h2 id="triton-inference-server">Triton inference server</h2>
-<p>We use the <a href="https://github.com/triton-inference-server/">Triton Inference Server</a> to serve ML models.</p>
-<p>Models are exported in ONNX format (or SavedModel for some specific models trained with Tensorflow), and added in the <code>models/triton</code> directory.</p>
-<p>Triton expects the models to be in a specific directory structure, with the model files in a subdirectory named after the model. For example, the model <code>my_model</code> should be in a directory named <code>my_model</code> in the <code>models/triton</code> directory.
-Each model version should be in a subdirectory named after the version number, for example <code>1</code>.</p>
-<p>Triton offers APIs in HTTP and gRPC. Robotoff uses the gRPC API to communicate with the server.</p>
-<p>Triton possesses several model management mode, we use the 'explicit' mode. In this mode, the server does not load any model by default, and models must be explicitly loaded and unloaded by the client.
-We ask Triton to load all the models in the <code>models/triton</code> directory at startup.</p>
-<p>Using this mode, we don't have to restart the server when we add or remove models.</p>
-<h3 id="triton-deployment">Triton deployment</h3>
+                <h1 id="triton-inference-server">Triton inference server</h1>
+<p>We use the <a href="https://github.com/triton-inference-server/">Triton Inference Server</a> to serve ML models.
+A CLI is available to easily manage models (add new model, load/unload, enable/disable). For further information on how Triton manages model we refer the reader to the <a href="#reference-on-triton-model-management--configuration">last section</a>.</p>
+<h2 id="triton-deployment">Triton deployment</h2>
 <p>Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs (server <code>gpu-01</code>, deployed on Google Cloud). </p>
 <p>To deploy Triton on a distinct server, go to <code>models</code>, where you will find a <code>docker-compose.yml</code> file to run the Triton server in a Docker container:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>models
 docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 </code></pre></div>
 <p>For local development, you can also run Triton on your local machine with Docker. Simply make sure that you <code>docker/ml.yml</code> is part of your COMPOSE_FILE envvar in your <code>.env</code> (ex: <code>COMPOSE_FILE=docker-compose.yml;docker/dev.yml;docker/ml.yml</code>).</p>
-<h3 id="model-management">Model management</h3>
+<h2 id="triton-model-management">Triton model management</h2>
 <p>A script <code>manage.py</code> can be found in the <code>models</code> directory to help manage models on the Triton server. It can be used to download, list, load, and unload models.</p>
 <p>The easiest way to launch the script is using <a href="https://docs.astral.sh/uv/">uv</a>.</p>
-<h4 id="downloading-models">Downloading models</h4>
+<h3 id="downloading-models">Downloading models</h3>
 <p>To download all models, run:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>download-models
 </code></pre></div>
 <p>It downloads all models defined in the <code>models/models.toml</code> file and store them in the <code>models/triton</code> directory.</p>
-<p>If you need to download a specific model, you can provide its name with the <code>--include</code> option:</p>
+<p>If you need to download a specific model (and ignore the remaining models defined in the toml file), you can provide its name with the <code>--include</code> option:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>download-models<span class="w"> </span>--include<span class="w"> </span>MODEL_NAME
 </code></pre></div>
-<h4 id="copying-configuration-files">Copying configuration files</h4>
+<h3 id="copying-configuration-files">Copying configuration files</h3>
 <p>Triton can generate automatically a configuration file for ONNX model, but we have custom configuration files as it allows us to have more control over the model behavior.</p>
 <p>Configuration files are stored in the <code>models/triton-config</code> directory. To copy them to the <code>models/triton</code> directory, run:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>copy-config
@@ -1088,12 +1113,12 @@ docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 <p>Make sure to check the logs to ensure that the models are loaded correctly:</p>
 <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>triton
 </code></pre></div>
-<h4 id="listing-models">Listing models</h4>
+<h3 id="listing-models">Listing models</h3>
 <p>To list the models currently loaded on the Triton server, run:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>list-models
 </code></pre></div>
 <p>Make sure that the Triton server is running before executing this command.</p>
-<h4 id="loading-and-unloading-models">Loading and unloading models</h4>
+<h3 id="loading-and-unloading-models">Loading and unloading models</h3>
 <p>All models present in the <code>models/triton</code> directory are loaded at Triton startup. If you add a new model, you don't need to restart the server, you can load it dynamically.</p>
 <p>Use the following command to load a model:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>load-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
@@ -1101,7 +1126,7 @@ docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 <p>You can unload a model with the following command:
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>unload-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
 </code></pre></div></p>
-<h4 id="disabling-models">Disabling models</h4>
+<h3 id="disabling-models">Disabling models</h3>
 <p>When you work locally, you don't always want to load all models, as it can take a lot of RAM. You can disable a model by using the following command:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>disable-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
 </code></pre></div>
@@ -1109,11 +1134,19 @@ docker-compose<span class="w"> </span>up<span class="w"> </span>-d
 <p>You can re-enable a model by moving it back:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>enable-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
 </code></pre></div>
-<h4 id="get-a-model-configuration-from-triton">Get a model configuration from Triton</h4>
+<h3 id="get-a-model-configuration-from-triton">Get a model configuration from Triton</h3>
 <p>You can get the configuration of a model currently loaded in Triton with the following command:</p>
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>get-model-config<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
 </code></pre></div>
 <p>This command retrieves the model configuration from the Triton server and displays it in the console.</p>
+<h2 id="reference-on-triton-model-management-configuration">Reference on Triton model management &amp; configuration</h2>
+<p>Models are exported in ONNX format and added in the <code>models/triton</code> directory.</p>
+<p>Triton expects the models to be in a specific directory structure, with the model files in a subdirectory named after the model. For example, the model <code>my_model</code> should be in a directory named <code>my_model</code> in the <code>models/triton</code> directory.
+Each model version should be in a subdirectory named after the version number, for example <code>1</code>.</p>
+<p>Triton offers APIs in HTTP and gRPC. Robotoff uses the gRPC API to communicate with the server.</p>
+<p>Triton possesses several model management mode, we use the 'explicit' mode. In this mode, the server does not load any model by default, and models must be explicitly loaded and unloaded by the client.
+We ask Triton to load all the models in the <code>models/triton</code> directory at startup.</p>
+<p>Using this mode, we don't have to restart the server when we add or remove models.</p>
                 
               
               
