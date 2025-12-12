@@ -9,7 +9,7 @@ dist
 robotoff.egg-info
 ml/data/*
 cache
-datasets
+/datasets/
 data/taxonomies
 *.joblib
 .ipynb_checkpoints
