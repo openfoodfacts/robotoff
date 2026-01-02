@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.85.2](https://github.com/openfoodfacts/robotoff/compare/v1.85.1...v1.85.2) (2026-01-02)
+
+
+### Bug Fixes
+
+* Greek translations in robotoff.po ([897774d](https://github.com/openfoodfacts/robotoff/commit/897774d01d176214945aa316dbf98b9996c84b80))
+
+
+### Technical
+
+* add reference on object detection datasets stored on HF ([#1822](https://github.com/openfoodfacts/robotoff/issues/1822)) ([720606c](https://github.com/openfoodfacts/robotoff/commit/720606c63a88e56f187f3a67bec0275b7b2dbf30))
+* **deps-dev:** bump werkzeug from 3.1.3 to 3.1.4 ([#1815](https://github.com/openfoodfacts/robotoff/issues/1815)) ([edbca02](https://github.com/openfoodfacts/robotoff/commit/edbca02ceb83aa453a2f879309ddb877b54190be))
+* **deps:** bump filelock from 3.18.0 to 3.20.1 ([#1824](https://github.com/openfoodfacts/robotoff/issues/1824)) ([92c685b](https://github.com/openfoodfacts/robotoff/commit/92c685b9a4f460aa7a278fb615a1ac856305f2ce))
+* **deps:** bump fonttools from 4.58.1 to 4.61.0 ([#1814](https://github.com/openfoodfacts/robotoff/issues/1814)) ([a2d9f9e](https://github.com/openfoodfacts/robotoff/commit/a2d9f9e4b4aa4eb2931d673c0cfb4cb197b80d58))
+* **deps:** bump transformers from 4.50.3 to 4.53.0 ([#1768](https://github.com/openfoodfacts/robotoff/issues/1768)) ([9cb7d26](https://github.com/openfoodfacts/robotoff/commit/9cb7d26782c8695474c965c44a222793a675119e))
+* **deps:** bump urllib3 from 2.5.0 to 2.6.0 ([#1821](https://github.com/openfoodfacts/robotoff/issues/1821)) ([08fa1e2](https://github.com/openfoodfacts/robotoff/commit/08fa1e2331e145383408874833fe86d575fa17c8))
+
 ## [1.85.1](https://github.com/openfoodfacts/robotoff/compare/v1.85.0...v1.85.1) (2025-12-08)
 
 
