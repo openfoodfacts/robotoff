@@ -17,7 +17,7 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr "Το προϊόν ανήκει σε αυτήν την κατηγορία;"
+msgstr "Το προϊόν ανήκει σε αυτήν την κατηγορία?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
@@ -25,19 +25,19 @@ msgstr "Το προϊόν έχει αυτήν την ετικέτα;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr "Μήπως το προϊόν ανήκει σε αυτό το εμπορικό σήμα?"
+msgstr "Μήπως το προϊόν ανήκει σε αυτό το εμπορικό σήμα;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Συμφωνεί αυτό το βάρος με το βάρος που εμφανίζεται στο προϊόν;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Είναι αυτή η εικόνα μια εικόνα διατροφής για αυτήν τη γλώσσα;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Το προϊόν έχει αυτό το στοιχείο συσκευασίας;"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
