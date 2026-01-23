@@ -1,10 +1,3 @@
-"""Module to perform language identification (langid).
-
-Under the hood, we use a Rust inference server, serving fasttext lid.176.bin
-model. 176 languages are supported.
-See https://fasttext.cc/docs/en/language-identification.html for more
-information.
-"""
 
 import dataclasses
 
@@ -21,20 +14,13 @@ class LanguagePrediction:
 def predict_lang_batch(
     texts: list[str], k: int = 10, threshold: float = 0.0
 ) -> list[list[LanguagePrediction]]:
-    """Predict the language of a list of texts (batch-mode).
-
-    :param texts: The texts we want to know the language of
-    :param k: number of detected language to return per text, defaults to 10
-    :param threshold: minimum confidence threshold of predictions, defaults to
-        0.0
-    :return: a list of list of `LanguagePrediction` (one for each text sample)
-        sorted by descending confidence scores
-    """
+    
     predictions: list[list[LanguagePrediction]] = []
     r = http_session.post(
-        f"{settings.FASTTEXT_SERVER_URI}/predict?k={k}&threshold={threshold}",
-        json=texts,
-    )
+    f"{settings.FASTTEXT_SERVER_URI}/predict?k={k}&threshold={threshold}",
+    json=texts,
+    timeout=5,
+)
     response = r.json()
     for lang_list, confidence_list in response:
         predictions.append(
@@ -46,16 +32,38 @@ def predict_lang_batch(
     return predictions
 
 
+PORTUGUESE_NUTRITION_KEYWORDS = (
+    "valor energético",
+    "energia",
+    "gorduras",
+    "hidratos",
+    "carboidratos",
+    "proteínas",
+    "sal",
+    "porção",
+    "porcao",
+)
+
+def looks_like_portuguese_nutrition(text: str) -> bool:
+    text = text.lower()
+    return any(keyword in text for keyword in PORTUGUESE_NUTRITION_KEYWORDS)
+
+
+
 def predict_lang(
     text: str, k: int = 10, threshold: float = 0.0
 ) -> list[LanguagePrediction]:
-    """Predict the language of `text`.
+    predictions = predict_lang_batch([text], k, threshold)[0]
 
-    :param text: The text we want to know the language of
-    :param k: number of detected language to return, defaults to 10
-    :param threshold: minimum confidence threshold of predictions, defaults to
-        0.0
-    :return: a list of `LanguagePrediction`, sorted by descending confidence
-        scores
-    """
-    return predict_lang_batch([text], k, threshold)[0]
+    if (
+        predictions
+        and predictions[0].lang == "es"
+        and looks_like_portuguese_nutrition(text)
+    ):
+        predictions[0] = LanguagePrediction(
+            lang="pt",
+            confidence=predictions[0].confidence,
+        )
+
+    
+    return predictions
