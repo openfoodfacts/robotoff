@@ -84,7 +84,7 @@ The workflow will fail if there are any linting errors, ensuring the API specifi
 - Robotoff is licensed under the AGPLv3.
 
 ## 📆 Weekly meetings
-- We e-meet every Tuesday at 11:00 Paris Time (10:00 London Time, 15:30 IST, 02:00 AM PT)
+- We e-meet every first Tuesday of each month, at 11:00 Paris Time (10:00 London Time, 15:30 IST, 02:00 AM PT)
 - ![Google Meet](https://img.shields.io/badge/Google%20Meet-00897B?logo=google-meet&logoColor=white) Video call link: https://meet.google.com/qvv-grzm-gzb
 - Join by phone: https://tel.meet/qvv-grzm-gzb?pin=9965177492770
 - Add the Event to your Calendar by [adding the Open Food Facts community calendar to your calendar](https://wiki.openfoodfacts.org/Events)
