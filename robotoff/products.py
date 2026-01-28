@@ -435,6 +435,7 @@ class Product:
         "nutrition_data_per",
         "nutrition_data_prepared",
         "serving_size",
+        "schema_version",
     )
 
     def __init__(self, product: JSONType):
@@ -474,6 +475,8 @@ class Product:
             product.get("nutrition_data_prepared") == "on"
         )
         self.serving_size: str | None = product.get("serving_size")
+        # if `schema_version` is not present, we assume it's 999
+        self.schema_version: int = product.get("schema_version", 999)
 
     @staticmethod
     def get_fields(item: JSONType) -> set[str]:
