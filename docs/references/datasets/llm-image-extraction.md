@@ -11,13 +11,13 @@ The [price-tag-extraction](https://huggingface.co/datasets/openfoodfacts/price-t
 
 ## Schema
 
-- `image_id`: string, unique identifier of the image. For Open Food Facts images, it's usually in the format `{barcode}_{imgid}` (example: for https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg, it would be `7038010005459_5`)
+- `image_id`: string, unique identifier of the image. For Open Food Facts images, it's usually in the format `{barcode}_{imgid}` (example: for [https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg](https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg), it would be `7038010005459_5`)
 - `image`: the image data. Note that we apply rotation based on EXIF metadata before saving the image. Images are also often resized to reduce dataset size and speed up training.
 - `output`: the expected output text extracted from the image. It's expected to be a valid JSON string conforming to the schema (see [Configuration file](#configuration-file) section below for more information).
 - `meta`: metadata about the image. It's project dependent, but most frequent fields are:
-    - `barcode` (Open Food Facts projects only): the barcode of the product.
-    - `off_image_id` (Open Food Facts projects only): the `imgid` of the original image.
-    - `image_url`: the URL of the image.
+   - `barcode` (Open Food Facts projects only): the barcode of the product.
+   - `off_image_id` (Open Food Facts projects only): the `imgid` of the original image.
+   - `image_url`: the URL of the image.
 
 
 ## Configuration file
