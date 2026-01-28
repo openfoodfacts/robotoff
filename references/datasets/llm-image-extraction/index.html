@@ -1004,13 +1004,15 @@
 <p>The <a href="https://huggingface.co/datasets/openfoodfacts/price-tag-extraction">price-tag-extraction</a> dataset is an example of such dataset.</p>
 <h2 id="schema">Schema</h2>
 <ul>
-<li><code>image_id</code>: string, unique identifier of the image. For Open Food Facts images, it's usually in the format <code>{barcode}_{imgid}</code> (example: for https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg, it would be <code>7038010005459_5</code>)</li>
+<li><code>image_id</code>: string, unique identifier of the image. For Open Food Facts images, it's usually in the format <code>{barcode}_{imgid}</code> (example: for <a href="https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg">https://images.openfoodfacts.org/images/products/703/801/000/5459/5.jpg</a>, it would be <code>7038010005459_5</code>)</li>
 <li><code>image</code>: the image data. Note that we apply rotation based on EXIF metadata before saving the image. Images are also often resized to reduce dataset size and speed up training.</li>
 <li><code>output</code>: the expected output text extracted from the image. It's expected to be a valid JSON string conforming to the schema (see <a href="#configuration-file">Configuration file</a> section below for more information).</li>
-<li><code>meta</code>: metadata about the image. It's project dependent, but most frequent fields are:
-    - <code>barcode</code> (Open Food Facts projects only): the barcode of the product.
-    - <code>off_image_id</code> (Open Food Facts projects only): the <code>imgid</code> of the original image.
-    - <code>image_url</code>: the URL of the image.</li>
+<li><code>meta</code>: metadata about the image. It's project dependent, but most frequent fields are:<ul>
+<li><code>barcode</code> (Open Food Facts projects only): the barcode of the product.</li>
+<li><code>off_image_id</code> (Open Food Facts projects only): the <code>imgid</code> of the original image.</li>
+<li><code>image_url</code>: the URL of the image.</li>
+</ul>
+</li>
 </ul>
 <h2 id="configuration-file">Configuration file</h2>
 <p>To fine-tune a LVLM using the dataset, we also need:</p>
