@@ -1501,12 +1501,6 @@ class NutrientExtractionImporter(InsightImporter):
         predictions: list[Prediction],
         product_id: ProductIdentifier,
     ) -> Iterator[ProductInsight]:
-        if product and product.nutrition_data_prepared:
-            # Don't generate candidates if the product has nutrition
-            # information per prepared product, as the model doesn't
-            # handle this case
-            return
-
         image_orientation_prediction = next(
             (p for p in predictions if p.type == PredictionType.image_orientation),
             None,
@@ -1584,6 +1578,19 @@ class NutrientExtractionImporter(InsightImporter):
         :param nutrients: the nutrient values extracted from the image
         :return: True if the prediction should be kept, False otherwise
         """
+        if product and (
+            # Don't support nutrition extraction with the new `nutriments` schema
+            product.schema_version
+            > 1002
+        ):
+            return False
+
+        if product and product.nutrition_data_prepared:
+            # Don't generate candidates if the product has nutrition
+            # information per prepared product, as the model doesn't
+            # handle this case
+            return False
+
         if product is None or not product.nutriments:
             # We don't have access to MongoDB or the nutriment data is missing
             # completely, so we generate an insight
@@ -1718,6 +1725,10 @@ class NutrientExtractionImporter(InsightImporter):
         if not product:
             # We cannot know whether the product has incomplete or missing nutrition
             # Stop here
+            return
+
+        # Don't support nutrition extraction with the new `nutriments` schema
+        if product.schema_version > 1002:
             return
 
         campaigns: list[str] = []

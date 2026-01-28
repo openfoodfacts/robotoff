@@ -49,10 +49,14 @@ def generate_fiber_quality_facet() -> None:
 
         product_id = ProductIdentifier(barcode, server_type)
         product = product_store.get_product(
-            product_id, ["nutriments", "data_quality_tags", "images"]
+            product_id, ["nutriments", "data_quality_tags", "images", "schema_version"]
         )
 
         if product is None:
+            continue
+
+        # Don't support (yet) the new nutrition schema
+        if product.get("schema_version", 999) > 1002:
             continue
 
         nutriments = product.get("nutriments", {})
