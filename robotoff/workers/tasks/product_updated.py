@@ -112,7 +112,9 @@ def should_rerun_category_predictor(diffs: JSONType | None) -> bool:
     fields = diffs.get("fields", {})
     updated_fields = fields.get("change", [])
     added_fields = fields.get("add", [])
-    has_nutriments_change = "nutriments" in diffs
+    # TODO(raphael): remove the `"nutriments" in diffs` once the new
+    # nutrition schema is fully rolled out.
+    has_nutriments_change = "nutriments" in diffs or "nutrition" in diffs
     uploaded_images = diffs.get("uploaded_images", {})
     is_uploaded_image = "add" in uploaded_images
     is_deleted_image = "delete" in uploaded_images

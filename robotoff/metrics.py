@@ -1,6 +1,5 @@
 import datetime
 import logging
-from typing import Iterable, Iterator
 from urllib.parse import urlparse
 
 from influxdb_client import InfluxDBClient
@@ -276,49 +275,3 @@ def generate_insight_metrics(target_datetime: datetime.datetime) -> list[dict]:
             }
         )
     return inserts
-
-
-def generate_recent_changes_metrics(items: Iterable[dict]) -> Iterator[dict]:
-    for item in items:
-        comment: str = item["comment"]
-        diffs: dict = item["diffs"]
-        uploaded_images = diffs.setdefault("uploaded_images", {})
-        selected_images: dict = diffs.setdefault("selected_images", {})
-        nutriments: dict = diffs.setdefault("nutriments", {})
-        nutriments_add: dict = nutriments.get("add", {})
-        nutriments_change: dict = nutriments.get("change", {})
-        nutriments_delete: dict = nutriments.get("delete", {})
-        fields: dict = diffs.setdefault("fields", {})
-        fields_add: dict = fields.setdefault("add", {})
-        fields_change: dict = fields.setdefault("change", {})
-        packagings: dict = diffs.setdefault("packagings", {})
-        yield {
-            "measurement": "recent_changes",
-            "tags": {
-                "countries_tags": item["countries_tags"],
-                "user_id": item["userid"],
-                "is_smooth_app": int("Smoothie - OpenFoodFacts" in comment),
-                "by_robotoff": int("[robotoff]" in comment),
-                "has_image_upload": int(bool(uploaded_images.get("add", {}))),
-                "has_image_delete": int(bool(uploaded_images.get("delete", {}))),
-                "has_image_selection_change": int(
-                    bool(selected_images.get("change", {}))
-                ),
-                "has_image_selection_add": int(bool(selected_images.get("add", {}))),
-                "has_image_selection_delete": int(
-                    bool(selected_images.get("delete", {}))
-                ),
-                "has_nutriment_change": int(bool(nutriments_change)),
-                "has_nutriment_add": int(bool(nutriments_add)),
-                "has_nutriment_delete": int(bool(nutriments_delete)),
-                "has_nutriscore_added": int("nutrition-score-fr" in nutriments_add),
-                "has_nutriscore_change": int("nutrition-score-fr" in nutriments_change),
-                "has_nutriscore_delete": int("nutrition-score-fr" in nutriments_delete),
-                "has_categories_add": int("categories" in fields_add),
-                "has_categories_change": int("categories" in fields_change),
-                "has_packagings_add": int(bool(packagings.get("add", {}))),
-                "has_packagings_change": int(bool(packagings.get("change", {}))),
-            },
-            "time": item["t"],
-            "fields": {"count": 1},
-        }
