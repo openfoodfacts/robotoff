@@ -18,7 +18,7 @@ from openfoodfacts.images import convert_to_legacy_schema
 from pymongo import MongoClient
 
 from robotoff import settings
-from robotoff.types import JSONType, ProductIdentifier, ServerType
+from robotoff.types import JSONType, NutritionV3, ProductIdentifier, ServerType
 from robotoff.utils import gzip_jsonl_iter, http_session, jsonl_iter
 
 logger = logging.getLogger(__name__)
@@ -431,6 +431,7 @@ class Product:
         "packagings",
         "lang",
         "ingredients_text",
+        "_nutrition_dict",
         "nutriments",
         "nutrition_data_per",
         "nutrition_data_prepared",
@@ -470,6 +471,7 @@ class Product:
                 ingredients_text[lang] = value
         self.ingredients_text: JSONType = ingredients_text
         self.nutriments: JSONType = product.get("nutriments") or {}
+        self._nutrition_dict: JSONType = product.get("nutrition", {})
         self.nutrition_data_per: str | None = product.get("nutrition_data_per")
         self.nutrition_data_prepared: bool = (
             product.get("nutrition_data_prepared") == "on"
@@ -477,6 +479,15 @@ class Product:
         self.serving_size: str | None = product.get("serving_size")
         # if `schema_version` is not present, we assume it's 999
         self.schema_version: int = product.get("schema_version", 999)
+
+    @property
+    def nutrition(self) -> NutritionV3 | None:
+        """Build and return the NutritionV3 from the `nutrition` dict.
+        If the `nutrition` dict is empty, return None.
+        """
+        if self._nutrition_dict:
+            return NutritionV3.model_validate(self._nutrition_dict)
+        return None
 
     @staticmethod
     def get_fields(item: JSONType) -> set[str]:

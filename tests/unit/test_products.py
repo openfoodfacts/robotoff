@@ -5,7 +5,8 @@ import pytest
 
 from robotoff.products import DBProductStore, Product, is_special_image, is_valid_image
 from robotoff.settings import TEST_DATA_DIR
-from robotoff.types import JSONType, ProductIdentifier, ServerType
+from robotoff.types import JSONType, NutritionV3, ProductIdentifier, ServerType
+from tests.unit.data.nutrition import NUTRITION_1, NUTRITION_2
 
 with (TEST_DATA_DIR / "images.json").open("r") as f:
     IMAGE_DATA = json.load(f)
@@ -272,3 +273,13 @@ class TestProduct:
             "unique_scans_n",
             "lang",
         }
+
+    @pytest.mark.parametrize(
+        "nutrition",
+        [NUTRITION_1, NUTRITION_2],
+    )
+    def test_product_creation_nutrition_field(self, nutrition: JSONType):
+        """Check that the new `nutrition` field is parsed without error by Pydantic."""
+        product = Product({"nutrition": nutrition})
+        nutrition_obj = product.nutrition
+        assert isinstance(nutrition_obj, NutritionV3)
