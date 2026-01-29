@@ -33,8 +33,6 @@ from robotoff.products import (
 )
 from robotoff.types import InsightType, ServerType
 
-from .latent import generate_quality_facets
-
 settings.init_sentry()
 
 logger = logging.getLogger(__name__)
@@ -381,15 +379,6 @@ def run():
         "cron",
         day="*",
         hour=19,
-        max_instances=1,
-    )
-
-    scheduler.add_job(
-        generate_quality_facets,
-        "cron",
-        day="*",
-        hour=11,
-        minute=25,
         max_instances=1,
     )
 

@@ -1579,53 +1579,49 @@ class NutrientExtractionImporter(InsightImporter):
         :return: True if the prediction should be kept, False otherwise
         """
         if product and (
-            # Don't support nutrition extraction with the new `nutriments` schema
+            # Don't support the legacy nutrition schema
             product.schema_version
-            > 1002
+            < 1003
         ):
             return False
 
-        if product and product.nutrition_data_prepared:
-            # Don't generate candidates if the product has nutrition
-            # information per prepared product, as the model doesn't
-            # handle this case
-            return False
-
-        if product is None or not product.nutriments:
-            # We don't have access to MongoDB or the nutriment data is missing
+        if product is None or not (product_nutrition := product.nutrition):
+            # We don't have access to MongoDB or the nutrition data is missing
             # completely, so we generate an insight
             return True
 
-        nutrition_data_per = product.nutrition_data_per
+        # Don't generate candidates if the product has nutrition
+        # information per prepared product, as the model doesn't
+        # handle this case
+        for input_set in product_nutrition.input_sets:
+            if input_set.preparation == "prepared":
+                return False
 
-        if nutrition_data_per == "100ml":
-            # nutrition_data_per can be 100ml even if the nutrient values are
-            # stored as per 100g, see this product for example:
-            # https://world.openfoodfacts.org/api/v2/product/7802900028473?rev=12&fields=nutriments,nutrition_data_per
-            nutrition_data_per = "100g"
-
-        if nutrition_data_per not in ("100g", "serving"):
-            raise ValueError(
-                f"Invalid nutrition data per: {product.nutrition_data_per}"
-            )
-
-        # Only keep the nutrient that are either per "100g" or "per serving"
-        # depending on `product.nutrition_data_per`, so that we know which
-        # nutrient values the prediction brings
-        for key in (
-            k for k in nutrients.keys() if k.endswith(f"_{nutrition_data_per}")
-        ):
+        for key in nutrients.keys():
             predicted_value: str = nutrients[key]["value"]
             predicted_unit: str | None = nutrients[key]["unit"]
-            current_value: str | int | None = product.nutriments.get(key)
             suffix = "_100g" if key.endswith("_100g") else "_serving"
-            current_unit: str | None = typing.cast(
-                str | None, product.nutriments.get(key.replace(suffix, "_unit"))
+            nutrient_name = key.replace(suffix, "")
+            per = suffix.lstrip("_")
+            nutrient_input = product_nutrition.get_input_nutrient(
+                nutrient=nutrient_name, per=per, source="packaging"
             )
+            if not nutrient_input and per == "100g":
+                # The model only detects nutrients per 100g, 100ml is considered
+                # equivalent. So we check for per 100ml if per 100g is not found
+                # in the product nutrition data.
+                nutrient_input = product_nutrition.get_input_nutrient(
+                    nutrient=nutrient_name, per="100ml", source="packaging"
+                )
+            current_value = getattr(nutrient_input, "value", None)
+            current_unit = getattr(nutrient_input, "unit", None)
 
             # If at least one nutrient value is different, we keep the prediction
             if not NutrientExtractionImporter._is_equal_nutrient_value(
-                predicted_value, predicted_unit, current_value, current_unit
+                predicted_value=predicted_value,
+                predicted_unit=predicted_unit,
+                current_value=current_value,
+                current_unit=current_unit,
             ):
                 return True
 
@@ -1633,7 +1629,7 @@ class NutrientExtractionImporter(InsightImporter):
         # the serving size is missing, we keep the prediction if it brings
         # the `serving_size` field.
         if (
-            nutrition_data_per == "serving"
+            product_nutrition.filter_input_sets(per="serving", source="packaging")
             and not product.serving_size
             and "serving_size" in nutrients
         ):
@@ -1727,12 +1723,13 @@ class NutrientExtractionImporter(InsightImporter):
             # Stop here
             return
 
-        # Don't support nutrition extraction with the new `nutriments` schema
-        if product.schema_version > 1002:
+        # Don't support nutrition extraction with the legacy `nutriments` schema
+        if product.schema_version < 1003:
             return
 
         campaigns: list[str] = []
-        if set(product.nutriments.keys()):
+        nutrition = product.nutrition
+        if nutrition and nutrition.input_sets:
             # The product already has some nutrient values, so we add it to the
             # `incomplete-nutrition` campaign. Robotoff clients will be able to
             # ask for incomplete nutrition insights only if they need to by
