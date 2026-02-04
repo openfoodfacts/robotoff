@@ -30,6 +30,7 @@ class FakeNutriscoreModel(RemoteModel):
         threshold: float | None = 0.5,
         nms_threshold: float | None = None,
         nms_eta: float | None = None,
+        nms: bool = True,
     ) -> ObjectDetectionResult:
         return self.raw_result
 
