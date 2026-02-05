@@ -56,6 +56,11 @@ def add_category_insight(
         )
         return
 
+    if product.get("schema_version", 999) > 1002:
+        # Don't predict category if we use the new schema version
+        # This is temporary, before we roll out the new schema support
+        return
+
     logger.info("Launching category prediction for %s", product_id)
     # predict category using neural model
     try:
