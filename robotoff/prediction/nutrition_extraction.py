@@ -244,6 +244,7 @@ def postprocess(
     )
 
 
+@typing.no_type_check
 def gather_pre_entities(
     logits: np.ndarray,
     words: list[str],
@@ -305,6 +306,9 @@ def gather_pre_entities(
             continue
 
         previous_word_id = word_id
+
+        # TODO(raphael): there is a possible indexing bug here highlighted by
+        # mypy, check this
         word = words[word_id]
         label_id = label_ids[idx]
         score = float(scores[idx, label_id])
