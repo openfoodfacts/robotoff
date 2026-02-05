@@ -809,7 +809,7 @@ class ImagePredictorResource:
             "nms_threshold", default=None
         )
         nms_eta: float | None = req.get_param_as_float("nms_eta", default=None)
-
+        nms: bool = req.get_param_as_bool("nms", default=True)
         available_object_detection_models = list(
             ObjectDetectionModel.__members__.keys()
         )
@@ -868,6 +868,7 @@ class ImagePredictorResource:
                     threshold=threshold,
                     nms_threshold=nms_threshold,
                     nms_eta=nms_eta,
+                    nms=nms,
                 )
 
                 if output_image:
