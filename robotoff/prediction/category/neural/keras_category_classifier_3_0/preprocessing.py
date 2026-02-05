@@ -66,7 +66,7 @@ def generate_inputs_dict(
     inputs = {
         "product_name": product.get("product_name", ""),
         "ingredients_tags": transform_ingredients_input(
-            product.get("ingredients", []), ingredient_taxonomy
+            product.get("ingredients") or [], ingredient_taxonomy
         )
         or [""],
         "ingredients_ocr_tags": extract_ocr_ingredients(
@@ -77,7 +77,7 @@ def generate_inputs_dict(
 
     # Only support legacy nutrition schema for now
     if product.get("schema_version", 999) <= 1002:
-        nutriments = product.get("nutriments", {})
+        nutriments = product.get("nutriments") or {}
         for nutriment_name in NUTRIMENT_NAMES:
             inputs[nutriment_name] = transform_nutrition_input(
                 nutriments.get(f"{nutriment_name.replace('_', '-')}_100g"),
