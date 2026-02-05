@@ -92,6 +92,7 @@ MODELS_CONFIG = {
         triton_model_name="price_tag_detection",
         image_size=960,
         label_names=["price-tag"],
+        default_threshold=0.25,
     ),
 }
 
@@ -110,6 +111,8 @@ def add_boxes_and_labels(image_array: np.ndarray, result: ObjectDetectionResult)
         instance_masks=None,
         use_normalized_coordinates=True,
         line_thickness=5,
+        max_boxes_to_draw=len(result.detection_boxes),
+        min_score_thresh=0.0,
     )
     image_with_boxes = Image.fromarray(image_array)
     result.boxed_image = image_with_boxes
@@ -127,6 +130,7 @@ class RemoteModel:
         threshold: float | None = None,
         nms_threshold: float | None = None,
         nms_eta: float | None = None,
+        nms: bool = True,
     ) -> ObjectDetectionResult:
         """Run an object detection model on an image.
 
@@ -144,6 +148,7 @@ class RemoteModel:
             defaults to None (0.7 will be used).
         :param nms_eta: the NMS eta parameter to use, defaults to None (1.0 will be
             used).
+        :param nms: whether to use NMS, defaults to True.
         :return: the detection result
         """
         threshold = threshold or self.config.default_threshold
@@ -158,6 +163,7 @@ class RemoteModel:
             threshold=threshold,
             nms_threshold=nms_threshold,
             nms_eta=nms_eta,
+            nms=nms,
         )
         for metric_name, duration in result.metrics.items():
             ml_metrics_logger.info(
