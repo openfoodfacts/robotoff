@@ -286,7 +286,7 @@ paths:
 
         The annotation is an integer that can take 4 values: `0`, `1`, `2`, `-1`. `0` means the insight is incorrect
         (so it won't be applied), `1` means it is correct (so it will be applied) and `-1` means the insight
-        won't be returned to the user (_skip_). `2` is used when user submit some data to the annotate endpoint 
+        won't be returned to the user (_skip_). `2` is used when user submit some data to the annotate endpoint
         (for example in some cases of category annotation or ingredients spellcheck).
 
         We use the voting mecanism system to remember which insight to skip for a user (authenticated or not).
@@ -412,7 +412,7 @@ paths:
           in: query
           description: |
             The minimum y-coordinate for cropping, relative to the image height.
-            We use relative coordinates, with (0, 0) being the upper left corner and 
+            We use relative coordinates, with (0, 0) being the upper left corner and
             (1, 1) being the lower right corner.
           example: 0.47795143723487854
           schema:
@@ -422,7 +422,7 @@ paths:
         - name: x_min
           description: |
             The minimum x-coordinate for cropping, relative to the image width.
-            We use relative coordinates, with (0, 0) being the upper left corner and 
+            We use relative coordinates, with (0, 0) being the upper left corner and
             (1, 1) being the lower right corner.
           in: query
           example: 0.5583494305610657
@@ -433,7 +433,7 @@ paths:
         - name: y_max
           description: |
             The maximum y-coordinate for cropping, relative to the image height.
-            We use relative coordinates, with (0, 0) being the upper left corner and 
+            We use relative coordinates, with (0, 0) being the upper left corner and
             (1, 1) being the lower right corner.
           in: query
           example: 0.5653171539306641
@@ -444,7 +444,7 @@ paths:
         - name: x_max
           description: |
             The maximum x-coordinate for cropping, relative to the image width.
-            We use relative coordinates, with (0, 0) being the upper left corner and 
+            We use relative coordinates, with (0, 0) being the upper left corner and
             (1, 1) being the lower right corner.
           in: query
           example: 0.6795185804367065
@@ -576,7 +576,7 @@ paths:
       summary: Search for logos
       operationId: searchLogos
       description: |
-        Search for logos detected using the universal-logo-detector model that 
+        Search for logos detected using the universal-logo-detector model that
         meet some criteria (annotation status, annotated, type,...)
       parameters:
         - $ref: "#/components/parameters/server_type"
@@ -686,7 +686,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LogoANNSearchResponse"
-  /ann/search/{logo_id:int}:
+
+  /ann/search/{logo_id}:
     get:
       tags:
         - ANN Search
@@ -694,6 +695,12 @@ paths:
       operationId: searchNearestNeighborsByLogoId
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
+        - name: logo_id
+          in: path
+          required: true
+          description: The ID of the logo to search for.
+          schema:
+            type: integer
         - $ref: "#/components/parameters/ann_search_count"
         - $ref: "#/components/parameters/server_type"
       responses:
@@ -1399,8 +1406,8 @@ paths:
                               type: array
                               items:
                                 type: object
-                                
-                        
+
+
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
   /predict/ocr_prediction:
@@ -1668,7 +1675,7 @@ paths:
       operationId: importBatchJobResults
       description: |
         Import batch job data into Robotoff database. This endpoint is secured and requires bearer authentication.
-        
+
         This endpoint is mainly used by the batch job once the job is finished.
       security:
         - batch_job_key: []
@@ -2066,7 +2073,7 @@ tags:
   - name: Image Processing
     description: |
       Endpoints for processing and manipulating images, including cropping and running prediction models.
-  - name: Image Management  
+  - name: Image Management
     description: |
       Endpoints for managing and retrieving image data and metadata.
   - name: Image Predictions
