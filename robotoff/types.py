@@ -488,9 +488,10 @@ class NutritionV3NutrientAggregated(BaseModel):
 
 
 class NutritionV3NutrientInput(BaseModel):
-    value_string: str
-    value: float
     unit: str
+    value: float | None = None
+    value_computed: float | None = None
+    value_string: str | None = None
     modifier: str | None = None
 
 

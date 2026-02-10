@@ -4,11 +4,12 @@ import pytest
 
 from robotoff.types import (
     IngredientAnnotateBody,
+    JSONType,
     NutrientData,
     NutritionV3,
     NutritionV3InputSet,
 )
-from tests.unit.data.nutrition import NUTRITION_2
+from tests.unit.data.nutrition import NUTRITION_1, NUTRITION_2, NUTRITION_3
 
 
 class TestNutrientData:
@@ -104,6 +105,10 @@ class TestIngredientAnnotateBody:
 
 
 class TestNutritionV3:
+    @pytest.mark.parametrize("obj", [NUTRITION_1, NUTRITION_2, NUTRITION_3])
+    def test_parse(self, obj: JSONType):
+        NutritionV3.model_validate(obj)
+
     def test_filter_input_sets(self):
         nutrition_obj = NutritionV3.model_validate(NUTRITION_2)
         results = nutrition_obj.filter_input_sets(source="packaging")
