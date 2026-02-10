@@ -8,14 +8,14 @@ import numpy as np
 
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import JSONType
+from robotoff.types import JSONType, NutritionV3
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 
 from .text_utils import fold, get_tag
 
-# Nutriments we use as model input
-NUTRIMENT_NAMES = (
+# Nutrients we use as model input
+NUTRIENT_NAMES = (
     "fat",
     "saturated_fat",
     "carbohydrates",
@@ -75,14 +75,7 @@ def generate_inputs_dict(
         or [""],
     }
 
-    # Only support legacy nutrition schema for now
-    if product.get("schema_version", 999) <= 1002:
-        nutriments = product.get("nutriments", {})
-        for nutriment_name in NUTRIMENT_NAMES:
-            inputs[nutriment_name] = transform_nutrition_input(
-                nutriments.get(f"{nutriment_name.replace('_', '-')}_100g"),
-                nutriment_name=nutriment_name,
-            )
+    inputs |= generate_nutrition_input_dict(product)
 
     if image_embeddings is None:
         # No image is available, so we provide zero-filled image embedding
@@ -121,6 +114,28 @@ def generate_inputs_dict(
     return inputs
 
 
+def generate_nutrition_input_dict(product: JSONType) -> JSONType:
+    """Generate the nutrition-related inputs of the category prediction model."""
+    inputs = {}
+    # Only support new nutrition schema
+    if product.get("schema_version", 999) > 1002:
+        nutrition = NutritionV3(**product.get("nutrition", {}))
+        # The aggregated returns nutrition values per 100g/100ml
+        nutrients = nutrition.aggregated_set.nutrients
+        for nutrient_name in NUTRIENT_NAMES:
+            nutrient_key = nutrient_name.replace("_", "-")
+            if nutrient_key in nutrients:
+                value = nutrients[nutrient_key].value
+            else:
+                value = None
+            inputs[nutrient_name] = transform_nutrition_input(
+                value,
+                nutriment_name=nutrient_key,
+            )
+
+    return inputs
+
+
 def remove_untaxonomized_values(value_tags: list[str], taxonomy: Taxonomy) -> list[str]:
     return [value_tag for value_tag in value_tags if value_tag in taxonomy]
 
@@ -150,7 +165,8 @@ def transform_nutrition_input(value: float | None, nutriment_name: str) -> float
     - the input value otherwise
 
     :param value: the float value
-    :param nutriment_name: the name of the nutriment
+    :param nutriment_name: the name of the nutriment, using Product Opener format.
+        Example: `energy-kcal`, not `energy_kcal`.
     :return: the transformed nutriment value
     """
     if value is None:
