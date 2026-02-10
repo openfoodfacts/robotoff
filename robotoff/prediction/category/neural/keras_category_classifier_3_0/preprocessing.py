@@ -133,6 +133,10 @@ def generate_nutrition_input_dict(product: JSONType) -> JSONType:
                 nutriment_name=nutrient_key,
             )
 
+    # Set value for all missing nutrients to -1 (missing)
+    for nutrient_name in NUTRIENT_NAMES:
+        if nutrient_name not in inputs:
+            inputs[nutrient_name] = -1
     return inputs
 
 

@@ -243,7 +243,17 @@ def test_generate_nutrition_input_dict_legacy_schema():
             }
         }
     )
-    assert output == {}
+    assert output == {
+        "carbohydrates": -1,
+        "energy_kcal": -1,
+        "fat": -1,
+        "fiber": -1,
+        "fruits_vegetables_nuts": -1,
+        "proteins": -1,
+        "salt": -1,
+        "saturated_fat": -1,
+        "sugars": -1,
+    }
 
 
 def test_generate_nutrition_input_dict_missing_or_wrong_values():
