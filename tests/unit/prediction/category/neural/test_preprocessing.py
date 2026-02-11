@@ -230,6 +230,30 @@ def test_generate_nutrition_input_dict():
     }
 
 
+def test_generate_nutrition_input_dict_null_aggregated_set():
+    """Test with new nutrition schema (schema version 1003)."""
+    output = generate_nutrition_input_dict(
+        {
+            "schema_version": 1003,
+            "nutrition": {
+                "aggregated_set": None,
+                "input_sets": [],
+            },
+        }
+    )
+    assert output == {
+        "carbohydrates": -1,
+        "energy_kcal": -1,
+        "fat": -1,
+        "fiber": -1,
+        "fruits_vegetables_nuts": -1,
+        "proteins": -1,
+        "salt": -1,
+        "saturated_fat": -1,
+        "sugars": -1,
+    }
+
+
 def test_generate_nutrition_input_dict_legacy_schema():
     """Test with legacy schema, we don't support it anymore, we expect an empty dict."""
     output = generate_nutrition_input_dict(

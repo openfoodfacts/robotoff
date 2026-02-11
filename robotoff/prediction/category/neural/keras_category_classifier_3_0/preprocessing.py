@@ -121,17 +121,19 @@ def generate_nutrition_input_dict(product: JSONType) -> JSONType:
     if product.get("schema_version", 999) > 1002:
         nutrition = NutritionV3(**product.get("nutrition", {}))
         # The aggregated returns nutrition values per 100g/100ml
-        nutrients = nutrition.aggregated_set.nutrients
-        for nutrient_name in NUTRIENT_NAMES:
-            nutrient_key = nutrient_name.replace("_", "-")
-            if nutrient_key in nutrients:
-                value = nutrients[nutrient_key].value
-            else:
-                value = None
-            inputs[nutrient_name] = transform_nutrition_input(
-                value,
-                nutriment_name=nutrient_key,
-            )
+
+        if nutrition.aggregated_set:
+            nutrients = nutrition.aggregated_set.nutrients
+            for nutrient_name in NUTRIENT_NAMES:
+                nutrient_key = nutrient_name.replace("_", "-")
+                if nutrient_key in nutrients:
+                    value = nutrients[nutrient_key].value
+                else:
+                    value = None
+                inputs[nutrient_name] = transform_nutrition_input(
+                    value,
+                    nutriment_name=nutrient_key,
+                )
 
     # Set value for all missing nutrients to -1 (missing)
     for nutrient_name in NUTRIENT_NAMES:
