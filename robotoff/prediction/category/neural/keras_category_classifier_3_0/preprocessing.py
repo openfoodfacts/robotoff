@@ -5,10 +5,11 @@ import string
 from collections import defaultdict
 
 import numpy as np
+from openfoodfacts.types import NutritionV3
 
 from robotoff import settings
 from robotoff.taxonomy import Taxonomy
-from robotoff.types import JSONType, NutritionV3
+from robotoff.types import JSONType
 from robotoff.utils.cache import function_cache_register
 from robotoff.utils.text import KeywordProcessor
 

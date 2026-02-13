@@ -15,10 +15,11 @@ from typing import Iterable, Iterator, Union
 import requests
 from huggingface_hub import snapshot_download
 from openfoodfacts.images import convert_to_legacy_schema
+from openfoodfacts.types import NutritionV3
 from pymongo import MongoClient
 
 from robotoff import settings
-from robotoff.types import JSONType, NutritionV3, ProductIdentifier, ServerType
+from robotoff.types import JSONType, ProductIdentifier, ServerType
 from robotoff.utils import gzip_jsonl_iter, http_session, jsonl_iter
 
 logger = logging.getLogger(__name__)

@@ -2,14 +2,7 @@ import json
 
 import pytest
 
-from robotoff.types import (
-    IngredientAnnotateBody,
-    JSONType,
-    NutrientData,
-    NutritionV3,
-    NutritionV3InputSet,
-)
-from tests.unit.data.nutrition import NUTRITION_1, NUTRITION_2, NUTRITION_3
+from robotoff.types import IngredientAnnotateBody, NutrientData
 
 
 class TestNutrientData:
@@ -102,56 +95,3 @@ class TestIngredientAnnotateBody:
                 annotation="ingredient",
                 bounding_box=[0.5, 0.2, 0.1, 0.6],
             )
-
-
-class TestNutritionV3:
-    @pytest.mark.parametrize("obj", [NUTRITION_1, NUTRITION_2, NUTRITION_3])
-    def test_parse(self, obj: JSONType):
-        NutritionV3.model_validate(obj)
-
-    def test_filter_input_sets(self):
-        nutrition_obj = NutritionV3.model_validate(NUTRITION_2)
-        results = nutrition_obj.filter_input_sets(source="packaging")
-        assert len(results) == 1
-        assert isinstance(results[0], NutritionV3InputSet)
-        assert (
-            len(nutrition_obj.filter_input_sets(source="packaging", per="100ml")) == 0
-        )
-
-    def test_get_input_nutrient(self):
-        nutrition_obj = NutritionV3.model_validate(NUTRITION_2)
-        result = nutrition_obj.get_input_nutrient(
-            nutrient="sodium",
-            per="100g",
-            preparation="as_sold",
-            per_quantity=100,
-            source="packaging",
-            per_unit="g",
-        )
-        assert result is not None
-        assert result.value == 2
-        assert result.value_string == "2.0"
-        assert result.unit == "g"
-        assert result.modifier == "<="
-
-        # We expect no result here
-        result = nutrition_obj.get_input_nutrient(
-            nutrient="sodium",
-            # per was modified here
-            per="serving",
-            preparation="as_sold",
-            per_quantity=100,
-            source="packaging",
-            per_unit="g",
-        )
-        assert result is None
-
-        result = nutrition_obj.get_input_nutrient(
-            nutrient="sugars",
-            source="usda",
-        )
-        assert result is not None
-        assert result.value == 5.2
-        assert result.value_string == "5.2"
-        assert result.unit == "g"
-        assert result.modifier is None
