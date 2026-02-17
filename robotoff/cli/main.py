@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
+from openfoodfacts.types import Environment, Flavor
 
 from robotoff.products import fetch_parquet_datasets
 from robotoff.types import (
@@ -274,8 +275,10 @@ def download_dataset(
 @app.command()
 def categorize(
     barcode: str,
-    server_type: ServerType = typer.Option(
-        ServerType.off, help="Server type of the product"
+    flavor: Flavor = typer.Option(Flavor.off, help="Flavor of the product"),
+    environment: Environment = typer.Option(
+        Environment.org,
+        help="The environment to use, production (org) or staging (net)",
     ),
     deepest_only: bool = False,
     threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
@@ -291,8 +294,12 @@ def categorize(
     predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product, setting
     deepest_only=True will return 'beans'."""
     import logging
+    import typing
 
-    from robotoff.off import get_product
+    from openfoodfacts.api import API
+    from openfoodfacts.types import APIVersion, JSONType
+
+    from robotoff import settings
     from robotoff.prediction.category.neural.category_classifier import (
         CategoryClassifier,
     )
@@ -301,13 +308,22 @@ def categorize(
 
     get_logger(level=logging.DEBUG)
 
-    product_id = ProductIdentifier(barcode, server_type)
-    product = get_product(product_id)
-    if product is None:
-        print(f"{product_id} not found")
-        return
+    api = API(
+        user_agent=settings.ROBOTOFF_USER_AGENT,
+        version=APIVersion.v3_5,
+        flavor=flavor,
+        environment=environment,
+    )
+    product = api.product.get(code=barcode)
 
-    predictions, _ = CategoryClassifier(
+    if product is None:
+        typer.echo(f"product not found: {barcode}")
+        typer.Exit(0)
+
+    product = typing.cast(JSONType, product)
+    product_id = ProductIdentifier(barcode, ServerType[flavor])
+
+    predictions, debug = CategoryClassifier(
         get_taxonomy(TaxonomyType.category.name, offline=True)
     ).predict(
         product,
@@ -316,6 +332,7 @@ def categorize(
         threshold=threshold,
         triton_uri=triton_uri,
     )
+    typer.echo(f"Debug information: {debug}")
 
     if predictions:
         for prediction in predictions:

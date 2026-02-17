@@ -130,13 +130,13 @@ class CategoryClassifier:
             so you should set this parameter only if you want to use a custom
             Triton Inference Server URI for all models.
         """
-        logger.debug("predicting category with model %s", model_name)
-
         if threshold is None:
             threshold = 0.5
 
         if model_name is None:
             model_name = NeuralCategoryClassifierModel.keras_image_embeddings_3_0
+
+        logger.debug("predicting category with model %s", model_name)
 
         if "ocr" in product:
             # We check that the OCR text list was not provided manually in

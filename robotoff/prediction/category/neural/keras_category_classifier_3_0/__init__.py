@@ -26,7 +26,7 @@ from robotoff.utils.cache import function_cache_register
 from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
     MAX_IMAGE_EMBEDDING,
-    NUTRIMENT_NAMES,
+    NUTRIENT_NAMES,
     generate_inputs_dict,
 )
 
@@ -485,7 +485,7 @@ def build_triton_request(
         )
 
     if add_nutriments:
-        for nutriment_name in NUTRIMENT_NAMES:
+        for nutriment_name in NUTRIENT_NAMES:
             nutriment_input = service_pb2.ModelInferRequest().InferInputTensor()
             nutriment_input.name = nutriment_name
             nutriment_input.datatype = "FP32"

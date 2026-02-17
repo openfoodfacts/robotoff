@@ -1693,9 +1693,8 @@ class TestNutrientExtractionImporter:
         }
 
     def test_generate_candidates_no_nutrient(self):
-        """A candidate must be generated if the product has no nutriments
+        """A candidate must be generated if the product has no nutrition information
         and if at least one nutrient value is predicted."""
-        product = Product({"code": DEFAULT_BARCODE, "nutriments": {}})
         data = {
             "nutrients": {
                 "energy-kj_100g": {
@@ -1741,9 +1740,30 @@ class TestNutrientExtractionImporter:
                 source_image=DEFAULT_SOURCE_IMAGE,
             ),
         ]
+        # In schema version 1002, we have the `nutriments` key with the legacy
+        # nutrition schema
+        product_version_1002 = Product(
+            {"code": DEFAULT_BARCODE, "nutriments": {}, "schema_version": 1002}
+        )
+        # In schema version 1003, nutrition is now stored in a `nutrition` field
+        # with a brand new structure
+        product_version_1003 = Product(
+            {"code": DEFAULT_BARCODE, "nutrition": {}, "schema_version": 1003}
+        )
+        # Assert that we don't generate candidates if product version if < 1003
+        assert (
+            len(
+                list(
+                    NutrientExtractionImporter.generate_candidates(
+                        product_version_1002, predictions, DEFAULT_PRODUCT_ID
+                    )
+                )
+            )
+            == 0
+        )
         candidates = list(
             NutrientExtractionImporter.generate_candidates(
-                product, predictions, DEFAULT_PRODUCT_ID
+                product_version_1003, predictions, DEFAULT_PRODUCT_ID
             )
         )
         assert len(candidates) == 1
@@ -1764,13 +1784,30 @@ class TestNutrientExtractionImporter:
         product = Product(
             {
                 "code": DEFAULT_BARCODE,
-                "nutriments": {
-                    "energy-kj_100g": "100",
-                    "energy-kj_unit": "kJ",
-                    "fat_100g": "10",
-                    "fat_unit": "g",
+                "nutrition": {
+                    "input_sets": [
+                        {
+                            "nutrients": {
+                                "energy-kj": {
+                                    "unit": "kJ",
+                                    "value": 100,
+                                    "value_string": "100",
+                                },
+                                "fat": {
+                                    "unit": "g",
+                                    "value": 10,
+                                    "value_string": "10",
+                                },
+                            },
+                            "per": "100g",
+                            "per_quantity": 100,
+                            "per_unit": "g",
+                            "preparation": "as_sold",
+                            "source": "packaging",
+                        }
+                    ]
                 },
-                "nutrition_data_per": "100g",
+                "schema_version": 1003,
             }
         )
         data = {
@@ -1806,11 +1843,36 @@ class TestNutrientExtractionImporter:
         assert len(candidates) == 0
 
     def test_generate_candidates_nutrition_data_prepared(self):
+        """If at least part of the nutrition data is indicated per prepared products,
+        don't generate any candidate, as the model currently doesn't support it.
+        """
         product = Product(
             {
                 "code": DEFAULT_BARCODE,
-                "nutriments": {},
-                "nutrition_data_prepared": "on",
+                "nutrition": {
+                    "input_sets": [
+                        {
+                            "nutrients": {
+                                "energy-kj": {
+                                    "unit": "kJ",
+                                    "value": 100,
+                                    "value_string": "100",
+                                },
+                                "fat": {
+                                    "unit": "g",
+                                    "value": 10,
+                                    "value_string": "10",
+                                },
+                            },
+                            "per": "100g",
+                            "per_quantity": 100,
+                            "per_unit": "g",
+                            "preparation": "prepared",
+                            "source": "packaging",
+                        }
+                    ]
+                },
+                "schema_version": 1003,
             }
         )
         data = {
@@ -1849,13 +1911,30 @@ class TestNutrientExtractionImporter:
         product = Product(
             {
                 "code": DEFAULT_BARCODE,
-                "nutriments": {
-                    "energy-kj_100g": "100",
-                    "energy-kj_unit": "kJ",
-                    "fat_100g": "10",
-                    "fat_unit": "g",
+                "schema_version": 1003,
+                "nutrition": {
+                    "input_sets": [
+                        {
+                            "nutrients": {
+                                "energy-kj": {
+                                    "unit": "kJ",
+                                    "value": 100,
+                                    "value_string": "100",
+                                },
+                                "fat": {
+                                    "unit": "g",
+                                    "value": 10,
+                                    "value_string": "10",
+                                },
+                            },
+                            "per": "100g",
+                            "per_quantity": 100,
+                            "per_unit": "g",
+                            "preparation": "as_sold",
+                            "source": "packaging",
+                        }
+                    ]
                 },
-                "nutrition_data_per": "100g",
             }
         )
         data = {
@@ -1946,23 +2025,29 @@ class TestNutrientExtractionImporter:
         )
 
     @pytest.mark.parametrize(
-        "nutriments,nutrition_data_per,serving_size,predicted_nutrients,expected_output",
+        "input_set,predicted_nutrients,expected_output",
         [
             # We keep the prediction if the product does not have any nutrients
-            (None, None, None, ["energy-kj_100g"], True),
+            (None, ["energy-kj_100g"], True),
             # We bring sugar which is missing, so we keep the prediction
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_100g": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_100g": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "100g",
+                    "per_quantity": 100,
+                    "per_unit": "g",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "100g",
-                None,
                 {
                     "energy-kj_100g": {"value": "100", "unit": "kj"},
                     "sugars_100g": {"value": "1.5", "unit": "g"},
@@ -1972,16 +2057,22 @@ class TestNutrientExtractionImporter:
             # Same but with 100ml
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_100g": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_100g": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "100ml",
+                    "per_quantity": 100,
+                    "per_unit": "ml",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "100ml",
-                None,
                 {
                     "energy-kj_100g": {"value": "100", "unit": "kj"},
                     "sugars_100g": {"value": "1.5", "unit": "g"},
@@ -1992,74 +2083,98 @@ class TestNutrientExtractionImporter:
             # the prediction
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_100g": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_100g": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "100g",
+                    "per_quantity": 100,
+                    "per_unit": "g",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "100g",
-                None,
                 {
                     "fat_100g": {"value": "9.5", "unit": "g"},
                 },
                 True,
             ),
-            # The nutrition is per 100g, and we don't bring any new value for 100g, so
-            # we discard the prediction
+            # We bring energy-kj per serving, which is not present in the original data.
+            # We keep the prediction.
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_100g": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_100g": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "100g",
+                    "per_quantity": 100,
+                    "per_unit": "g",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "100g",
-                None,
                 {
                     "energy-kj_100g": {"value": "100", "unit": "kj"},
                     "energy-kj_serving": {"value": "50", "unit": "kj"},
                 },
-                False,
+                True,
             ),
             # Same thing as above but for serving
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_serving": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_serving": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "serving",
+                    "per_quantity": 100,
+                    "per_unit": "g",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "serving",
-                "100 g",
                 {
                     "energy-kj_100g": {"value": "100", "unit": "kj"},
                     "energy-kj_serving": {"value": "100", "unit": "kj"},
                     "fat_serving": {"value": "10", "unit": "g"},
                 },
-                False,
+                True,
             ),
             # Here we keep the prediction as serving_size is missing
             (
                 {
-                    "energy-kj": 100,
-                    "energy-kj_serving": 100,
-                    "energy-kj_value": 100,
-                    "energy-kj_unit": "kJ",
-                    "fat": 10,
-                    "fat_serving": 10,
-                    "fat_unit": "g",
+                    "energy-kj": {
+                        "value": 100,
+                        "value_string": "100",
+                        "unit": "kJ",
+                    },
+                    "fat": {
+                        "value": 10,
+                        "value_string": "10",
+                        "unit": "g",
+                    },
+                    "per": "serving",
+                    "per_quantity": 100,
+                    "per_unit": "g",
+                    "preparation": "as_sold",
+                    "source": "packaging",
                 },
-                "serving",
-                None,
                 {
                     "energy-kj_serving": {"value": "100", "unit": "kj"},
                     "serving_size": {"value": "50 g", "unit": None},
@@ -2070,22 +2185,18 @@ class TestNutrientExtractionImporter:
     )
     def test_keep_prediction(
         self,
-        nutriments: JSONType | None,
-        nutrition_data_per: str | None,
-        serving_size: str | None,
+        input_set: JSONType | None,
         predicted_nutrients: JSONType,
         expected_output: bool,
     ):
-        if nutriments is None:
+        if input_set is None:
             product = None
         else:
-            assert nutrition_data_per is not None
             product = Product(
                 {
                     "code": DEFAULT_BARCODE,
-                    "nutriments": nutriments,
-                    "nutrition_data_per": nutrition_data_per,
-                    "serving_size": serving_size,
+                    "nutrition": {"input_sets": [input_set]},
+                    "schema_version": 1003,
                 }
             )
         assert (
@@ -2159,11 +2270,46 @@ class TestNutrientExtractionImporter:
         product_missing = Product(
             {
                 "code": DEFAULT_BARCODE,
-                "nutriments": {},
+                "schema_version": 1003,
+                "nutrition": {},
             }
         )
         product_incomplete = Product(
-            {"code": DEFAULT_BARCODE, "nutriments": {"energy-kcal_100g": "100"}}
+            {
+                "code": DEFAULT_BARCODE,
+                "schema_version": 1003,
+                "nutrition": {
+                    "aggregated_set": {
+                        "nutrients": {
+                            "fat": {
+                                "unit": "g",
+                                "value": 10,
+                                "source": "packaging",
+                                "source_per": "100g",
+                                "source_index": 0,
+                            },
+                        },
+                        "preparation": "as_sold",
+                        "per": "100g",
+                    },
+                    "input_sets": [
+                        {
+                            "nutrients": {
+                                "fat": {
+                                    "unit": "g",
+                                    "value": 10,
+                                    "value_string": "10",
+                                },
+                            },
+                            "per": "100g",
+                            "per_quantity": 100,
+                            "per_unit": "g",
+                            "preparation": "as_sold",
+                            "source": "packaging",
+                        }
+                    ],
+                },
+            }
         )
         data = {
             "nutrients": {
