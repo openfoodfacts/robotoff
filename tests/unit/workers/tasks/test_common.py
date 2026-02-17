@@ -45,7 +45,9 @@ def test_add_category_insight_with_ml_insights(mocker):
         "robotoff.workers.tasks.common.import_insights",
         return_value=InsightImportResult(),
     )
-    add_category_insight(DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE})
+    add_category_insight(
+        DEFAULT_PRODUCT_ID, {"code": DEFAULT_BARCODE, "schema_version": 1003}
+    )
 
     import_insights_mock.assert_called_once_with(
         [
