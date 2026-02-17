@@ -294,9 +294,10 @@ def categorize(
     predict 'fresh vegetables' -> 'legumes' -> 'beans' for a product, setting
     deepest_only=True will return 'beans'."""
     import logging
+    import typing
 
     from openfoodfacts.api import API
-    from openfoodfacts.types import APIVersion
+    from openfoodfacts.types import APIVersion, JSONType
 
     from robotoff import settings
     from robotoff.prediction.category.neural.category_classifier import (
@@ -319,6 +320,7 @@ def categorize(
         typer.echo(f"product not found: {barcode}")
         typer.Exit(0)
 
+    product = typing.cast(JSONType, product)
     product_id = ProductIdentifier(barcode, ServerType[flavor])
 
     predictions, debug = CategoryClassifier(
