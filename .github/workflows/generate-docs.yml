@@ -30,23 +30,19 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1.4
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
 
-      - name: Load cached venv
-        id: cached-poetry-dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Load cached uv
         uses: actions/cache@v5
         with:
-          path: .venv
-          key: ${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/uv.lock') }}
 
       - name: Install dependencies
-        run: poetry install
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-
+        run: uv sync --group dev --frozen
+        
       - name: Generate documentation
         run: bash ./build_mkdocs.sh
 

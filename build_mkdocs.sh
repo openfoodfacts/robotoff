@@ -11,4 +11,4 @@ IFS=$'\n\t'
 cp ./README.md ./docs/README.md
 
 # Build mkdocs
-poetry run mkdocs build --strict
+uv run mkdocs build --strict

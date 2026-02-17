@@ -17,9 +17,9 @@ Though you may populate your postgres database with some predictions, insights, 
 
 We recommend  [Factory](https://factoryboy.readthedocs.io/en/stable/) to create some data in your local database.
 
-If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
+If you have installed Robotoff via Docker, you can run Python using uv and execute Factory like so:
 ```
-$ docker compose run --rm api poetry run python
+$ docker compose run --rm api uv run python
 ...
 > from tests.integration.models_utils import *
 > PredictionFactory()

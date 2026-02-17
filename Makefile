@@ -125,10 +125,10 @@ endif
 # Quality    #
 #------------#
 toml-check:
-	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --check poetry.toml pyproject.toml
+	${DOCKER_COMPOSE} run --rm --no-deps api uv run toml-sort --check pyproject.toml
 
 toml-lint:
-	${DOCKER_COMPOSE} run --rm --no-deps api poetry run toml-sort --in-place poetry.toml pyproject.toml
+	${DOCKER_COMPOSE} run --rm --no-deps api uv run toml-sort --in-place pyproject.toml
 
 flake8:
 	${DOCKER_COMPOSE} run --rm --no-deps api flake8
@@ -177,21 +177,21 @@ i18n-compile:
 # Note it's important to have --no-deps, to avoid launching a concurrent postgres instance
 	${DOCKER_COMPOSE} run --rm --entrypoint bash --no-deps worker-1 -c "cd i18n && . compile.sh"
 
-update_poetry_lock:
-	@echo "🥫  Updating poetry.lock"
-	${DOCKER_COMPOSE} run --rm --no-deps api poetry lock --no-update
+update_uv_lock:
+	@echo "🥫  Updating uv.lock"
+	${DOCKER_COMPOSE} run --rm --no-deps api uv lock --no-upgrade
 
 unit-tests:
 	@echo "🥫 Running tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker-1 poetry run pytest --cov-report xml --cov=robotoff tests/unit ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest --cov-report xml --cov=robotoff tests/unit ${args}
 
 integration-tests:
 	@echo "🥫 Running integration tests …"
 	# run tests in worker to have more memory
 	# also, change project name to run in isolation
-	${DOCKER_COMPOSE_TEST} run --rm worker-1 poetry run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
+	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 ml-tests: 
@@ -199,14 +199,14 @@ ml-tests:
 	${DOCKER_COMPOSE_TEST} up -d triton
 	@echo "Sleeping for 30s, waiting for triton to be ready..."
 	@sleep 30
-	${DOCKER_COMPOSE_TEST} run --rm worker-1 poetry run pytest -vv tests/ml ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest -vv tests/ml ${args}
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
 # interactive testings
 # usage: make pytest args='test/unit/my-test.py --pdb'
 pytest: guard-args
 	@echo "🥫 Running test: ${args} …"
-	${DOCKER_COMPOSE_TEST} run --rm worker-1 poetry run pytest ${args}
+	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest ${args}
 
 #------------#
 # Production #

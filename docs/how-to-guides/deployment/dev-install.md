@@ -9,7 +9,7 @@ You should, consider those changes:
 
 - if you want to use ML models, add `docker/ml.yml` to `COMPOSE_FILE`, using `;` as separator.
 
-  You should also run `make dl-models` to download all machine learning models locally.
+  You should also download all models by running the following command inside the `models` directory: `uv run manage.py download-models`. See [this documentation page](../../explanations/triton.md) for more information about model management.
 
 - change `OFF_UID` and `OFF_GID` to match your own user UID/GID (optional, only if you experience some file permission issue, see [Getting developper uid for docker](https://gist.github.com/alexgarel/6e6158ee869d6db2192e0441fd58576e))
 
@@ -34,41 +34,36 @@ The expected response is `{"status":"running"}`.
 
 Also take a look at [maintenance](./maintenance.md).
 
-## Local install with poetry
+To debug in a running container, you can simply run:
+
+```bash
+docker compose run --rm api python
+```
+
+Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb](https://docs.python.org/3/library/pdb.html) or play with the code.
+
+
+## Local install with uv
 
 This is an alternative if you are reluctant to use Docker, or have some other reasons to prefer manual install.
 
 After cloning the repository:
-1. Make sure a [recent version of Poetry is installed](https://python-poetry.org/docs/#installation)
+1. Make sure a [recent version of uv is installed](https://docs.astral.sh/uv/getting-started/installation/)
 
-2. Configure Poetry to use Python 3.11:
-   ```bash
-   poetry env use python3.11
-   ```
-
-3.  Install the dependencies:
+2.  Install the dependencies:
 
     ```bash
-    poetry install
+    uv sync
     ```
 
-4.  Configure files required for the tests to run locally:
+3.  Configure files required for the tests to run locally:
 
     Compile the i18n files:
     ```bash
     cd i18n && bash compile.sh && cd ..
     ```
 
-3. Also configure your settings to point to your dev postgresql database (that you should have installed the way you want)
-
-4. If you want to use Elasticsearch predictions, you'll also have to set an Elasticsearch instance
-
-5. To debug in a running container, you need to run poetry in the container. For example:
-
-    ```
-    docker compose run --rm api poetry run python
-    ```
-    Here we run the `api` service. This opens a Python command prompt, you may debug with [pdb](https://docs.python.org/3/library/pdb.html) or play with the code. 
+4. Also configure your settings to point to your dev PostgreSQL database (that you should have installed the way you want)
 
 
 ## Restore DB dumps

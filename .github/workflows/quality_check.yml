@@ -5,7 +5,7 @@ on:
     paths:
       - "**/robotoff/**"
       - "pyproject.toml"
-      - "poetry.lock"
+      - "uv.lock"
       - "data/**"
       - "tests/**"
       - "**.pot"

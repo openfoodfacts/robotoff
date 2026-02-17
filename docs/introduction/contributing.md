@@ -93,7 +93,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
    black --check .
    mypy .
    isort --check .
-   poetry run pytest tests
+   uv run pytest tests
    ```
 
    Before running the test cases make sure you have a database created. Have a look at `.env` and `robotoff/settings.py` the default database name, user, and password is:
