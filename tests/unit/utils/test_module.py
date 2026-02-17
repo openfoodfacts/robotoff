@@ -82,7 +82,7 @@ def test_get_image_from_url_decompression_bomb(mocker):
     response_mock = mocker.Mock()
     mocker.patch(
         "robotoff.utils.image.Image",
-        **{"open.side_effect": Image.DecompressionBombError()}
+        **{"open.side_effect": Image.DecompressionBombError()},
     )
     response_mock.content = generate_image()
     response_mock.ok = True

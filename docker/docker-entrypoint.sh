@@ -3,14 +3,14 @@
 set -e
 
 # activate our virtual environment here
-. /opt/pysetup/.venv/bin/activate
+. /opt/robotoff/.venv/bin/activate
 
 PRE_ARGS=()
 
-# add poetry run for robotoff-cli, because we are lazy
+# add uv run for robotoff-cli, because we are lazy
 if [[ "$1" == "robotoff-cli" ]]
 then
-  PRE_ARGS=( poetry run )
+  PRE_ARGS=( uv run )
 fi
 
 # You can put other setup logic here

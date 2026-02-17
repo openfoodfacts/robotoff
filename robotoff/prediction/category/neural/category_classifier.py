@@ -24,7 +24,7 @@ def create_prediction(
     confidence: float,
     model_version: str,
     product_id: ProductIdentifier,
-    **kwargs
+    **kwargs,
 ) -> Prediction:
     """Create a Prediction.
 

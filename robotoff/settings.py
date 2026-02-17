@@ -274,7 +274,7 @@ def init_sentry(integrations: list[Integration] | None = None):
 
 def get_package_version() -> str:
     """Return Robotoff version from pyproject.toml file."""
-    return toml.load(str(PROJECT_DIR / "pyproject.toml"))["tool"]["poetry"]["version"]
+    return toml.load(str(PROJECT_DIR / "pyproject.toml"))["project"]["version"]
 
 
 OCR_DATA_DIR = DATA_DIR / "ocr"

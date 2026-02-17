@@ -1,6 +1,90 @@
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+  "types-pytz==2024.1.0.20240417",
+  "types-pyyaml==6.0.12.20240808",
+  "flake8==7.2.0",
+  "black==25.1.0",
+  "factory_boy-peewee==0.0.4",  # This package is archived and not maintained anymore but works and is very lightweight.
+  "mypy==1.10.1",
+  "pytest~=7.2.0",
+  "pytest-mock~=3.10.0",
+  "pre-commit~=4.2.0",
+  "toml-sort~=0.20.1",
+  "isort==6.0.1",
+  "flake8-bugbear~=22.10.27",
+  "flake8-github-actions~=0.1.1",
+  "pytest-cov~=4.0.0",
+  "mkdocs-material~=7.2.3",
+  "mdx-truly-sane-lists~=1.2",
+  "markdown~=3.3",  # mdx-truly-sane-lists requires markdown < 3.4
+  "mkdocs-awesome-pages-plugin~=2.8.0",
+  "coverage[toml]~=6.3",
+  "types-requests~=2.28.11.5",
+  "types-six==1.16.10",
+  "types-protobuf==3.17.3",
+  "types-certifi==2021.10.8",
+  "types-setuptools==65.6.0.0",
+  "types-toml==0.10.3",
+  "pytest-httpserver==1.1.4",
+  "types-cachetools==5.2.1",
+  "types-redis==4.3.21",
+  "rq-dashboard~=0.6.1",
+  "requests-mock==1.12.1"
+]
+
+[project]
+name = "robotoff"
+version = "1.85.2"
+description = "Real-time and batch prediction service for Open Food Facts."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Open Food Facts Team" }]
+license = "AGPL-3.0-only"
+dependencies = [
+  "requests>=2.31,<2.33",
+  "peewee~=3.17.6",
+  "psycopg2-binary~=2.9.1",
+  "gunicorn>=20.1,<23.1",
+  "falcon~=3.1.3",
+  "elasticsearch~=8.18.1",
+  "pymongo>=4.5,<4.7",
+  "dacite~=1.6.0",
+  "influxdb-client~=1.34.0",
+  "jsonschema~=4.4.0",
+  "orjson>=3.8.2,<3.10.0",
+  "Pillow>=9.3,<10.4",
+  "numpy~=2.2.6",
+  "protobuf~=3.20.3",
+  "Pint==0.25",
+  "APScheduler~=3.10.1",
+  "more-itertools~=8.9.0",
+  "matplotlib~=3.9.1",
+  "typer~=0.16.0",
+  "py-healthcheck==1.10.1",
+  "cachetools~=5.5.0",
+  "tritonclient[grpc]==2.38.0",
+  "rq~=1.11.1",
+  "python-redis-lock~=4.0.0",
+  "transformers>=4.44.2,<4.54.0",
+  "lark~=1.1.4",
+  "h5py~=3.13.0",
+  "opencv-python-headless~=4.12.0.88",
+  "toml~=0.10.2",
+  "openfoodfacts~=3.4.3",
+  "pydantic==2.11.9",
+  "imagehash~=4.3.1",
+  "peewee-migrate~=1.12.2",
+  "diskcache~=5.6.3",
+  "google-cloud-batch~=0.17.26",
+  "duckdb>=1.0,<1.2",
+  "google-cloud-storage~=2.14.0",
+  "pandas~=2.2.2",
+  "pyarrow~=17.0.0",
+  "rich~=13.9.2",  # Used for CLI pretty print
+  "backoff==2.2.1",
+  "albumentations==2.0.8",
+  "sentry-sdk[falcon]>=2.44.0,<3.0"
+]
 
 [tool.black]
 include = '\.pyi?$'
@@ -35,93 +119,3 @@ line_length = 88
 
 [tool.mypy]
 ignore_missing_imports = true
-
-[tool.poetry]
-name = "robotoff"
-version = "1.85.2"
-description = "Real-time and batch prediction service for Open Food Facts."
-authors = ["Open Food Facts Team"]
-license = "GNU Affero General Public License v3"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-requests = ">=2.31,<2.33"
-peewee = "~3.17.6"
-psycopg2-binary = "~2.9.1"
-gunicorn = ">=20.1,<23.1"
-falcon = "~3.1.3"
-elasticsearch = "~8.18.1"
-pymongo = ">=4.5,<4.7"
-dacite = "~1.6.0"
-influxdb-client = "~1.34.0"
-jsonschema = "~4.4.0"
-orjson = ">=3.8.2,<3.10.0"
-Pillow = ">=9.3,<10.4"
-numpy = "~2.2.6"
-protobuf = "~3.20.3"
-Pint = "0.25"
-APScheduler = "~3.10.1"
-more-itertools = "~8.9.0"
-matplotlib = "~3.9.1"
-typer = "~0.16.0"
-py-healthcheck = "^1.10.1"
-cachetools = "~5.5.0"
-tritonclient = {extras = ["grpc"], version = "2.38.0"}
-rq = "~1.11.1"
-python-redis-lock = "~4.0.0"
-transformers = ">=4.44.2,<4.54.0"
-lark = "~1.1.4"
-h5py = "~3.13.0"
-opencv-python-headless = "~4.12.0.88"
-toml = "~0.10.2"
-openfoodfacts = "3.4.3"
-imagehash = "~4.3.1"
-peewee-migrate = "~1.12.2"
-diskcache = "~5.6.3"
-google-cloud-batch = "~0.17.26"
-duckdb = ">=1.0,<1.2"
-google-cloud-storage = "~2.14.0"
-pandas = "~2.2.2"
-pyarrow = "~17.0.0"
-rich = "~13.9.2"  # Used for CLI pretty print
-backoff = "^2.2.1"
-albumentations = "^2.0.8"
-
-[tool.poetry.dependencies.sentry-sdk]
-version = ">=2.44.0,<3.0"
-extras = ["falcon"]
-
-[tool.poetry.group.dev.dependencies]
-types-pytz = "^2024.1.0.20240417"
-types-pyyaml = "^6.0.12.20240808"
-flake8 = "^7.2.0"
-black = "^25.1.0"
-factory_boy-peewee = "0.0.4"  # This package is archived and not maintained anymore but works and is very lightweight.
-mypy = "1.10.1"
-pytest = "~7.2.0"
-pytest-mock = "~3.10.0"
-pre-commit = "~4.2.0"
-toml-sort = "~0.20.1"
-isort = "^6.0.1"
-flake8-bugbear = "~22.10.27"
-flake8-github-actions = "~0.1.1"
-pytest-cov = "~4.0.0"
-mkdocs-material = "~7.2.3"
-mdx-truly-sane-lists = "~1.2"
-markdown = "~3.3"  # mdx-truly-sane-lists requires markdown < 3.4
-mkdocs-awesome-pages-plugin = "~2.8.0"
-coverage = { extras = ["toml"], version = "~6.3" }
-types-requests = "~2.28.11.5"
-types-six = "^1.16.10"
-types-protobuf = "^3.17.3"
-types-certifi = "^2021.10.8"
-types-setuptools = "^65.6.0.0"
-types-toml = "^0.10.3"
-pytest-httpserver = "^1.0.4"
-types-cachetools = "^5.2.1"
-types-redis = "^4.3.21"
-rq-dashboard = "~0.6.1"
-requests-mock = "^1.12.1"
-
-[tool.poetry.scripts]
-robotoff-cli = 'robotoff.cli.main:main'
