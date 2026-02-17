@@ -934,8 +934,8 @@
 you won't have a MongoDB instance. This means you won't have any product data on your local set up.
 Though you may populate your postgres database with some predictions, insights, images references, etc.</p>
 <p>We recommend  <a href="https://factoryboy.readthedocs.io/en/stable/">Factory</a> to create some data in your local database.</p>
-<p>If you have installed Robotoff via Docker, you can run Python using Poetry and execute Factory like so:
-<div class="highlight"><pre><span></span><code>$ docker compose run --rm api poetry run python
+<p>If you have installed Robotoff via Docker, you can run Python using uv and execute Factory like so:
+<div class="highlight"><pre><span></span><code>$ docker compose run --rm api uv run python
 ...
 &gt; from tests.integration.models_utils import *
 &gt; PredictionFactory()

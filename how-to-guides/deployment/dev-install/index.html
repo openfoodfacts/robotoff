@@ -416,8 +416,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-install-with-poetry" class="md-nav__link">
-    Local install with poetry
+  <a href="#local-install-with-uv" class="md-nav__link">
+    Local install with uv
   </a>
   
 </li>
@@ -988,8 +988,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#local-install-with-poetry" class="md-nav__link">
-    Local install with poetry
+  <a href="#local-install-with-uv" class="md-nav__link">
+    Local install with uv
   </a>
   
 </li>
@@ -1046,7 +1046,7 @@ You should, consider those changes:</p>
 <ul>
 <li>
 <p>if you want to use ML models, add <code>docker/ml.yml</code> to <code>COMPOSE_FILE</code>, using <code>;</code> as separator.</p>
-<p>You should also run <code>make dl-models</code> to download all machine learning models locally.</p>
+<p>You should also download all models by running the following command inside the <code>models</code> directory: <code>uv run manage.py download-models</code>. See <a href="../../../explanations/triton/">this documentation page</a> for more information about model management.</p>
 </li>
 </ul>
 <ul>
@@ -1063,19 +1063,18 @@ You should, consider those changes:</p>
 </code></pre></div>
 The expected response is <code>{"status":"running"}</code>.</p>
 <p>Also take a look at <a href="../maintenance/">maintenance</a>.</p>
-<h2 id="local-install-with-poetry">Local install with poetry</h2>
+<p>To debug in a running container, you can simply run:</p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>api<span class="w"> </span>python
+</code></pre></div>
+<p>Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code.</p>
+<h2 id="local-install-with-uv">Local install with uv</h2>
 <p>This is an alternative if you are reluctant to use Docker, or have some other reasons to prefer manual install.</p>
 <p>After cloning the repository:
-1. Make sure a <a href="https://python-poetry.org/docs/#installation">recent version of Poetry is installed</a></p>
+1. Make sure a <a href="https://docs.astral.sh/uv/getting-started/installation/">recent version of uv is installed</a></p>
 <ol>
 <li>
-<p>Configure Poetry to use Python 3.11:
-   <div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>env<span class="w"> </span>use<span class="w"> </span>python3.11
-</code></pre></div></p>
-</li>
-<li>
 <p>Install the dependencies:</p>
-<div class="highlight"><pre><span></span><code>poetry<span class="w"> </span>install
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>sync
 </code></pre></div>
 </li>
 <li>
@@ -1085,16 +1084,7 @@ The expected response is <code>{"status":"running"}</code>.</p>
 </code></pre></div></p>
 </li>
 <li>
-<p>Also configure your settings to point to your dev postgresql database (that you should have installed the way you want)</p>
-</li>
-<li>
-<p>If you want to use Elasticsearch predictions, you'll also have to set an Elasticsearch instance</p>
-</li>
-<li>
-<p>To debug in a running container, you need to run poetry in the container. For example:</p>
-<p><div class="highlight"><pre><span></span><code>docker compose run --rm api poetry run python
-</code></pre></div>
-  Here we run the <code>api</code> service. This opens a Python command prompt, you may debug with <a href="https://docs.python.org/3/library/pdb.html">pdb</a> or play with the code. </p>
+<p>Also configure your settings to point to your dev PostgreSQL database (that you should have installed the way you want)</p>
 </li>
 </ol>
 <h2 id="restore-db-dumps">Restore DB dumps</h2>

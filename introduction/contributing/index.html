@@ -1150,7 +1150,7 @@ make tests
 black --check .
 mypy .
 isort --check .
-poetry run pytest tests
+uv run pytest tests
 </code></pre></div>
 <p>Before running the test cases make sure you have a database created. Have a look at <code>.env</code> and <code>robotoff/settings.py</code> the default database name, user, and password is:</p>
 <p><div class="highlight"><pre><span></span><code>postgres
