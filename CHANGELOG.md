@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.85.3](https://github.com/openfoodfacts/robotoff/compare/v1.85.2...v1.85.3) (2026-02-17)
+
+
+### Bug Fixes
+
+* upgrade buildx ([bb77914](https://github.com/openfoodfacts/robotoff/commit/bb77914a2df33d16462c00fe79517a266a449141))
+
+
+### Technical
+
+* **deps-dev:** bump cryptography from 45.0.3 to 46.0.5 ([#1846](https://github.com/openfoodfacts/robotoff/issues/1846)) ([55ffec1](https://github.com/openfoodfacts/robotoff/commit/55ffec1a3eddc9d885959e6104927221c31cfbaf))
+* **deps:** ugprade triton-client and protobuf ([#1850](https://github.com/openfoodfacts/robotoff/issues/1850)) ([265b409](https://github.com/openfoodfacts/robotoff/commit/265b409a0b8f46f6aa55a341525e06bba140dfa0))
+* **nutrition:** support new nutrition schema ([#1838](https://github.com/openfoodfacts/robotoff/issues/1838)) ([6119b8c](https://github.com/openfoodfacts/robotoff/commit/6119b8c1d94d9bfcddd12c3393128b4ac7d07156))
+* switch from poetry to uv ([#1849](https://github.com/openfoodfacts/robotoff/issues/1849)) ([e9e56e9](https://github.com/openfoodfacts/robotoff/commit/e9e56e99e5762bdb31ae799c6dba22570f439ea9))
+
 ## [1.85.2](https://github.com/openfoodfacts/robotoff/compare/v1.85.1...v1.85.2) (2026-02-05)
 
 
