@@ -42,6 +42,10 @@ services:
     <<: *robotoff-dev
   worker-4:
     <<: *robotoff-dev
+  worker-5:
+    <<: *robotoff-dev
+  worker-6:
+    <<: *robotoff-dev
   worker-ml-1:
     <<: *robotoff-dev
   worker-ml-2:
