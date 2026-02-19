@@ -132,7 +132,7 @@ services:
 
   worker-6:
     <<: *robotoff-worker
-    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-5
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-6
     command: python -m robotoff run-worker robotoff-high-6 robotoff-ml-model robotoff-low
 
   worker-ml-1:
