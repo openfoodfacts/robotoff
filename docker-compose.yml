@@ -62,7 +62,7 @@ x-robotoff-base-env:
   IMAGE_MODERATION_SERVICE_URL:
   AUTH_BEARER_TOKEN_NUTRIPATROL:
   CROP_ALLOWED_DOMAINS:
-  NUM_RQ_WORKERS: 4 # Update worker service command accordingly if you change this settings
+  NUM_RQ_WORKERS: 6 # Update worker service command accordingly if you change this settings
   # Used by Google SDK to know where to find the credentials
   GOOGLE_APPLICATION_CREDENTIALS: /opt/robotoff/credentials/google/credentials.json
   GOOGLE_CREDENTIALS: # JSON credentials pasted as environment variable
@@ -124,6 +124,16 @@ services:
     <<: *robotoff-worker
     container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-4
     command: python -m robotoff run-worker robotoff-high-4 robotoff-ml-model robotoff-low
+
+  worker-5:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-5
+    command: python -m robotoff run-worker robotoff-high-5 robotoff-ml-model robotoff-low
+
+  worker-6:
+    <<: *robotoff-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-5
+    command: python -m robotoff run-worker robotoff-high-6 robotoff-ml-model robotoff-low
 
   worker-ml-1:
     <<: *robotoff-worker
