@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.4](https://github.com/openfoodfacts/robotoff/compare/v1.85.3...v1.85.4) (2026-02-19)
+
+
+### Technical
+
+* **deps:** upgrade openfoodfacts lib ([#1852](https://github.com/openfoodfacts/robotoff/issues/1852)) ([d17909d](https://github.com/openfoodfacts/robotoff/commit/d17909dc76a8bbe94702be0cc5b2c64de9d3d0af))
+
 ## [1.85.3](https://github.com/openfoodfacts/robotoff/compare/v1.85.2...v1.85.3) (2026-02-17)
 
 
