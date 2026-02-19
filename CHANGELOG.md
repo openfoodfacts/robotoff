@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.85.5](https://github.com/openfoodfacts/robotoff/compare/v1.85.4...v1.85.5) (2026-02-19)
+
+
+### Technical
+
+* fix container name in docker-compose.yml ([f27c139](https://github.com/openfoodfacts/robotoff/commit/f27c139968d9f91de37f220418fce475c8d3b384))
+* increase number of product workers to 6 ([#1854](https://github.com/openfoodfacts/robotoff/issues/1854)) ([fe82e52](https://github.com/openfoodfacts/robotoff/commit/fe82e52958d991a4d9856536db708f5b6f68a925))
+
 ## [1.85.4](https://github.com/openfoodfacts/robotoff/compare/v1.85.3...v1.85.4) (2026-02-19)
 
 
