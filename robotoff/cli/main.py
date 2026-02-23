@@ -29,6 +29,24 @@ def run_scheduler():
 
 
 @app.command()
+def download_taxonomies(
+    download_newer: bool = typer.Option(
+        False,
+        help="If True, we check if a new version of the taxonomies is available and "
+        "download it if so. If False, we only download the taxonomies if they are not "
+        "already cached locally.",
+    )
+):
+    """Download all taxonomies."""
+    from robotoff.taxonomy import download_taxonomies as _download_taxonomies
+    from robotoff.utils import get_logger
+
+    logger = get_logger()
+    _download_taxonomies(download_newer=download_newer)
+    logger.info("All taxonomies downloaded successfully.")
+
+
+@app.command()
 def run_worker(
     queues: list[str] = typer.Argument(..., help="Names of the queues to listen to"),
     burst: bool = typer.Option(

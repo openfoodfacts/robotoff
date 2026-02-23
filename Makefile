@@ -47,7 +47,7 @@ goodbye:
 #-------#
 # Local #
 #-------#
-dev: hello create-po-default-network build init-elasticsearch migrate-db up create_external_networks
+dev: hello create-po-default-network build init-elasticsearch migrate-db download-taxonomies up create_external_networks
 	@echo "🥫 You should be able to access your local install of Robotoff at http://localhost:5500"
 
 edit_etc_hosts:
@@ -267,6 +267,10 @@ robotoff-cli: guard-args
 # apply DB migrations
 migrate-db:
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff migrate-db
+
+download-taxonomies:
+	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff download-taxonomies --no-download-newer
+
 
 create-migration: guard-args
 	${DOCKER_COMPOSE} run --rm --no-deps api python -m robotoff create-migration ${args}

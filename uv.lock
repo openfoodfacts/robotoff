@@ -1685,16 +1685,16 @@ wheels = [
 
 [[package]]
 name = "openfoodfacts"
-version = "3.4.4"
+version = "3.4.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "requests" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/63/eb7542e4a7d5d3854b6ecab2a969db9805eed47a58f966d959d334c11e17/openfoodfacts-3.4.4.tar.gz", hash = "sha256:eb22c9f603076dca2e1766a92beb03e9899f6c67d2d26708f99be318ce8c1dda", size = 60740, upload-time = "2026-02-19T08:32:24.092Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/35/59ed4e448cdc6da9be5f01f29781024cd4e431369bf404f23150acc7b69f/openfoodfacts-3.4.5.tar.gz", hash = "sha256:03107591ab9ac99210337012e7481315aaa0f72fdf9850fc24718aa0f9a2845f", size = 60850, upload-time = "2026-02-23T14:40:38.775Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/34/b3c6dfdc2e0768c715a86604b1f12f5e961df9052b629e9ff84814b453dc/openfoodfacts-3.4.4-py3-none-any.whl", hash = "sha256:5ec002dbfff7f41bb73eaccf895967d08772e20e5e457f8c656386a1f1578bf3", size = 63598, upload-time = "2026-02-19T08:32:25.575Z" },
+    { url = "https://files.pythonhosted.org/packages/60/bf/1fdfa307b16c70eee3ead5924354ba9da2e347d6302609517cf80207846c/openfoodfacts-3.4.5-py3-none-any.whl", hash = "sha256:d0154533fd923ef24711b94f4bfa2950766b98a77a1065d76a6247ca67cedeeb", size = 63759, upload-time = "2026-02-23T14:40:37.702Z" },
 ]
 
 [[package]]
@@ -2655,7 +2655,7 @@ wheels = [
 
 [[package]]
 name = "robotoff"
-version = "1.85.2"
+version = "1.85.4"
 source = { virtual = "." }
 dependencies = [
     { name = "albumentations" },
@@ -2760,7 +2760,7 @@ requires-dist = [
     { name = "more-itertools", specifier = "~=8.9.0" },
     { name = "numpy", specifier = "~=2.2.6" },
     { name = "opencv-python-headless", specifier = "~=4.12.0.88" },
-    { name = "openfoodfacts", specifier = "~=3.4.4" },
+    { name = "openfoodfacts", specifier = "==3.4.5" },
     { name = "orjson", specifier = ">=3.8.2,<3.10.0" },
     { name = "pandas", specifier = "~=2.2.2" },
     { name = "peewee", specifier = "~=3.17.6" },

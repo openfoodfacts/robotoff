@@ -16,6 +16,9 @@ from robotoff.utils.cache import function_cache_register
 logger = logging.getLogger(__name__)
 
 
+CACHE_DIR = settings.DATA_DIR / "taxonomies"
+
+
 def generate_category_hierarchy(
     taxonomy: Taxonomy, category_to_index: dict[str, int], root: int
 ):
@@ -42,6 +45,28 @@ def generate_category_hierarchy(
     return categories_hierarchy_list
 
 
+def download_taxonomies(download_newer: bool = True):
+    """Download all taxonomies.
+
+    :param download_newer: If True, we check if a new version of the taxonomies is
+        available and download it if so. If False, we only download the taxonomies if
+        they are not already cached locally.
+    """
+    for taxonomy_type in TaxonomyType:
+        if taxonomy_type.name not in settings.TAXONOMY_URLS:
+            logger.warning(
+                "No URL found for taxonomy %s, skipping download.",
+                taxonomy_type.name,
+            )
+            continue
+        logger.info("Downloading taxonomy %s...", taxonomy_type.name)
+        _get_taxonomy(
+            taxonomy_type.name,
+            download_newer=download_newer,
+            cache_dir=CACHE_DIR,
+        )
+
+
 # ttl: 12h
 @ttl_cache(maxsize=100, ttl=12 * 60 * 60)
 def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Taxonomy:
@@ -59,7 +84,6 @@ def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Ta
     :return: the Taxonomy
     """
     taxonomy_offline_path = settings.TAXONOMY_PATHS.get(taxonomy_type)
-    cache_dir = settings.DATA_DIR / "taxonomies"
     if offline:
         if taxonomy_offline_path is None:
             raise ValueError(
@@ -70,28 +94,12 @@ def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Ta
     taxonomy_type_enum = (
         TaxonomyType[taxonomy_type] if isinstance(taxonomy_type, str) else taxonomy_type
     )
-
     try:
-        return _get_taxonomy(
-            taxonomy_type_enum,
-            force_download=False,
-            download_newer=True,
-            cache_dir=cache_dir,
-        )
-    except Exception as e:
-        logger.error(
-            "Error while fetching taxonomy %s: %s.",
-            taxonomy_type,
-            e,
-        )
-
-    try:
-        logger.info("Trying to load taxonomy %s from local cache...", taxonomy_type)
         return _get_taxonomy(
             taxonomy_type_enum,
             force_download=False,
             download_newer=False,
-            cache_dir=cache_dir,
+            cache_dir=CACHE_DIR,
         )
     except Exception as e:
         logger.info(

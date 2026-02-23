@@ -31,6 +31,7 @@ from robotoff.products import (
     get_min_product_store,
     has_jsonl_dataset_changed,
 )
+from robotoff.taxonomy import download_taxonomies
 from robotoff.types import InsightType, ServerType
 
 settings.init_sentry()
@@ -360,6 +361,9 @@ def run():
     scheduler.add_job(
         process_insights, "interval", minutes=2, max_instances=1, jitter=20
     )
+
+    # Check that taxonomies are up to date every 2h
+    scheduler.add_job(download_taxonomies, "interval", hours=2, max_instances=1)
 
     scheduler.add_job(clean_tmp_files, "cron", day="*", hour=0, max_instances=1)
     # This job exports daily product metrics for monitoring.
