@@ -58,18 +58,50 @@ def get_taxonomy(taxonomy_type: TaxonomyType | str, offline: bool = False) -> Ta
       defaults to False. It's not available for all taxonomy types.
     :return: the Taxonomy
     """
+    taxonomy_offline_path = str(settings.TAXONOMY_PATHS[taxonomy_type])
+    cache_dir = settings.DATA_DIR / "taxonomies"
     if offline:
-        return Taxonomy.from_path(str(settings.TAXONOMY_PATHS[taxonomy_type]))
+        return Taxonomy.from_path(taxonomy_offline_path)
 
     taxonomy_type_enum = (
         TaxonomyType[taxonomy_type] if isinstance(taxonomy_type, str) else taxonomy_type
     )
-    return _get_taxonomy(
-        taxonomy_type_enum,
-        force_download=False,
-        download_newer=True,
-        cache_dir=settings.DATA_DIR / "taxonomies",
+
+    try:
+        return _get_taxonomy(
+            taxonomy_type_enum,
+            force_download=False,
+            download_newer=True,
+            cache_dir=cache_dir,
+        )
+    except Exception as e:
+        logger.error(
+            "Error while fetching taxonomy %s: %s.",
+            taxonomy_type,
+            e,
+        )
+
+    try:
+        logger.info("Trying to load taxonomy %s from local cache...", taxonomy_type)
+        return _get_taxonomy(
+            taxonomy_type_enum,
+            force_download=False,
+            download_newer=False,
+            cache_dir=cache_dir,
+        )
+    except Exception as e:
+        logger.info(
+            "No cached version of taxonomy %s found or error while loading it: %s. ",
+            taxonomy_type,
+            e,
+        )
+
+    logger.info(
+        "Loading taxonomy %s from local static file %s...",
+        taxonomy_type,
+        taxonomy_offline_path,
     )
+    return Taxonomy.from_path(taxonomy_offline_path)
 
 
 def is_prefixed_value(value: str) -> bool:
