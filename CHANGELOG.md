@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.85.5](https://github.com/openfoodfacts/robotoff/compare/v1.85.4...v1.85.5) (2026-02-23)
+
+
+### Bug Fixes
+
+* don't crash in fail_taxonomy if PO server is not responding ([#1856](https://github.com/openfoodfacts/robotoff/issues/1856)) ([3dab674](https://github.com/openfoodfacts/robotoff/commit/3dab674315d58e8a29c9cc8f2f01d192a34fefd8))
+* fix bug in taxonomy.py ([c257711](https://github.com/openfoodfacts/robotoff/commit/c25771181b9697aabba56f69d875edc6e870e81b))
+
+
+### Technical
+
+* fix container name in docker-compose.yml ([f27c139](https://github.com/openfoodfacts/robotoff/commit/f27c139968d9f91de37f220418fce475c8d3b384))
+* increase number of product workers to 6 ([#1854](https://github.com/openfoodfacts/robotoff/issues/1854)) ([fe82e52](https://github.com/openfoodfacts/robotoff/commit/fe82e52958d991a4d9856536db708f5b6f68a925))
+
 ## [1.85.4](https://github.com/openfoodfacts/robotoff/compare/v1.85.3...v1.85.4) (2026-02-19)
 
 
