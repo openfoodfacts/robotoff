@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.6](https://github.com/openfoodfacts/robotoff/compare/v1.85.5...v1.85.6) (2026-02-23)
+
+
+### Bug Fixes
+
+* centralize taxonomy download ([#1857](https://github.com/openfoodfacts/robotoff/issues/1857)) ([768848d](https://github.com/openfoodfacts/robotoff/commit/768848d56be9f9ad352af1df0d6bf4f540ec7275))
+
 ## [1.85.5](https://github.com/openfoodfacts/robotoff/compare/v1.85.4...v1.85.5) (2026-02-23)
 
 
