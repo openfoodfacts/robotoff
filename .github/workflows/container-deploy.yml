@@ -63,7 +63,7 @@ jobs:
         # Triton server for production is running on a separate server with 2 GPUs
         echo "DEFAULT_TRITON_URI=10.3.0.101:5504" >> $GITHUB_ENV
     - name: Wait for container build
-      uses: lewagon/wait-on-check-action@v1.4.1
+      uses: lewagon/wait-on-check-action@v1.5.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
