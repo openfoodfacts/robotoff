@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.7](https://github.com/openfoodfacts/robotoff/compare/v1.85.6...v1.85.7) (2026-03-04)
+
+
+### Technical
+
+* **deps:** bump werkzeug from 3.1.5 to 3.1.6 ([#1860](https://github.com/openfoodfacts/robotoff/issues/1860)) ([0295c0b](https://github.com/openfoodfacts/robotoff/commit/0295c0b4800d325b8ac677493adc7998854aa1bd))
+
 ## [1.85.6](https://github.com/openfoodfacts/robotoff/compare/v1.85.5...v1.85.6) (2026-02-23)
 
 
