@@ -54,7 +54,8 @@ paths:
                   questions:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/Question"
+
   /questions:
     get:
       tags:
@@ -103,7 +104,7 @@ paths:
                   questions:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/Question"
                   count:
                     type: integer
                     description: The total number of results with the provided filters
@@ -561,8 +562,7 @@ paths:
                     type: array
                     description: Details about requested logos
                     items:
-                      type: object
-                      description: Information about the logo
+                      $ref: "#/components/schemas/LogoDetails"
                   count:
                     type: number
                     description: Number of returned results
@@ -640,8 +640,7 @@ paths:
                     type: array
                     description: Found logos
                     items:
-                      type: object
-                      description: Information about the logo
+                      $ref: "#/components/schemas/LogoDetails"
                   count:
                     type: number
                     description: Number of returned results
@@ -991,8 +990,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                description: Logo annotation details
+                $ref: "#/components/schemas/LogoDetails"
         "404":
           description: Logo not found
     put:
@@ -1407,7 +1405,6 @@ paths:
                               items:
                                 type: object
 
-
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
   /predict/ocr_prediction:
@@ -1757,6 +1754,25 @@ components:
           description: country tags of the product
           items:
             type: string
+        data:
+          type: object
+          description: a JSON object containing additional data about the insight.
+          properties:
+            bounding_box:
+              type: array
+              description: The bounding box of the logo as a list of ratio coordinates.
+              items:
+                type: number
+
+            logo_id:
+              type: integer
+              description: the ID of the logo associated with the insight, if any
+        source_image:
+          type: string
+          description: the path of the image the insight was generated from.
+        with_image:
+          type: boolean
+          description: whether the insight has an associated image or not
       example:
         id: 3cd5aecd-edcc-4237-87d0-6595fc4e53c9
         type: label
@@ -1764,6 +1780,124 @@ components:
         countries:
           - en:france
           - en:united-kingdom
+    Question:
+      type: object
+      description: a question associated to an insight.
+      required:
+        - barcode
+        - insight_id
+        - insight_type
+        - question
+        - value
+      properties:
+        barcode:
+          type: string
+          example: "3250390172185"
+        insight_id:
+          type: string
+          example: "a5e4397a-f14b-444f-972d-504a04e1cd7a"
+        insight_type:
+          type: string
+          example: "label"
+        question:
+          type: string
+          example: "Does the product have this label?"
+        ref_image_url:
+          type: string
+          example: "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg"
+        server_type:
+          $ref: "#/components/parameters/server_type"
+        source_image_url:
+          type: string
+          example: "https://images.openfoodfacts.org/images/products/325/039/017/2185/6.400.jpg"
+        type:
+          type: string
+          example: "add-binary"
+        value:
+          type: string
+          example: "Nutriscore Grade A"
+        value_tag:
+          type: string
+          example: "en:nutriscore-grade-a"
+
+    LogoDetails:
+      description: Logo annotation details
+      type: object
+      required:
+        - id
+        - barcode
+      properties:
+        annotation_type:
+          type: string
+          example: "label"
+
+        annotation_value:
+          type: string
+          example: "en:eu-organic"
+
+        annotation_value_tag:
+          type: string
+          example: "en:eu-organic"
+
+        barcode:
+          type: string
+          example: "6175700"
+
+        bounding_box:
+          type: array
+          description: The bounding box of the logo as a list of ratio coordinates.
+          items:
+            type: number
+
+        completed_at:
+          type: string
+          example: "2022-12-16T11:28:25.599715"
+
+        id:
+          type: number
+
+        image:
+          type: object
+
+        nearest_neighbors:
+          type: object
+          description: The nearest neighbor logos of this logo, as returned by the logo ANN search.
+          properties:
+            distances:
+              type: array
+              items:
+                type: number
+            logo_ids:
+              type: array
+              items:
+                type: number
+
+        score:
+          type: number
+          description: The confidence score of the annotation, between 0 and 1. The larger the score is the more confident we are in the annotation.
+
+        server_type:
+          $ref: "#/components/parameters/server_type"
+
+        source_image:
+          type: string
+          description: The path of the image the logo was extracted from.
+          example: "/6175700/5.jpg"
+
+        taxonomy_value:
+          type: string
+          description: The taxonomy tag associated to the logo, if any.
+          example: "en:eu-organic"
+
+        text:
+          type: string
+          description: The text detected on the logo.
+
+        username:
+          type: string
+          description: The username of the annotator who created the logo.
+          example: "gcloud-annotators"
+
     Prediction:
       type: object
       description: a Robotoff Prediction
@@ -1835,15 +1969,7 @@ components:
               - `flashtext` for all predictions generated using flashtext library
               - `regex` for all predictions generated using simple regex
         server_type:
-          type: string
-          example: "off"
-          description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
-          enum:
-            - "off"
-            - "obf"
-            - "opff"
-            - "opf"
-            - "off_pro"
+          $ref: "#/components/parameters/server_type"
         confidence:
           type: number
           example: 0.95
@@ -1862,7 +1988,8 @@ components:
     ocr_url:
       name: ocr_url
       in: query
-      description: The URL of the OCR JSON to use. The OCR must have been extracted using
+      description:
+        The URL of the OCR JSON to use. The OCR must have been extracted using
         Google Cloud Vision, and be in the JSON format.
       schema:
         type: string
