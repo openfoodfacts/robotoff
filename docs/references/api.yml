@@ -1883,11 +1883,12 @@ components:
         completed_at:
           description: The datetime of completion of the annotation, in ISO format.
           type: string
+          format: date-time
           example: "2022-12-16T11:28:25.599715"
 
         id:
           description: The ID of the logo annotation.
-          type: number
+          type: integer
 
         image:
           description: Details about the image associated with the logo.
