@@ -2655,7 +2655,7 @@ wheels = [
 
 [[package]]
 name = "robotoff"
-version = "1.85.4"
+version = "1.85.6"
 source = { virtual = "." }
 dependencies = [
     { name = "albumentations" },
