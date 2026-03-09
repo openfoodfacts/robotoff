@@ -85,6 +85,7 @@ def rerun_import_images(
     server_type: ServerType | None = None,
     return_count: bool = False,
     flags: list[ImportImageFlag] | None = None,
+    run_async: bool = True,
 ) -> None | int:
     """Rerun full image import on all images in DB, or on images of a specific
     product.
@@ -100,6 +101,9 @@ def rerun_import_images(
     :param return_count: if True, return the number of images to process, without
         processing them, defaults to False
     :param flags: the list of flags to rerun, defaults to None (all tasks are rerun).
+    :param run_async: whether to run the tasks asynchronously in the worker queue or
+        not. If False, the tasks will be executed synchronously in the current process
+        instead of being enqueued. Defaults to True.
     :return: the number of images to process, or None if return_count is False
     """
     where_clauses = [ImageModel.deleted == False]  # noqa: E712
@@ -145,6 +149,7 @@ def rerun_import_images(
             # Use the low queue for rerun, as it's not as important as the
             # real-time updates from Redis
             use_high_queue=False,
+            run_async=run_async,
         )
     return None
 
@@ -232,6 +237,7 @@ def run_import_image(
     include_flags: list[ImportImageFlag] | None = None,
     exclude_flags: list[ImportImageFlag] | None = None,
     use_high_queue: bool = True,
+    run_async: bool = True,
 ) -> None:
     """Launch all extraction tasks on an image.
 
@@ -247,8 +253,11 @@ def run_import_image(
     :param include_flags: the list of flags to run, defaults to None (all models are
         run).
     :param exclude_flags: the list of flags to exclude, defaults to None.
-    param use_high_queue: if True, use the high priority queue for most important
+    :param use_high_queue: if True, use the high priority queue for most important
         tasks. If False, always use the low priority queue. Defaults to True.
+    :param run_async: whether to run the jobs asynchronously or not. Defaults to
+        True. If False, the tasks will be executed immediately in the current thread
+        instead of being enqueued.
     """
     flags = (
         [flag for flag in ImportImageFlag if flag not in (exclude_flags or [])]
@@ -262,7 +271,8 @@ def run_import_image(
     if ImportImageFlag.run_logo_object_detection in flags:
         enqueue_job(
             run_logo_object_detection,
-            selected_ml_model_queue,
+            queue=selected_ml_model_queue,
+            run_async=run_async,
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
@@ -274,7 +284,8 @@ def run_import_image(
             # Run object detection model that detects nutrition tables
             enqueue_job(
                 run_nutrition_table_object_detection,
-                selected_ml_model_queue,
+                queue=selected_ml_model_queue,
+                run_async=run_async,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
                 image_url=image_url,
@@ -285,7 +296,8 @@ def run_import_image(
             # than OFF (OBF, OPF,...)
             enqueue_job(
                 import_insights_from_image,
-                high_queue,
+                queue=high_queue,
+                run_async=run_async,
                 job_kwargs={"result_ttl": 0},
                 product_id=product_id,
                 image_url=image_url,
@@ -297,7 +309,8 @@ def run_import_image(
             # trained on non-food products
             enqueue_job(
                 extract_ingredients_job,
-                selected_ml_model_queue,
+                queue=selected_ml_model_queue,
+                run_async=run_async,
                 # We add a higher timeout, as we request Product Opener to
                 # parse ingredient list, which may take a while depending on
                 # the number of ingredient list (~1s per ingredient list)
@@ -309,7 +322,8 @@ def run_import_image(
         if ImportImageFlag.extract_nutrition in flags:
             enqueue_job(
                 extract_nutrition_job,
-                selected_ml_model_queue,
+                queue=selected_ml_model_queue,
+                run_async=run_async,
                 job_kwargs={"result_ttl": 0, "timeout": "2m"},
                 product_id=product_id,
                 image_url=image_url,
@@ -323,7 +337,8 @@ def run_import_image(
             # last 10 images to predict the category
             enqueue_job(
                 add_category_insight_job,
-                selected_ml_model_queue,
+                queue=selected_ml_model_queue,
+                run_async=run_async,
                 job_kwargs={"result_ttl": 0, "timeout": "2m"},
                 product_id=product_id,
             )
@@ -332,21 +347,11 @@ def run_import_image(
         # Compute image fingerprint, this job is low priority
         enqueue_job(
             add_image_fingerprint_job,
-            low_queue,
+            queue=low_queue,
+            run_async=run_async,
             job_kwargs={"result_ttl": 0},
             image_model_id=image_model_id,
         )
-    # Run UPC detection to detect if the image is dominated by a UPC (and thus
-    # should not be a product selected image)
-    # UPC detection is buggy since the upgrade to OpenCV 4.10
-    # Unit tests are failing, we need to fix them before re-enabling this task
-    # enqueue_job(
-    #     run_upc_detection,
-    #     high_queue,
-    #     job_kwargs={"result_ttl": 0},
-    #     product_id=product_id,
-    #     image_url=image_url,
-    # )
 
 
 def import_insights_from_image(
@@ -374,7 +379,7 @@ def import_insights_from_image(
     ):
         enqueue_job(
             run_nutriscore_object_detection,
-            get_high_queue(product_id),
+            queue=get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             image_url=image_url,
@@ -754,7 +759,7 @@ def run_logo_object_detection(
         # product barcode. See `get_high_queue` documentation for more details.
         enqueue_job(
             process_created_logos,
-            get_high_queue(product_id),
+            queue=get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             image_prediction_id=image_prediction.id,
             server_type=product_id.server_type,

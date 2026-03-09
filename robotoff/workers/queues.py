@@ -96,10 +96,16 @@ def _enqueue_in_job(
     kwargs,
 ):
     time.sleep(job_delay)
-    enqueue_job(func, queue, job_kwargs, **kwargs)
+    enqueue_job(func=func, queue=queue, job_kwargs=job_kwargs, **kwargs)
 
 
-def enqueue_job(func: Callable, queue: Queue, job_kwargs: dict | None = None, **kwargs):
+def enqueue_job(
+    func: Callable,
+    queue: Queue,
+    run_async: bool = True,
+    job_kwargs: dict | None = None,
+    **kwargs,
+):
     """Create a new job from the function and kwargs and enqueue it in the
     queue.
 
@@ -108,8 +114,19 @@ def enqueue_job(func: Callable, queue: Queue, job_kwargs: dict | None = None, **
 
     :param func: the function to use
     :param queue: the queue to use
+    :param run_async: whether to run the job asynchronously or not. If False,
+        the job will be executed immediately in the current thread instead of
+        being enqueued.
     :param job_kwargs: optional kwargs parameters to provide to `Job.create`
     """
+    if not run_async:
+        try:
+            func(**kwargs)
+        except Exception as e:
+            logger.error(f"Error running task {func.__name__} synchronously: {e}")
+            raise
+        return
+
     job_kwargs = job_kwargs or {}
     job = Job.create(func=func, kwargs=kwargs, connection=redis_conn, **job_kwargs)
     return queue.enqueue_job(job=job)

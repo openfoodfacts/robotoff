@@ -80,7 +80,7 @@ def add_category_insight(
     if async_import:
         enqueue_job(
             import_category_predictions_job,
-            get_high_queue(product_id),
+            queue=get_high_queue(product_id),
             job_kwargs={"result_ttl": 0},
             product_id=product_id,
             predictions=product_predictions,
