@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.85.7](https://github.com/openfoodfacts/robotoff/compare/v1.85.6...v1.85.7) (2026-03-09)
+
+
+### Bug Fixes
+
+* don't wait before applying insights ([e1af695](https://github.com/openfoodfacts/robotoff/commit/e1af695e52bd0dba440a2230d26278d7da2aebcc))
+* improve `rerun-import-all-images` command ([b8c1e4d](https://github.com/openfoodfacts/robotoff/commit/b8c1e4d6a737437a1c3dae74fbfbc699cc907425))
+
+
+### Technical
+
+* complete the description of the returned objects ([#1862](https://github.com/openfoodfacts/robotoff/issues/1862)) ([4697276](https://github.com/openfoodfacts/robotoff/commit/4697276c63858bcae27f065fea11ad0a8150dc9e))
+* **deps:** bump flask from 3.1.2 to 3.1.3 ([#1859](https://github.com/openfoodfacts/robotoff/issues/1859)) ([73cbaa8](https://github.com/openfoodfacts/robotoff/commit/73cbaa83733ca87ed37b1c11f0285e629bb1b4af))
+* **deps:** bump the all-actions group across 1 directory with 3 updates ([#1861](https://github.com/openfoodfacts/robotoff/issues/1861)) ([1807eca](https://github.com/openfoodfacts/robotoff/commit/1807eca0407db3650518acd106e848a363e48960))
+* **deps:** bump werkzeug from 3.1.5 to 3.1.6 ([#1860](https://github.com/openfoodfacts/robotoff/issues/1860)) ([0295c0b](https://github.com/openfoodfacts/robotoff/commit/0295c0b4800d325b8ac677493adc7998854aa1bd))
+
 ## [1.85.6](https://github.com/openfoodfacts/robotoff/compare/v1.85.5...v1.85.6) (2026-02-23)
 
 
