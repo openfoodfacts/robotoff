@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.85.8](https://github.com/openfoodfacts/robotoff/compare/v1.85.7...v1.85.8) (2026-03-09)
+
+
+### Bug Fixes
+
+* allow to run synchronously in `import_image` func ([#1865](https://github.com/openfoodfacts/robotoff/issues/1865)) ([5e5577a](https://github.com/openfoodfacts/robotoff/commit/5e5577a2906aa15284e3a905fdd43aaf6ee95383))
+
+
+### Technical
+
+* add documentation on brand insight generation ([ee33517](https://github.com/openfoodfacts/robotoff/commit/ee3351735da8f5b34655d433d5c1bed9e58eb544))
+* add first version of AGENTS.md ([98f0960](https://github.com/openfoodfacts/robotoff/commit/98f09608012a330a56f1f908f8d7fd3caaf155c9))
+
 ## [1.85.7](https://github.com/openfoodfacts/robotoff/compare/v1.85.6...v1.85.7) (2026-03-09)
 
 
