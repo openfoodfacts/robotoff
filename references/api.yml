@@ -8,16 +8,16 @@ info:
   contact: {}
   version: "1.0"
 servers:
-  - url: https://robotoff.openfoodfacts.org/api/v1
-    description: Production server
-  - url: https://robotoff.openfoodfacts.net/api/v1
-    description: Preproduction server
+- url: https://robotoff.openfoodfacts.org/api/v1
+  description: Production server
+- url: https://robotoff.openfoodfacts.net/api/v1
+  description: Preproduction server
 
 paths:
   /questions/{barcode}:
     get:
       tags:
-        - Question Management
+      - Question Management
       summary: Get questions for a given product
       operationId: getQuestionsByBarcode
       description: |
@@ -27,17 +27,17 @@ paths:
           - brand
           - remaining types
       parameters:
-        - name: count
-          in: query
-          description: The number of questions to return
-          schema:
-            type: integer
-            default: 1
-            minimum: 1
-        - $ref: "#/components/parameters/barcode_path"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/lang"
-        - $ref: "#/components/parameters/insight_types"
+      - name: count
+        in: query
+        description: The number of questions to return
+        schema:
+          type: integer
+          default: 1
+          minimum: 1
+      - $ref: "#/components/parameters/barcode_path"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/lang"
+      - $ref: "#/components/parameters/insight_types"
       responses:
         "200":
           description: "Questions about the requested product"
@@ -49,44 +49,47 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_questions"
-                      - "found"
+                    - "no_questions"
+                    - "found"
                   questions:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/Question"
+
   /questions:
     get:
+      description: |
+        Fetch questions based on various filters.
       tags:
-        - Question Management
+      - Question Management
       summary: Fetch questions
       operationId: getQuestions
       parameters:
-        - $ref: "#/components/parameters/lang"
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/countries"
-        - $ref: "#/components/parameters/brands"
-        - $ref: "#/components/parameters/value_tag"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaigns"
-        - $ref: "#/components/parameters/predictor"
-        - name: order_by
-          in: query
-          description: |
-            The field to use for ordering results:
-              - confidence: order by (descending) model confidence, null confidence insights come last
-              - popularity: order by (descending) popularity (=scan count)
-              - random: use a random order
-          schema:
-            type: string
-            default: popularity
-            enum:
-              - confidence
-              - random
-              - popularity
+      - $ref: "#/components/parameters/lang"
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/insight_types"
+      - $ref: "#/components/parameters/countries"
+      - $ref: "#/components/parameters/brands"
+      - $ref: "#/components/parameters/value_tag"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/reserved_barcode"
+      - $ref: "#/components/parameters/campaigns"
+      - $ref: "#/components/parameters/predictor"
+      - name: order_by
+        in: query
+        description: |
+          The field to use for ordering results:
+            - confidence: order by (descending) model confidence, null confidence insights come last
+            - popularity: order by (descending) popularity (=scan count)
+            - random: use a random order
+        schema:
+          type: string
+          default: popularity
+          enum:
+          - confidence
+          - random
+          - popularity
       responses:
         "200":
           description: The questions matching the filters
@@ -98,39 +101,39 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_questions"
-                      - "found"
+                    - "no_questions"
+                    - "found"
                   questions:
                     type: array
                     items:
-                      type: object
+                      $ref: "#/components/schemas/Question"
                   count:
                     type: integer
                     description: The total number of results with the provided filters
   /questions/unanswered:
     get:
       tags:
-        - Question Management
+      - Question Management
       summary: Get unanswered question counts
       operationId: getUnansweredQuestions
       description: |
         Get number of unanswered questions grouped by `value_tag`.
         The list is ordered from highest count to lowest.
       parameters:
-        - name: count
-          in: query
-          description: The number of distinct `value_tag`s to return
-          schema:
-            type: number
-            default: 25
-            minimum: 1
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/insight_type"
-        - $ref: "#/components/parameters/countries"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/reserved_barcode"
-        - $ref: "#/components/parameters/campaigns"
-        - $ref: "#/components/parameters/predictor"
+      - name: count
+        in: query
+        description: The number of distinct `value_tag`s to return
+        schema:
+          type: number
+          default: 25
+          minimum: 1
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/insight_type"
+      - $ref: "#/components/parameters/countries"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/reserved_barcode"
+      - $ref: "#/components/parameters/campaigns"
+      - $ref: "#/components/parameters/predictor"
       responses:
         "200":
           description: "The number of questions grouped by `value_tag`"
@@ -146,38 +149,40 @@ paths:
                     type: array
                     items:
                       oneOf:
-                        - type: string
-                          description: The `value_tag`
-                        - type: integer
-                          description: The number of questions for this `value_tag`
+                      - type: string
+                        description: The `value_tag`
+                      - type: integer
+                        description: The number of questions for this `value_tag`
                   status:
                     type: string
                     description: The request status
                     enum:
-                      - found
-                      - no_questions
+                    - found
+                    - no_questions
                 required:
-                  - count
-                  - questions
-                  - status
+                - count
+                - questions
+                - status
 
   /predictions:
     get:
+      description: |
+        Fetch predictions based on various filters.
       tags:
-        - Prediction Management
+      - Prediction Management
       summary: Get predictions
       operationId: getPredictions
       parameters:
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/barcode_query_filter"
-        - name: types
-          in: query
-          description: Comma-separated list, filter by prediction types
-          schema:
-            type: string
-            example: brand,label
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/barcode_query_filter"
+      - name: types
+        in: query
+        description: Comma-separated list, filter by prediction types
+        schema:
+          type: string
+          example: brand,label
       responses:
         "200":
           description: The queried predictions
@@ -189,8 +194,8 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_predictions"
-                      - "found"
+                    - "no_predictions"
+                    - "found"
                   predictions:
                     type: array
                     items:
@@ -202,7 +207,7 @@ paths:
   /insights:
     get:
       tags:
-        - Insight Management
+      - Insight Management
       summary: List insights
       description: |
         Return insights based on various filters. The results can be filtered by insight type, barcode, annotation status, and more.
@@ -210,20 +215,20 @@ paths:
         If no `insight_types` are provided, insights of all types are returned.
       operationId: getInsights
       parameters:
-        - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/barcode_optional"
-        - $ref: "#/components/parameters/insight_filter_annotated"
-        - $ref: "#/components/parameters/insight_filter_annotation"
-        - $ref: "#/components/parameters/value_tag"
-        - $ref: "#/components/parameters/brands"
-        - $ref: "#/components/parameters/countries"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/predictor"
-        - $ref: "#/components/parameters/insight_order_by"
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/campaigns"
-        - $ref: "#/components/parameters/lc"
+      - $ref: "#/components/parameters/insight_types"
+      - $ref: "#/components/parameters/barcode_optional"
+      - $ref: "#/components/parameters/insight_filter_annotated"
+      - $ref: "#/components/parameters/insight_filter_annotation"
+      - $ref: "#/components/parameters/value_tag"
+      - $ref: "#/components/parameters/brands"
+      - $ref: "#/components/parameters/countries"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/predictor"
+      - $ref: "#/components/parameters/insight_order_by"
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/campaigns"
+      - $ref: "#/components/parameters/lc"
       responses:
         "200":
           description: "List of insights matching the criteria"
@@ -239,8 +244,8 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_insights"
-                      - "found"
+                    - "no_insights"
+                    - "found"
                     example: "found"
                   count:
                     type: integer
@@ -248,18 +253,19 @@ paths:
                     example: 10
   /insights/detail/{insight_id}:
     get:
+      description: Get detailed information about a specific insight.
       tags:
-        - Insight Management
+      - Insight Management
       summary: Get a specific insight
       operationId: getInsightDetails
       parameters:
-        - name: insight_id
-          in: path
-          description: "ID of the insight"
-          required: true
-          style: simple
-          schema:
-            type: string
+      - name: insight_id
+        in: path
+        description: "ID of the insight"
+        required: true
+        style: simple
+        schema:
+          type: string
       responses:
         "200":
           description: "Insight details"
@@ -270,7 +276,7 @@ paths:
   /insights/annotate:
     post:
       tags:
-        - Insight Management
+      - Insight Management
       summary: Submit an annotation
       operationId: annotateInsight
       description: |
@@ -291,8 +297,8 @@ paths:
 
         We use the voting mecanism system to remember which insight to skip for a user (authenticated or not).
       security:
-        - basicAuth: []
-        - {}
+      - basicAuth: []
+      - {}
       requestBody:
         required: true
         content:
@@ -309,17 +315,17 @@ paths:
                   type: integer
                   description: "Annotation of the prediction: 1 to accept the prediction, 0 to refuse it, and -1 for _skip_, 2 to accept and add data"
                   enum:
-                    - 0
-                    - 1
-                    - -1
-                    - 2
+                  - 0
+                  - 1
+                  - -1
+                  - 2
                 update:
                   type: integer
                   description: "Send the update to Openfoodfacts if `update=1`, don't send the update otherwise. This parameter is useful if the update is performed client-side"
                   default: 1
                   enum:
-                    - 0
-                    - 1
+                  - 0
+                  - 1
                 data:
                   type: object
                   description: "Additional data provided by the user as key-value pairs (required when annotation=2)"
@@ -329,8 +335,8 @@ paths:
                   description: "Device identifier for tracking anonymous votes"
 
               required:
-                - "insight_id"
-                - "annotation"
+              - "insight_id"
+              - "annotation"
       responses:
         "200":
           description: "Annotation successfully processed"
@@ -359,31 +365,29 @@ paths:
         Generate a CSV dump of insights with specific criteria.
         If more than 10,000 insights match provided criteria and `count` is not provided, a `HTTP 400` is returned
       tags:
-        - Insight Management
+      - Insight Management
       operationId: dumpInsights
       parameters:
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/value_tag"
-        - $ref: "#/components/parameters/insight_types"
-        - $ref: "#/components/parameters/barcode_query_filter"
-        - name: annotated
-          description: The annotation status of the insight.
-            If not provided, both annotated and non-annotated insights are returned
-          in: query
-          schema:
-            type: boolean
-            default: null
-            nullable: true
-        - name: count
-          description: Maximum number of insights to return.
-            If not provided, an HTTP 400 response may be returned if more than 10,000 insights match the criteria
-          in: query
-          schema:
-            type: integer
-            default: null
-            nullable: true
-            minimum: 0
-            maximum: 10000
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/value_tag"
+      - $ref: "#/components/parameters/insight_types"
+      - $ref: "#/components/parameters/barcode_query_filter"
+      - name: annotated
+        description: The annotation status of the insight. If not provided, both annotated and non-annotated insights are returned
+        in: query
+        schema:
+          type: boolean
+          default: null
+          nullable: true
+      - name: count
+        description: Maximum number of insights to return. If not provided, an HTTP 400 response may be returned if more than 10,000 insights match the criteria
+        in: query
+        schema:
+          type: integer
+          default: null
+          nullable: true
+          minimum: 0
+          maximum: 10000
       responses:
         "200":
           description: The CSV dump
@@ -404,54 +408,54 @@ paths:
         base image and cropping coordinates. Cropping coordinates are relative (between 0.
         and 1. inclusive), with (0, 0) being the upper left corner.
       tags:
-        - Image Processing
+      - Image Processing
       operationId: cropImage
       parameters:
-        - $ref: "#/components/parameters/image_url"
-        - name: y_min
-          in: query
-          description: |
-            The minimum y-coordinate for cropping, relative to the image height.
-            We use relative coordinates, with (0, 0) being the upper left corner and
-            (1, 1) being the lower right corner.
-          example: 0.47795143723487854
-          schema:
-            type: number
-            minimum: 0
-            maximum: 1
-        - name: x_min
-          description: |
-            The minimum x-coordinate for cropping, relative to the image width.
-            We use relative coordinates, with (0, 0) being the upper left corner and
-            (1, 1) being the lower right corner.
-          in: query
-          example: 0.5583494305610657
-          schema:
-            type: number
-            minimum: 0
-            maximum: 1
-        - name: y_max
-          description: |
-            The maximum y-coordinate for cropping, relative to the image height.
-            We use relative coordinates, with (0, 0) being the upper left corner and
-            (1, 1) being the lower right corner.
-          in: query
-          example: 0.5653171539306641
-          schema:
-            type: number
-            minimum: 0
-            maximum: 1
-        - name: x_max
-          description: |
-            The maximum x-coordinate for cropping, relative to the image width.
-            We use relative coordinates, with (0, 0) being the upper left corner and
-            (1, 1) being the lower right corner.
-          in: query
-          example: 0.6795185804367065
-          schema:
-            type: number
-            minimum: 0
-            maximum: 1
+      - $ref: "#/components/parameters/image_url"
+      - name: y_min
+        in: query
+        description: |
+          The minimum y-coordinate for cropping, relative to the image height.
+          We use relative coordinates, with (0, 0) being the upper left corner and
+          (1, 1) being the lower right corner.
+        example: 0.47795143723487854
+        schema:
+          type: number
+          minimum: 0
+          maximum: 1
+      - name: x_min
+        description: |
+          The minimum x-coordinate for cropping, relative to the image width.
+          We use relative coordinates, with (0, 0) being the upper left corner and
+          (1, 1) being the lower right corner.
+        in: query
+        example: 0.5583494305610657
+        schema:
+          type: number
+          minimum: 0
+          maximum: 1
+      - name: y_max
+        description: |
+          The maximum y-coordinate for cropping, relative to the image height.
+          We use relative coordinates, with (0, 0) being the upper left corner and
+          (1, 1) being the lower right corner.
+        in: query
+        example: 0.5653171539306641
+        schema:
+          type: number
+          minimum: 0
+          maximum: 1
+      - name: x_max
+        description: |
+          The maximum x-coordinate for cropping, relative to the image width.
+          We use relative coordinates, with (0, 0) being the upper left corner and
+          (1, 1) being the lower right corner.
+        in: query
+        example: 0.6795185804367065
+        schema:
+          type: number
+          minimum: 0
+          maximum: 1
       responses:
         "200":
           description: "Cropped image in JPEG format"
@@ -464,56 +468,53 @@ paths:
   /image_predictions:
     get:
       tags:
-        - Image Predictions
+      - Image Predictions
       summary: Get image predictions
       description: |
         Return image predictions based on various filters. The results can be filtered by model name, type, confidence, and more.
       operationId: getImagePredictions
       parameters:
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/barcode_query_filter"
-        - name: with_logo
-          description:
-            if True, only return image predictions that have associated logos
-            (only valid for universal-logo-detector image predictions). If false, only return image predictions that have no associated logos.
-            Otherwise, return all image predictions.
-          in: query
-          schema:
-            type: boolean
-            default: null
-            nullable: true
-        - name: model_name
-          description: filter by name of the image predictor model
-          in: query
-          schema:
-            type: string
-            example: universal-logo-detector
-        - name: image_id
-          description: filter by image ID. It should be a digit (raw images only), otherwise no result will be returned.
-          in: query
-          schema:
-            type: string
-            example: "1"
-        - name: type
-          description: filter by type of the image predictor model
-          in: query
-          schema:
-            type: string
-            example: object_detection
-        - name: model_version
-          description: filter by model version value
-          in: query
-          schema:
-            type: string
-        - name: min_confidence
-          description: filter by minimum confidence score value
-          in: query
-          schema:
-            type: number
-            minimum: 0.0
-            maximum: 1.0
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/barcode_query_filter"
+      - name: with_logo
+        description: if True, only return image predictions that have associated logos (only valid for universal-logo-detector image predictions). If false, only return image predictions that have no associated logos. Otherwise, return all image predictions.
+        in: query
+        schema:
+          type: boolean
+          default: null
+          nullable: true
+      - name: model_name
+        description: filter by name of the image predictor model
+        in: query
+        schema:
+          type: string
+          example: universal-logo-detector
+      - name: image_id
+        description: filter by image ID. It should be a digit (raw images only), otherwise no result will be returned.
+        in: query
+        schema:
+          type: string
+          example: "1"
+      - name: type
+        description: filter by type of the image predictor model
+        in: query
+        schema:
+          type: string
+          example: object_detection
+      - name: model_version
+        description: filter by model version value
+        in: query
+        schema:
+          type: string
+      - name: min_confidence
+        description: filter by minimum confidence score value
+        in: query
+        schema:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
 
       responses:
         "200":
@@ -526,8 +527,8 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_image_predictions"
-                      - "found"
+                    - "no_image_predictions"
+                    - "found"
                   image_predictions:
                     type: array
                     items:
@@ -539,16 +540,16 @@ paths:
   /images/logos:
     get:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Fetch logos
       operationId: fetchLogos
       description: Return details about requested logos (maximum 500 logos can be fetched per request).
       parameters:
-        - name: logo_ids
-          description: Comma-separated string of logo IDs
-          in: query
-          schema:
-            type: string
+      - name: logo_ids
+        description: Comma-separated string of logo IDs
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: The fetch results
@@ -561,73 +562,69 @@ paths:
                     type: array
                     description: Details about requested logos
                     items:
-                      type: object
-                      description: Information about the logo
+                      $ref: "#/components/schemas/LogoDetails"
                   count:
                     type: number
                     description: Number of returned results
                 required:
-                  - logos
-                  - count
+                - logos
+                - count
   /images/logos/search:
     get:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Search for logos
       operationId: searchLogos
       description: |
         Search for logos detected using the universal-logo-detector model that
         meet some criteria (annotation status, annotated, type,...)
       parameters:
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/barcode_query_filter"
-        - name: count
-          description: Number of results to return
-          in: query
-          schema:
-            type: number
-            default: 25
-            minimum: 1
-            maximum: 2000
-        - name: type
-          description: Filter by logo type
-          in: query
-          schema:
-            type: string
-          example: packager_code
-        - name: value
-          description: Filter by annotated value
-          in: query
-          example: lidl
-          schema:
-            type: string
-        - name: taxonomy_value
-          description:
-            Filter by taxonomy value, i.e. the canonical value present is the associated taxonomy.
-            This parameter is mutually exclusive with `value`, and should be used for `label` type.
-          in: query
-          example: en:organic
-          schema:
-            type: string
-        - name: min_confidence
-          description: Filter logos that have a confidence score above a threshold
-          in: query
-          schema:
-            type: number
-        - name: random
-          description: If true, randomized result order
-          in: query
-          schema:
-            type: boolean
-            default: false
-        - name: annotated
-          description: The annotation status of the logo.
-            If not provided, both annotated and non-annotated logos are returned
-          in: query
-          schema:
-            type: boolean
-            default: null
-            nullable: true
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/barcode_query_filter"
+      - name: count
+        description: Number of results to return
+        in: query
+        schema:
+          type: number
+          default: 25
+          minimum: 1
+          maximum: 2000
+      - name: type
+        description: Filter by logo type
+        in: query
+        schema:
+          type: string
+        example: packager_code
+      - name: value
+        description: Filter by annotated value
+        in: query
+        example: lidl
+        schema:
+          type: string
+      - name: taxonomy_value
+        description: Filter by taxonomy value, i.e. the canonical value present is the associated taxonomy. This parameter is mutually exclusive with `value`, and should be used for `label` type.
+        in: query
+        example: en:organic
+        schema:
+          type: string
+      - name: min_confidence
+        description: Filter logos that have a confidence score above a threshold
+        in: query
+        schema:
+          type: number
+      - name: random
+        description: If true, randomized result order
+        in: query
+        schema:
+          type: boolean
+          default: false
+      - name: annotated
+        description: The annotation status of the logo. If not provided, both annotated and non-annotated logos are returned
+        in: query
+        schema:
+          type: boolean
+          default: null
+          nullable: true
       responses:
         "200":
           description: The search results
@@ -640,29 +637,28 @@ paths:
                     type: array
                     description: Found logos
                     items:
-                      type: object
-                      description: Information about the logo
+                      $ref: "#/components/schemas/LogoDetails"
                   count:
                     type: number
                     description: Number of returned results
                 required:
-                  - logos
-                  - count
+                - logos
+                - count
   /images/logos/{logo_id}/reset:
     post:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Reset logo annotation
       operationId: resetLogoAnnotation
       description: Reset logo annotations, and delete all annotation-associated predictions and insights
       parameters:
-        - name: logo_id
-          in: path
-          required: true
-          description: The ID of the logo whose annotation to reset
-          schema:
-            type: integer
-            example: 1
+      - name: logo_id
+        in: path
+        required: true
+        description: The ID of the logo whose annotation to reset
+        schema:
+          type: integer
+          example: 1
       responses:
         "204":
           description: HTTP 204 is returned if the reset operation was successful
@@ -672,13 +668,13 @@ paths:
   /ann/search:
     get:
       tags:
-        - ANN Search
+      - ANN Search
       summary: Approximate search for nearest neighbors of a random query logo
       operationId: searchNearestNeighbors
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
-        - $ref: "#/components/parameters/ann_search_count"
-        - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/ann_search_count"
+      - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: Response from ANN search
@@ -690,19 +686,19 @@ paths:
   /ann/search/{logo_id}:
     get:
       tags:
-        - ANN Search
+      - ANN Search
       summary: Approximate search for nearest neighbors of a specified query logo
       operationId: searchNearestNeighborsByLogoId
       description: Return ID and distance of each logo found, the number of neighbors returned and the ID of the query logo.
       parameters:
-        - name: logo_id
-          in: path
-          required: true
-          description: The ID of the logo to search for.
-          schema:
-            type: integer
-        - $ref: "#/components/parameters/ann_search_count"
-        - $ref: "#/components/parameters/server_type"
+      - name: logo_id
+        in: path
+        required: true
+        description: The ID of the logo to search for.
+        schema:
+          type: integer
+      - $ref: "#/components/parameters/ann_search_count"
+      - $ref: "#/components/parameters/server_type"
       responses:
         "200":
           description: Response from ANN search
@@ -714,7 +710,7 @@ paths:
   /status:
     get:
       tags:
-        - System
+      - System
       summary: Get API status
       operationId: getApiStatus
       description: Check if the API is running
@@ -729,13 +725,13 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "running"
+                    - "running"
                     example: "running"
 
   /health:
     get:
       tags:
-        - System
+      - System
       summary: Get health check status
       operationId: getHealthStatus
       description: Check the health of all system components
@@ -762,18 +758,18 @@ paths:
   /users/statistics/{username}:
     get:
       tags:
-        - User Management
+      - User Management
       summary: Get user statistics
       operationId: getUserStatistics
       description: Get annotation statistics for a specific user
       parameters:
-        - name: username
-          in: path
-          required: true
-          description: The username to get statistics for
-          schema:
-            type: string
-            example: "contributor"
+      - name: username
+        in: path
+        required: true
+        description: The username to get statistics for
+        schema:
+          type: string
+          example: "contributor"
       responses:
         "200":
           description: User statistics
@@ -793,21 +789,21 @@ paths:
   /images:
     get:
       tags:
-        - Image Management
+      - Image Management
       summary: Get images
       operationId: getImages
       description: Retrieve images with optional filters
       parameters:
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/barcode_optional"
-        - name: with_predictions
-          in: query
-          description: Filter images that have predictions
-          schema:
-            type: boolean
-            default: false
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/barcode_optional"
+      - name: with_predictions
+        in: query
+        description: Filter images that have predictions
+        schema:
+          type: boolean
+          default: false
       responses:
         "200":
           description: Images matching the filters
@@ -819,8 +815,8 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_images"
-                      - "found"
+                    - "no_images"
+                    - "found"
                   images:
                     type: array
                     items:
@@ -833,24 +829,24 @@ paths:
   /images/predict:
     get:
       tags:
-        - Image Processing
+      - Image Processing
       summary: Predict on images
       operationId: predictOnImages
       description: Run image prediction models on product images
       parameters:
-        - $ref: "#/components/parameters/barcode"
-        - $ref: "#/components/parameters/server_type"
-        - name: models
-          in: query
-          description: Comma-separated list of model names to run
-          schema:
-            type: string
-            example: "nutrition-table,universal-logo-detector"
-        - name: output_image_id
-          in: query
-          description: Image ID to store predictions for
-          schema:
-            type: string
+      - $ref: "#/components/parameters/barcode"
+      - $ref: "#/components/parameters/server_type"
+      - name: models
+        in: query
+        description: Comma-separated list of model names to run
+        schema:
+          type: string
+          example: "nutrition-table,universal-logo-detector"
+      - name: output_image_id
+        in: query
+        description: Image ID to store predictions for
+        schema:
+          type: string
       responses:
         "200":
           description: Prediction results
@@ -868,12 +864,12 @@ paths:
   /images/logos/annotate:
     post:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Annotate multiple logos
       operationId: annotateLogos
       description: Bulk annotate logos with type and value
       security:
-        - basicAuth: []
+      - basicAuth: []
       requestBody:
         required: true
         content:
@@ -893,27 +889,27 @@ paths:
                         type: string
                         description: Type of the logo
                         enum:
-                          - "brand"
-                          - "category"
-                          - "label"
-                          - "no_logo"
-                          - "nutritional_label"
-                          - "packager_code"
-                          - "packaging"
-                          - "qr_code"
-                          - "store"
+                        - "brand"
+                        - "category"
+                        - "label"
+                        - "no_logo"
+                        - "nutritional_label"
+                        - "packager_code"
+                        - "packaging"
+                        - "qr_code"
+                        - "store"
                       value:
                         type: string
                         nullable: true
                         description: Value/name of the logo
                     required:
-                      - logo_id
-                      - type
-                      - value
+                    - logo_id
+                    - type
+                    - value
                 server_type:
                   $ref: "#/components/parameters/server_type"
               required:
-                - annotations
+              - annotations
       responses:
         "200":
           description: Annotation results
@@ -929,35 +925,35 @@ paths:
   /images/logos/update:
     post:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Bulk update logo annotations
       operationId: updateLogoAnnotations
       description: Mass update logo annotations by changing type and value
       parameters:
-        - name: source_type
-          in: query
-          required: true
-          description: Current logo type to update from
-          schema:
-            type: string
-        - name: source_value
-          in: query
-          required: true
-          description: Current logo value to update from
-          schema:
-            type: string
-        - name: target_type
-          in: query
-          required: true
-          description: New logo type to update to
-          schema:
-            type: string
-        - name: target_value
-          in: query
-          required: true
-          description: New logo value to update to
-          schema:
-            type: string
+      - name: source_type
+        in: query
+        required: true
+        description: Current logo type to update from
+        schema:
+          type: string
+      - name: source_value
+        in: query
+        required: true
+        description: Current logo value to update from
+        schema:
+          type: string
+      - name: target_type
+        in: query
+        required: true
+        description: New logo type to update to
+        schema:
+          type: string
+      - name: target_value
+        in: query
+        required: true
+        description: New logo value to update to
+        schema:
+          type: string
       responses:
         "200":
           description: Update results
@@ -973,44 +969,43 @@ paths:
   /images/logos/{logo_id}:
     get:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Get logo details
       operationId: getLogoDetails
       description: Get details about a specific logo
       parameters:
-        - name: logo_id
-          in: path
-          required: true
-          description: The ID of the logo
-          schema:
-            type: integer
-            example: 1
+      - name: logo_id
+        in: path
+        required: true
+        description: The ID of the logo
+        schema:
+          type: integer
+          example: 1
       responses:
         "200":
           description: Logo details
           content:
             application/json:
               schema:
-                type: object
-                description: Logo annotation details
+                $ref: "#/components/schemas/LogoDetails"
         "404":
           description: Logo not found
     put:
       tags:
-        - Logo Management
+      - Logo Management
       summary: Update logo annotation
       operationId: updateLogoAnnotation
       description: Update the type and value of a logo annotation
       security:
-        - basicAuth: []
+      - basicAuth: []
       parameters:
-        - name: logo_id
-          in: path
-          required: true
-          description: The ID of the logo to update
-          schema:
-            type: integer
-            example: 1
+      - name: logo_id
+        in: path
+        required: true
+        description: The ID of the logo to update
+        schema:
+          type: integer
+          example: 1
       requestBody:
         required: true
         content:
@@ -1027,7 +1022,7 @@ paths:
                   nullable: true
                   description: The value/name of the logo
               required:
-                - type
+              - type
       responses:
         "204":
           description: Logo annotation updated successfully
@@ -1039,7 +1034,7 @@ paths:
   /image_predictions/import:
     post:
       tags:
-        - Image Predictions
+      - Image Predictions
       summary: Import image predictions
       operationId: importImagePredictions
       description: Bulk import image predictions into the database
@@ -1074,13 +1069,13 @@ paths:
                         type: string
                         description: Server type
                     required:
-                      - barcode
-                      - image_id
-                      - model_name
-                      - model_version
-                      - data
+                    - barcode
+                    - image_id
+                    - model_name
+                    - model_version
+                    - data
               required:
-                - predictions
+              - predictions
       responses:
         "200":
           description: Import successful
@@ -1088,22 +1083,22 @@ paths:
   /annotation/collection:
     get:
       tags:
-        - Annotation Management
+      - Annotation Management
       summary: Get logo annotations
       operationId: getAnnotationCollection
       description: Retrieve logo annotations with optional filters
       parameters:
-        - $ref: "#/components/parameters/count"
-        - $ref: "#/components/parameters/page"
-        - $ref: "#/components/parameters/server_type"
-        - $ref: "#/components/parameters/barcode_optional"
-        - $ref: "#/components/parameters/value_tag"
-        - name: types
-          in: query
-          description: Comma-separated list of annotation types to filter by
-          schema:
-            type: string
-            example: "brand,label"
+      - $ref: "#/components/parameters/count"
+      - $ref: "#/components/parameters/page"
+      - $ref: "#/components/parameters/server_type"
+      - $ref: "#/components/parameters/barcode_optional"
+      - $ref: "#/components/parameters/value_tag"
+      - name: types
+        in: query
+        description: Comma-separated list of annotation types to filter by
+        schema:
+          type: string
+          example: "brand,label"
       responses:
         "200":
           description: Logo annotations matching the filters
@@ -1115,8 +1110,8 @@ paths:
                   status:
                     type: string
                     enum:
-                      - "no_annotation"
-                      - "found"
+                    - "no_annotation"
+                    - "found"
                   annotation:
                     type: array
                     items:
@@ -1129,35 +1124,35 @@ paths:
   /predict/ingredient_list:
     get:
       tags:
-        - Predict
+      - Predict
       summary: Extract ingredient list from OCR
       operationId: extractIngredientList
       description: Extract and parse ingredient lists from OCR text
       parameters:
-        - name: ocr_url
-          in: query
-          required: true
-          description: URL of the OCR JSON to process
-          schema:
-            type: string
-            format: uri
-            example: "https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json"
-        - name: aggregation_strategy
-          in: query
-          description: Strategy for aggregating ingredient entities
-          schema:
-            type: string
-            enum:
-              - "simple"
-              - "max"
-              - "first"
-            default: "simple"
-        - name: model_version
-          in: query
-          description: Version of the ingredient extraction model
-          schema:
-            type: string
-            default: "1"
+      - name: ocr_url
+        in: query
+        required: true
+        description: URL of the OCR JSON to process
+        schema:
+          type: string
+          format: uri
+          example: "https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json"
+      - name: aggregation_strategy
+        in: query
+        description: Strategy for aggregating ingredient entities
+        schema:
+          type: string
+          enum:
+          - "simple"
+          - "max"
+          - "first"
+          default: "simple"
+      - name: model_version
+        in: query
+        description: Version of the ingredient extraction model
+        schema:
+          type: string
+          default: "1"
       responses:
         "200":
           description: Extracted ingredient list
@@ -1175,7 +1170,7 @@ paths:
   /products/dataset:
     get:
       tags:
-        - Dataset
+      - Dataset
       summary: Get dataset information
       operationId: getDatasetInfo
       description: Get information about the product dataset
@@ -1192,7 +1187,7 @@ paths:
                     description: Current dataset ETag
     post:
       tags:
-        - Dataset
+      - Dataset
       summary: Update product dataset
       operationId: updateDataset
       description: Trigger an update of the product dataset
@@ -1203,7 +1198,7 @@ paths:
   /predict/category:
     post:
       tags:
-        - Predict
+      - Predict
       summary: Predict categories for a product
       operationId: predictCategory
       description: |
@@ -1220,117 +1215,117 @@ paths:
           application/json:
             schema:
               anyOf:
-                - type: object
-                  properties:
-                    barcode:
-                      type: string
-                      description: The barcode of the product to categorize
-                      minLength: 1
-                      example: "0748162621021"
-                    server_type:
-                      type: string
-                      description: |
-                        The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
-                        Only 'off' is currently supported for category prediction
-                      default: "off"
-                      enum:
-                        - "off"
-                        - "obf"
-                        - "opff"
-                        - "opf"
-                    deepest_only:
-                      type: boolean
-                      description: |
-                        If true, only return the deepest elements in the category taxonomy
-                        (don't return categories that are parents of other predicted categories)
-                    threshold:
-                      type: number
-                      description: |
-                        The score above which we consider the category to be detected
-                      default: 0.5
-                  required:
-                    - barcode
-                - type: object
-                  properties:
-                    product:
-                      type: object
-                      description: |
-                        product information used as model input. All fields are optional, but at
-                        least one field must be provided.
-                      properties:
-                        product_name:
+              - type: object
+                properties:
+                  barcode:
+                    type: string
+                    description: The barcode of the product to categorize
+                    minLength: 1
+                    example: "0748162621021"
+                  server_type:
+                    type: string
+                    description: |
+                      The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+                      Only 'off' is currently supported for category prediction
+                    default: "off"
+                    enum:
+                    - "off"
+                    - "obf"
+                    - "opff"
+                    - "opf"
+                  deepest_only:
+                    type: boolean
+                    description: |
+                      If true, only return the deepest elements in the category taxonomy
+                      (don't return categories that are parents of other predicted categories)
+                  threshold:
+                    type: number
+                    description: |
+                      The score above which we consider the category to be detected
+                    default: 0.5
+                required:
+                - barcode
+              - type: object
+                properties:
+                  product:
+                    type: object
+                    description: |
+                      product information used as model input. All fields are optional, but at
+                      least one field must be provided.
+                    properties:
+                      product_name:
+                        type: string
+                        minLength: 1
+                        example: roasted chicken
+                      ingredients_tags:
+                        description: the ingredient list, as an ordered list of ingredient tags
+                        type: array
+                        items:
                           type: string
-                          minLength: 1
-                          example: roasted chicken
-                        ingredients_tags:
-                          description: the ingredient list, as an ordered list of ingredient tags
+                        example:
+                        - "en:chicken"
+                        - "en:salts"
+                      image_embeddings:
+                        description: |
+                          Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
+                          Each item of the list is the embedding of a single image, provided as a list of dimension 512.
+                          Shape: (num_images, 512)
+                        type: array
+                        maxItems: 10
+                        items:
+                          description: a single image embedding
                           type: array
                           items:
-                            type: string
-                          example:
-                            - "en:chicken"
-                            - "en:salts"
-                        image_embeddings:
-                          description: |
-                            Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
-                            Each item of the list is the embedding of a single image, provided as a list of dimension 512.
-                            Shape: (num_images, 512)
-                          type: array
-                          maxItems: 10
-                          items:
-                            description: a single image embedding
-                            type: array
-                            items:
-                              type: number
-                            minItems: 512
-                            maxItems: 512
-                        ocr:
-                          description: |
-                            A list of string corresponding to the text extracted from the product images with OCR.
-                            Each element of the list is the text of a single image, the list order doesn't affect predictions.
-                            We use OCR text to detect ingredient mentions and use it as a model input.
-                            For optimal results, this field should be provided even if `ingredients_tags` is provided.
-                          type: array
-                          items:
-                            type: string
-                        nutriments:
-                          type: object
-                          description: |
-                            Nutriment values. These fields have exactly the same meaning as those of Product Opener.
-                            All fields are optional, only send data for the field for which the value is not missing.
-                          properties:
-                            fat_100g:
-                              type: number
-                            saturated-fat_100g:
-                              type: number
-                            carbohydrates_100g:
-                              type: number
-                            sugars_100g:
-                              type: number
-                            fiber_100g:
-                              type: number
-                            proteins_100g:
-                              type: number
-                            salt_100g:
-                              type: number
-                            energy-kcal_100g:
-                              type: number
-                            fruits-vegetables-nuts_100g:
-                              type: number
-                          additionalProperties: false
-                      minProperties: 1 # at least one input must be provided
-                    deepest_only:
-                      type: boolean
-                      description: |
-                        If true, only return the deepest elements in the category taxonomy
-                        (don't return categories that are parents of other predicted categories)
-                    threshold:
-                      type: number
-                      description: |
-                        The score above which we consider the category to be detected
-                      default: 0.5
-                  required:
-                    - product
+                            type: number
+                          minItems: 512
+                          maxItems: 512
+                      ocr:
+                        description: |
+                          A list of string corresponding to the text extracted from the product images with OCR.
+                          Each element of the list is the text of a single image, the list order doesn't affect predictions.
+                          We use OCR text to detect ingredient mentions and use it as a model input.
+                          For optimal results, this field should be provided even if `ingredients_tags` is provided.
+                        type: array
+                        items:
+                          type: string
+                      nutriments:
+                        type: object
+                        description: |
+                          Nutriment values. These fields have exactly the same meaning as those of Product Opener.
+                          All fields are optional, only send data for the field for which the value is not missing.
+                        properties:
+                          fat_100g:
+                            type: number
+                          saturated-fat_100g:
+                            type: number
+                          carbohydrates_100g:
+                            type: number
+                          sugars_100g:
+                            type: number
+                          fiber_100g:
+                            type: number
+                          proteins_100g:
+                            type: number
+                          salt_100g:
+                            type: number
+                          energy-kcal_100g:
+                            type: number
+                          fruits-vegetables-nuts_100g:
+                            type: number
+                        additionalProperties: false
+                    minProperties: 1 # at least one input must be provided
+                  deepest_only:
+                    type: boolean
+                    description: |
+                      If true, only return the deepest elements in the category taxonomy
+                      (don't return categories that are parents of other predicted categories)
+                  threshold:
+                    type: number
+                    description: |
+                      The score above which we consider the category to be detected
+                    default: 0.5
+                required:
+                - product
       responses:
         "200":
           description: the category predictions
@@ -1353,13 +1348,13 @@ paths:
                           description: The confidence score of the model
                           example: 0.6
                       required:
-                        - value_tag
-                        - confidence
+                      - value_tag
+                      - confidence
 
   /predict/nutrition:
     get:
       tags:
-        - Predict
+      - Predict
       summary: Extract nutritional information from an image
       operationId: extractNutrition
       description: |
@@ -1369,8 +1364,8 @@ paths:
         For more information about the model, see the
         [Nutri-Sight documentation](https://openfoodfacts.github.io/robotoff/references/predictions/nutrient-extraction/).
       parameters:
-        - $ref: "#/components/parameters/image_url"
-        - $ref: "#/components/parameters/ocr_url"
+      - $ref: "#/components/parameters/image_url"
+      - $ref: "#/components/parameters/ocr_url"
       responses:
         "200":
           description: the extracted nutritional information
@@ -1407,34 +1402,35 @@ paths:
                               items:
                                 type: object
 
-
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
   /predict/ocr_prediction:
     get:
+      description: |
+        Generate OCR-based predictions for a product based on the OCR JSON obtained from Google Cloud Vision.
       tags:
-        - Predict
-      summary: Generate OCR predictions an OCR JSON
+      - Predict
+      summary: Generate OCR-based predictions for a product.
       operationId: generateOCRPredictions
       parameters:
-        - name: ocr_url
-          in: query
-          required: true
-          description: The URL of the OCR JSON to use for extraction
-          schema:
-            type: string
-            example: https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json
-            format: uri
-        - $ref: "#/components/parameters/server_type"
-        - name: prediction_types
-          in: query
-          required: false
-          description: |
-            a comma-separated list of prediction types to use for extraction. If not provided, we use the default:
-            set of OCR prediction types (see `DEFAULT_OCR_PREDICTION_TYPES` variable in Robotoff codebase)
-          schema:
-            type: string
-            example: "category,label"
+      - name: ocr_url
+        in: query
+        required: true
+        description: The URL of the OCR JSON to use for extraction
+        schema:
+          type: string
+          example: https://static.openfoodfacts.org/images/products/216/124/000/3089/1.json
+          format: uri
+      - $ref: "#/components/parameters/server_type"
+      - name: prediction_types
+        in: query
+        required: false
+        description: |
+          a comma-separated list of prediction types to use for extraction. If not provided, we use the default:
+          set of OCR prediction types (see `DEFAULT_OCR_PREDICTION_TYPES` variable in Robotoff codebase)
+        schema:
+          type: string
+          example: "category,label"
       responses:
         "200":
           description: the extracted predictions
@@ -1442,17 +1438,17 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - type: object
-                    title: Successful response
-                    description: the extracted predictions
-                    properties:
-                      predictions:
-                        type: array
-                        description: a list of extracted predictions
-                        items:
-                          $ref: "#/components/schemas/Prediction"
-                    required:
-                      - "predictions"
+                - type: object
+                  title: Successful response
+                  description: the extracted predictions
+                  properties:
+                    predictions:
+                      type: array
+                      description: a list of extracted predictions
+                      items:
+                        $ref: "#/components/schemas/Prediction"
+                  required:
+                  - "predictions"
 
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
@@ -1460,7 +1456,7 @@ paths:
   /predict/lang:
     get:
       tags:
-        - Predict
+      - Predict
       summary: Predict the language of a text
       operationId: predictLanguage
       description: |
@@ -1471,32 +1467,32 @@ paths:
         Use the POST version if you want to predict the language of a long text, as the GET version
         has a limit on the length of the text that can be provided.
       parameters:
-        - name: text
-          in: query
-          required: true
-          description: The text to predict language of
-          schema:
-            type: string
-            example: "hello world"
-        - name: k
-          in: query
-          required: false
-          description: |
-            the number of predictions to return
-          schema:
-            type: integer
-            default: 10
-            minimum: 1
-        - name: threshold
-          in: query
-          required: false
-          description: |
-            the minimum probability for a language to be returned
-          schema:
-            type: number
-            default: 0.01
-            minimum: 0
-            maximum: 1
+      - name: text
+        in: query
+        required: true
+        description: The text to predict language of
+        schema:
+          type: string
+          example: "hello world"
+      - name: k
+        in: query
+        required: false
+        description: |
+          the number of predictions to return
+        schema:
+          type: integer
+          default: 10
+          minimum: 1
+      - name: threshold
+        in: query
+        required: false
+        description: |
+          the minimum probability for a language to be returned
+        schema:
+          type: number
+          default: 0.01
+          minimum: 0
+          maximum: 1
       responses:
         "200":
           description: the predicted languages
@@ -1523,7 +1519,7 @@ paths:
           description: "An HTTP 400 is returned if the provided parameters are invalid"
     post:
       tags:
-        - Predict
+      - Predict
       summary: Predict the language of a text
       operationId: predictLanguagePost
       description: |
@@ -1553,7 +1549,7 @@ paths:
                   minimum: 0
                   maximum: 1
               required:
-                - text
+              - text
       responses:
         "200":
           description: the predicted languages
@@ -1582,7 +1578,7 @@ paths:
   /predict/lang/product:
     get:
       tags:
-        - Predict
+      - Predict
       summary: Predict the languages of the product
       operationId: predictProductLanguages
       description: |
@@ -1593,26 +1589,26 @@ paths:
         `image_lang` stored in the `prediction` table.
 
       parameters:
-        - $ref: "#/components/parameters/barcode"
-        - $ref: "#/components/parameters/server_type"
-        - name: k
-          in: query
-          required: false
-          description: Number of language predictions to return
-          schema:
-            type: integer
-            default: 10
-            minimum: 1
-        - name: threshold
-          in: query
-          required: false
-          description: |
-            the minimum probability for a language to be returned
-          schema:
-            type: number
-            default: 0.01
-            minimum: 0
-            maximum: 1
+      - $ref: "#/components/parameters/barcode"
+      - $ref: "#/components/parameters/server_type"
+      - name: k
+        in: query
+        required: false
+        description: Number of language predictions to return
+        schema:
+          type: integer
+          default: 10
+          minimum: 1
+      - name: threshold
+        in: query
+        required: false
+        description: |
+          the minimum probability for a language to be returned
+        schema:
+          type: number
+          default: 0.01
+          minimum: 0
+          maximum: 1
       responses:
         "200":
           description: |
@@ -1670,7 +1666,7 @@ paths:
   /batch/import:
     post:
       tags:
-        - Batch Job
+      - Batch Job
       summary: Import batch job results
       operationId: importBatchJobResults
       description: |
@@ -1678,16 +1674,16 @@ paths:
 
         This endpoint is mainly used by the batch job once the job is finished.
       security:
-        - batch_job_key: []
+      - batch_job_key: []
       parameters:
-        - $ref: "#/components/parameters/job_type"
-        - name: batch_dir
-          in: query
-          required: true
-          description: The directory path where batch job results are stored
-          schema:
-            type: string
-            example: "gs://bucket/path/to/batch/results"
+      - $ref: "#/components/parameters/job_type"
+      - name: batch_dir
+        in: query
+        required: true
+        description: The directory path where batch job results are stored
+        schema:
+          type: string
+          example: "gs://bucket/path/to/batch/results"
       responses:
         "200":
           description: Data successfully imported.
@@ -1721,8 +1717,8 @@ components:
                   distance between the query logo and the result logo (closer to 0 means a more similar logo)
                 example: 0.1
             required:
-              - logo_id
-              - distance
+            - logo_id
+            - distance
           description: Each item corresponds to a neighbor logo
         count:
           type: integer
@@ -1731,16 +1727,16 @@ components:
           type: integer
           description: ID of the query logo
       required:
-        - results
-        - count
-        - query_logo_id
+      - results
+      - count
+      - query_logo_id
     InsightSearchResult:
       description: An insight search result as returned by /insights/random or /insights/{barcode}
       required:
-        - id
-        - type
-        - barcode
-        - countries
+      - id
+      - type
+      - barcode
+      - countries
       type: object
       properties:
         id:
@@ -1757,13 +1753,186 @@ components:
           description: country tags of the product
           items:
             type: string
+        data:
+          type: object
+          description: a JSON object containing additional data about the insight.
+          properties:
+            bounding_box:
+              type: array
+              description: The bounding box of the logo as a list of ratio coordinates.
+              items:
+                type: number
+
+            logo_id:
+              type: integer
+              description: the ID of the logo associated with the insight, if any
+        source_image:
+          type: string
+          description: the path of the image the insight was generated from.
+        with_image:
+          type: boolean
+          description: whether the insight has an associated image or not
       example:
         id: 3cd5aecd-edcc-4237-87d0-6595fc4e53c9
         type: label
         barcode: 9782012805866
         countries:
-          - en:france
-          - en:united-kingdom
+        - en:france
+        - en:united-kingdom
+    Question:
+      type: object
+      description: a question associated to an insight.
+      required:
+      - barcode
+      - insight_id
+      - insight_type
+      - question
+      - value
+      properties:
+        barcode:
+          description: Barcode of the product the question is about
+          type: string
+          example: "3250390172185"
+        insight_id:
+          description: ID of the insight the question is about
+          type: string
+          example: "a5e4397a-f14b-444f-972d-504a04e1cd7a"
+        insight_type:
+          description: |
+            Type of the insight the question is about (ex: "label", "category",...)
+          type: string
+          example: "label"
+        question:
+          description: |
+            The question to ask the user to validate the insight.
+          type: string
+          example: "Does the product have this label?"
+        ref_image_url:
+          description: |
+            A reference image URL to help the user answer the question. For example, for a label
+            insight, we show the user a reference image of the label to help them identify it on
+            the product packaging.
+          type: string
+          example: "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg"
+        server_type:
+          $ref: "#/components/parameters/server_type"
+        source_image_url:
+          description: |
+            The URL of the image the insight was generated from. This is provided as additional context
+            to help the user answer the question, but it is not necessarily the same image as the one
+            shown to the user in the question interface.
+          type: string
+          example: "https://images.openfoodfacts.org/images/products/325/039/017/2185/6.400.jpg"
+        type:
+          description: |
+            The type of the question, which determines how the user's answer will be processed.
+            Only `add-binary` is currently supported.
+          type: string
+          example: "add-binary"
+          enum:
+          - "add-binary"
+        value:
+          description: |
+            The value associated with the question. This is the value that will be added to the product
+            in Product Opener if the user answers "yes" to the question. Depending on the insight type,
+            the `value_tag` may also be used to update Product Opener.
+          type: string
+          example: "Nutriscore Grade A"
+        value_tag:
+          description: |
+            The value tag associated with the question. This is the value tag that will be added to the product
+            in Product Opener if the user answers "yes" to the question. Depending on the insight type,
+            the `value` may also be used to update Product Opener.
+          type: string
+          example: "en:nutriscore-grade-a"
+
+    LogoDetails:
+      description: Logo annotation details
+      type: object
+      required:
+      - id
+      - barcode
+      properties:
+        annotation_type:
+          description: |
+            The type of the logo annotation (ex: "brand", "label",...)
+          type: string
+          example: "label"
+
+        annotation_value:
+          description: The value of the logo annotation.
+          type: string
+          example: "en:eu-organic"
+
+        annotation_value_tag:
+          description: The value tag of the logo annotation.
+          type: string
+          example: "en:eu-organic"
+
+        barcode:
+          description: Barcode of the product the logo annotation is about.
+          type: string
+          example: "6175700"
+
+        bounding_box:
+          type: array
+          description: The bounding box of the logo as a list of ratio coordinates.
+          items:
+            type: number
+
+        completed_at:
+          description: The datetime of completion of the annotation, in ISO format.
+          type: string
+          format: date-time
+          example: "2022-12-16T11:28:25.599715"
+
+        id:
+          description: The ID of the logo annotation.
+          type: integer
+
+        image:
+          description: Details about the image associated with the logo.
+          type: object
+
+        nearest_neighbors:
+          type: object
+          description: The nearest neighbor logos of this logo, as returned by the logo ANN search.
+          properties:
+            distances:
+              type: array
+              items:
+                type: number
+            logo_ids:
+              type: array
+              items:
+                type: number
+
+        score:
+          type: number
+          description: The confidence score of the annotation, between 0 and 1. The larger the score is the more confident we are in the annotation.
+
+        server_type:
+          $ref: "#/components/parameters/server_type"
+
+        source_image:
+          type: string
+          description: The path of the image the logo was extracted from.
+          example: "/6175700/5.jpg"
+
+        taxonomy_value:
+          type: string
+          description: The taxonomy tag associated to the logo, if any.
+          example: "en:eu-organic"
+
+        text:
+          type: string
+          description: The text detected on the logo.
+
+        username:
+          type: string
+          description: The username of the annotator who created the logo.
+          example: "gcloud-annotators"
+
     Prediction:
       type: object
       description: a Robotoff Prediction
@@ -1835,15 +2004,7 @@ components:
               - `flashtext` for all predictions generated using flashtext library
               - `regex` for all predictions generated using simple regex
         server_type:
-          type: string
-          example: "off"
-          description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
-          enum:
-            - "off"
-            - "obf"
-            - "opff"
-            - "opf"
-            - "off_pro"
+          $ref: "#/components/parameters/server_type"
         confidence:
           type: number
           example: 0.95
@@ -1862,8 +2023,7 @@ components:
     ocr_url:
       name: ocr_url
       in: query
-      description: The URL of the OCR JSON to use. The OCR must have been extracted using
-        Google Cloud Vision, and be in the JSON format.
+      description: The URL of the OCR JSON to use. The OCR must have been extracted using Google Cloud Vision, and be in the JSON format.
       schema:
         type: string
         format: uri
@@ -1906,11 +2066,11 @@ components:
         type: string
         default: "off"
         enum:
-          - "off"
-          - "obf"
-          - "opff"
-          - "opf"
-          - "off_pro"
+        - "off"
+        - "obf"
+        - "opff"
+        - "opf"
+        - "off_pro"
     insight_types:
       name: insight_types
       in: query
@@ -1985,8 +2145,8 @@ components:
       schema:
         type: string
         enum:
-          - random
-          - popularity
+        - random
+        - popularity
         example: popularity
     ann_search_count:
       name: count
@@ -2045,7 +2205,7 @@ components:
       schema:
         type: string
         enum:
-          - ingredients_spellcheck
+        - ingredients_spellcheck
 
   securitySchemes:
     basicAuth:
@@ -2058,38 +2218,38 @@ components:
       description: Bearer token authentication for batch job import endpoints
 
 tags:
-  - name: Question Management
-    description: |
-      Endpoints for managing and retrieving questions about products that need human validation.
-  - name: Insight Management
-    description: |
-      An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
-      If the insight is correct, the Openfoodfacts DB can be updated accordingly.
+- name: Question Management
+  description: |
+    Endpoints for managing and retrieving questions about products that need human validation.
+- name: Insight Management
+  description: |
+    An insight is a fact about a product that has been either extracted or inferred from the product pictures, characteristics,...
+    If the insight is correct, the Openfoodfacts DB can be updated accordingly.
 
-      Current insight types and their description can be found in [robotoff/insights/dataclass.py](https://github.com/openfoodfacts/robotoff/blob/main/robotoff/insights/dataclass.py).
-  - name: Prediction Management
-    description: |
-      Endpoints for managing and retrieving prediction data from various ML models.
-  - name: Image Processing
-    description: |
-      Endpoints for processing and manipulating images, including cropping and running prediction models.
-  - name: Image Management
-    description: |
-      Endpoints for managing and retrieving image data and metadata.
-  - name: Image Predictions
-  - name: Logo Management
-    description: |
-      Endpoints for managing logo annotations, searching, and bulk operations on logos detected in product images.
-  - name: ANN Search
-    description: |
-      Approximate Nearest Neighbor search endpoints for finding similar logos based on visual features.
-  - name: Predict
-  - name: System
-  - name: User Management
-    description: |
-      Endpoints for managing user data and statistics.
-  - name: Annotation Management
-    description: |
-      Endpoints for managing annotation collections and metadata.
-  - name: Dataset
-  - name: Batch Job
+    Current insight types and their description can be found in [robotoff/insights/dataclass.py](https://github.com/openfoodfacts/robotoff/blob/main/robotoff/insights/dataclass.py).
+- name: Prediction Management
+  description: |
+    Endpoints for managing and retrieving prediction data from various ML models.
+- name: Image Processing
+  description: |
+    Endpoints for processing and manipulating images, including cropping and running prediction models.
+- name: Image Management
+  description: |
+    Endpoints for managing and retrieving image data and metadata.
+- name: Image Predictions
+- name: Logo Management
+  description: |
+    Endpoints for managing logo annotations, searching, and bulk operations on logos detected in product images.
+- name: ANN Search
+  description: |
+    Approximate Nearest Neighbor search endpoints for finding similar logos based on visual features.
+- name: Predict
+- name: System
+- name: User Management
+  description: |
+    Endpoints for managing user data and statistics.
+- name: Annotation Management
+  description: |
+    Endpoints for managing annotation collections and metadata.
+- name: Dataset
+- name: Batch Job
