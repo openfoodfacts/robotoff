@@ -34,7 +34,7 @@ dev = [
 
 [project]
 name = "robotoff"
-version = "1.85.7"
+version = "1.85.8"
 description = "Real-time and batch prediction service for Open Food Facts."
 readme = "README.md"
 requires-python = ">=3.11"
