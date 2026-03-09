@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.9](https://github.com/openfoodfacts/robotoff/compare/v1.85.8...v1.85.9) (2026-03-09)
+
+
+### Bug Fixes
+
+* improve rerun-import-images command ([#1866](https://github.com/openfoodfacts/robotoff/issues/1866)) ([3c691c6](https://github.com/openfoodfacts/robotoff/commit/3c691c6bd0148010d30a5ffcd7b22a86cdce7762))
+
 ## [1.85.8](https://github.com/openfoodfacts/robotoff/compare/v1.85.7...v1.85.8) (2026-03-09)
 
 
