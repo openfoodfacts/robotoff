@@ -747,9 +747,12 @@ def rerun_import_images(
     This includes launching all ML models and insight extraction from the image and
     associated OCR. To control which tasks are rerun, use the --flags option.
     """
+    from robotoff.utils import get_logger
     from robotoff.workers.tasks.import_image import (
         rerun_import_images as _rerun_import_images,
     )
+
+    get_logger()
 
     if run_async is None:
         run_async = barcode is None
@@ -784,7 +787,9 @@ def rerun_import_images(
             flags=flags_,
             run_async=run_async,
         )
-    typer.echo("The task was successfully scheduled.")
+
+    if run_async:
+        typer.echo("The task was successfully scheduled.")
 
 
 @app.command()
