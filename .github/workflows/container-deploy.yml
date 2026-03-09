@@ -175,6 +175,9 @@ jobs:
           # Specific logging settings
           echo "LOG_ML_METRICS_ENABLED=0" >> .env
 
+          # Don't wait before applying insights
+          echo "INSIGHT_AUTOMATIC_PROCESSING_WAIT=0" >> .env
+
     - name: Create Docker volumes
       uses: appleboy/ssh-action@master
       with:
