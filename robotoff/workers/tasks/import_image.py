@@ -79,20 +79,24 @@ logger = logging.getLogger(__name__)
 
 
 @with_db
-def rerun_import_all_images(
+def rerun_import_images(
+    product_id: ProductIdentifier | None = None,
     limit: int | None = None,
     server_type: ServerType | None = None,
     return_count: bool = False,
     flags: list[ImportImageFlag] | None = None,
 ) -> None | int:
-    """Rerun full image import on all images in DB.
+    """Rerun full image import on all images in DB, or on images of a specific
+    product.
 
     This includes launching all ML models and insight extraction from the image and
     associated OCR. To control which tasks are rerun, use the --flags option.
 
+    :param product_id: the product identifier to rerun the import for, defaults to
+        None (all products).
     :param limit: the maximum number of images to process, defaults to None (all)
     :param server_type: the server type (project) of the products, defaults to None
-        (all)
+        (all). This parameter is ignored if product_id is provided.
     :param return_count: if True, return the number of images to process, without
         processing them, defaults to False
     :param flags: the list of flags to rerun, defaults to None (all tasks are rerun).
@@ -100,8 +104,14 @@ def rerun_import_all_images(
     """
     where_clauses = [ImageModel.deleted == False]  # noqa: E712
 
-    if server_type is not None:
+    if product_id is not None:
+        where_clauses.append(
+            (ImageModel.barcode == product_id.barcode)
+            & (ImageModel.server_type == product_id.server_type.name)
+        )
+    elif server_type is not None:
         where_clauses.append(ImageModel.server_type == server_type.name)
+
     query = (
         ImageModel.select(
             ImageModel.id,

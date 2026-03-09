@@ -719,14 +719,19 @@ def run_object_detection_model(
 
 
 @app.command()
-def rerun_import_all_images(
-    server_type: Optional[ServerType] = typer.Option(
+def rerun_import_images(
+    barcode: str | None = typer.Option(
+        None,
+        help="Rerun image import for a specific product. If not provided, "
+        "all products are updated",
+    ),
+    server_type: ServerType | None = typer.Option(
         None, help="Server type of the product"
     ),
-    limit: Optional[int] = typer.Option(
+    limit: int | None = typer.Option(
         None, help="the maximum number of images to process, defaults to None (all)"
     ),
-    flags: list[ImportImageFlag] = typer.Option(
+    flags: list[ImportImageFlag] | None = typer.Option(
         None, help="Flags to use for image import"
     ),
 ):
@@ -736,12 +741,25 @@ def rerun_import_all_images(
     associated OCR. To control which tasks are rerun, use the --flags option.
     """
     from robotoff.workers.tasks.import_image import (
-        rerun_import_all_images as _rerun_import_all_images,
+        rerun_import_images as _rerun_import_images,
     )
 
     flags_ = flags or None
-    count = _rerun_import_all_images(
-        limit=limit, server_type=server_type, flags=flags_, return_count=True
+
+    product_id = None
+    if barcode:
+        if server_type is None:
+            raise typer.BadParameter(
+                "server_type must be provided if barcode is provided"
+            )
+        product_id = ProductIdentifier(barcode, server_type)
+
+    count = _rerun_import_images(
+        product_id=product_id,
+        limit=limit,
+        server_type=server_type,
+        flags=flags_,
+        return_count=True,
     )
     message = (
         f"rerunning full image import on {count} images, confirm?"
@@ -749,7 +767,7 @@ def rerun_import_all_images(
         else f"running following tasks ({', '.join(flag.name for flag in flags_)}) on {count} images, confirm?"
     )
     if typer.confirm(message):
-        _rerun_import_all_images(limit=limit, server_type=server_type, flags=flags_)
+        _rerun_import_images(limit=limit, server_type=server_type, flags=flags_)
     typer.echo("The task was successfully scheduled.")
 
 
