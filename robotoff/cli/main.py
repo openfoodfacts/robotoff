@@ -483,7 +483,7 @@ def refresh_insights(
         for product_id_batch in tqdm.tqdm(batches, desc="barcode batch"):
             enqueue_job(
                 refresh_insights_job,
-                low_queue,
+                queue=low_queue,
                 job_kwargs={"result_ttl": 0, "timeout": "5m"},
                 product_ids=product_id_batch,
             )
@@ -543,7 +543,7 @@ def import_images_in_db(
         for batch in tqdm.tqdm(batches, desc="job"):
             enqueue_job(
                 save_image_job,
-                low_queue,
+                queue=low_queue,
                 job_kwargs={"result_ttl": 0},
                 batch=batch,
                 server_type=server_type,
@@ -604,7 +604,7 @@ def run_category_prediction(
         # Enqueue a job to predict category for this product
         enqueue_job(
             add_category_insight_job,
-            low_queue,
+            queue=low_queue,
             job_kwargs={"result_ttl": 0},
             product_id=ProductIdentifier(barcode, server_type),
             triton_uri=triton_uri,
@@ -710,7 +710,7 @@ def run_object_detection_model(
                 raise RuntimeError()
             enqueue_job(
                 func,
-                low_queue,
+                queue=low_queue,
                 job_kwargs={"result_ttl": 0},
                 product_id=ProductIdentifier(barcode, server_type),
                 image_url=image_url,
@@ -734,6 +734,13 @@ def rerun_import_images(
     flags: list[ImportImageFlag] | None = typer.Option(
         None, help="Flags to use for image import"
     ),
+    run_async: bool | None = typer.Option(
+        None,
+        help="Whether to run the tasks asynchronously in the worker queue or to run "
+        "them synchronously in the current process. Default to True if barcode is not "
+        "provided, False otherwise (i.e. run synchronously if a single product is "
+        "updated, asynchronously for a full refresh).",
+    ),
 ):
     """Rerun full image import on all images in DB.
 
@@ -743,6 +750,9 @@ def rerun_import_images(
     from robotoff.workers.tasks.import_image import (
         rerun_import_images as _rerun_import_images,
     )
+
+    if run_async is None:
+        run_async = barcode is None
 
     flags_ = flags or None
 
@@ -767,7 +777,13 @@ def rerun_import_images(
         else f"running following tasks ({', '.join(flag.name for flag in flags_)}) on {count} images, confirm?"
     )
     if typer.confirm(message):
-        _rerun_import_images(limit=limit, server_type=server_type, flags=flags_)
+        _rerun_import_images(
+            product_id=product_id,
+            limit=limit,
+            server_type=server_type,
+            flags=flags_,
+            run_async=run_async,
+        )
     typer.echo("The task was successfully scheduled.")
 
 

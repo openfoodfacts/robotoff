@@ -1176,8 +1176,8 @@ class ImageLogoAnnotateResource:
                 generate_insights_from_annotated_logos_job,
                 # we have logo IDs of different products, so we don't send the
                 # job to a product-specific queue
-                get_high_queue(),
-                {"result_ttl": 0, "timeout": "5m"},
+                queue=get_high_queue(),
+                job_kwargs={"result_ttl": 0, "timeout": "5m"},
                 logo_ids=logo_ids,
                 server_type=server_type,
                 auth=auth,
@@ -1770,10 +1770,10 @@ class BatchJobImportResource:
         if parse_valid_token(req, "batch_job_key"):
             enqueue_job(
                 import_batch_predictions,
-                job_type=job_type,
-                batch_dir=batch_dir,
                 queue=low_queue,
                 job_kwargs={"timeout": "8h"},
+                job_type=job_type,
+                batch_dir=batch_dir,
             )
         logger.info("Batch import %s has been queued.", job_type)
 
