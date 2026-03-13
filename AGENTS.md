@@ -65,7 +65,7 @@ make tests args='...' # Run specific pytest args
 ### Formatting
 
 - **Line length**: 88 characters (matches Black default)
-- **Formatter**: Black (v25.1.0)
+- **Formatter**: Black (v26.3.1)
 - **Import sorting**: isort (v6.0.1) with:
   - `multi_line_output = 3` (hanging indent)
   - `include_trailing_comma = true`

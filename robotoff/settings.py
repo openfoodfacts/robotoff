@@ -260,7 +260,7 @@ def init_sentry(integrations: list[Integration] | None = None):
                 event_level=logging.WARNING,  # Send warning and errors as events
             )
         )
-        sentry_sdk.init(  # type:ignore # mypy say it's abstract
+        sentry_sdk.init(  # type: ignore # mypy say it's abstract
             _sentry_dsn,
             environment=robotoff_instance,
             integrations=integrations,

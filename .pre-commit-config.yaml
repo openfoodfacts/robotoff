@@ -1,17 +1,17 @@
 repos:
-  # Note for all linters: do not forget to update pyproject.toml when updating version.
-  - repo: https://github.com/ambv/black
-    rev: 25.1.0
-    hooks:
-      - id: black
-        language_version: python3.11
+# Note for all linters: do not forget to update pyproject.toml when updating version.
+- repo: https://github.com/ambv/black
+  rev: 26.3.1
+  hooks:
+  - id: black
+    language_version: python3.11
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.2.0
-    hooks:
-      - id: flake8
+- repo: https://github.com/pycqa/flake8
+  rev: 7.2.0
+  hooks:
+  - id: flake8
 
-  - repo: https://github.com/timothycrosley/isort
-    rev: 6.0.1
-    hooks:
-      - id: isort
+- repo: https://github.com/timothycrosley/isort
+  rev: 6.0.1
+  hooks:
+  - id: isort

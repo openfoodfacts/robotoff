@@ -803,7 +803,7 @@ def save_logo_embeddings(
     image_width = image.shape[1]
     for logo in logos:
         y_min, x_min, y_max, x_max = logo.bounding_box
-        (left, right, top, bottom) = (
+        left, right, top, bottom = (
             int(x_min * image_width),
             int(x_max * image_width),
             int(y_min * image_height),
