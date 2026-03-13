@@ -20,6 +20,7 @@ image. The functions do not return a value, instead they modify the image
 itself.
 
 """
+
 import collections
 import warnings
 
@@ -279,14 +280,14 @@ def draw_bounding_box_on_image(
     draw = ImageDraw.Draw(image)
     im_width, im_height = image.size
     if use_normalized_coordinates:
-        (left, right, top, bottom) = (
+        left, right, top, bottom = (
             xmin * im_width,
             xmax * im_width,
             ymin * im_height,
             ymax * im_height,
         )
     else:
-        (left, right, top, bottom) = (xmin, xmax, ymin, ymax)
+        left, right, top, bottom = (xmin, xmax, ymin, ymax)
     draw.line(
         [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
         width=thickness,

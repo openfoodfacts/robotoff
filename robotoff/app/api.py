@@ -726,7 +726,7 @@ class ImageCropResource:
         if image is None:
             raise falcon.HTTPBadRequest(f"Could not fetch image: {image_url}")
 
-        (left, right, top, bottom) = (
+        left, right, top, bottom = (
             x_min * image.width,
             x_max * image.width,
             y_min * image.height,
