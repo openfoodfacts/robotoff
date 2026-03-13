@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.85.10](https://github.com/openfoodfacts/robotoff/compare/v1.85.9...v1.85.10) (2026-03-13)
+
+
+### Technical
+
+* **deps:** bump orjson from 3.9.15 to 3.11.6 ([#1869](https://github.com/openfoodfacts/robotoff/issues/1869)) ([b5d4a18](https://github.com/openfoodfacts/robotoff/commit/b5d4a183d0aa75aada9d93d2b06222c852fa6ad3))
+* **deps:** upgrade black ([#1871](https://github.com/openfoodfacts/robotoff/issues/1871)) ([137e519](https://github.com/openfoodfacts/robotoff/commit/137e519c059e9588105c507b00262143b0f282e8))
+
 ## [1.85.9](https://github.com/openfoodfacts/robotoff/compare/v1.85.8...v1.85.9) (2026-03-09)
 
 
