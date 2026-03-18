@@ -78,6 +78,15 @@ triton_version = 1
 type = "single_file"
 model_path = "weights/model.onnx"
 
+
+[[models.price_tag_classification]]
+repo_id = "openfoodfacts/price-tag-classification"
+revision = "d1f63a2d8fa85d87dc48798ebcb06a79f2888787"
+triton_version = 1
+type = "single_file"
+model_path = "weights/model.onnx"
+
+
 ## Deprecated
 
 # The version 1 of this model is not used anymore, we now use version 2
