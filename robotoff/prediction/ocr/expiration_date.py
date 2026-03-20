@@ -15,25 +15,51 @@ from robotoff.types import JSONType, Prediction, PredictionType
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
-PREDICTOR_VERSION = "1"
+PREDICTOR_VERSION = "2"
+
+GERMAN_DATE_HINTS = (
+    "mindestens haltbar",
+    "haltbar bis",
+    "mhd",
+)
 
 
-def process_full_digits_expiration_date(match, short: bool) -> datetime.date | None:
+def process_full_digits_expiration_date(
+    match,
+    short: bool,
+    date_orders: tuple[str, ...] = ("dmy",),
+) -> datetime.date | None:
     day, month, year = match.group(1, 2, 3)
 
-    if short:
-        format_str: str = "%d/%m/%y"
-    else:
-        format_str = "%d/%m/%Y"
+    format_map = {
+        "dmy": "%d/%m/%y" if short else "%d/%m/%Y",
+        "mdy": "%m/%d/%y" if short else "%m/%d/%Y",
+    }
 
-    try:
-        date = datetime.datetime.strptime(
-            "{}/{}/{}".format(day, month, year), format_str
-        ).date()
-    except ValueError:
-        return None
+    for date_order in date_orders:
+        format_str = format_map.get(date_order)
+        if format_str is None:
+            continue
 
-    return date
+        try:
+            return datetime.datetime.strptime(
+                "{}/{}/{}".format(day, month, year), format_str
+            ).date()
+        except ValueError:
+            continue
+
+    return None
+
+
+def get_date_orders(raw: str, text: str) -> tuple[str, ...]:
+    separator_match = re.search(r"[-./]", raw)
+    separator = separator_match.group(0) if separator_match is not None else None
+    lowered_text = text.casefold()
+
+    if separator == "/" and any(hint in lowered_text for hint in GERMAN_DATE_HINTS):
+        return tuple()
+
+    return ("dmy",)
 
 
 EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
@@ -71,7 +97,8 @@ def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
             if not ocr_regex.processing_func:
                 continue
 
-            date = ocr_regex.processing_func(match)
+            date_orders = get_date_orders(raw, text)
+            date = ocr_regex.processing_func(match, date_orders=date_orders)
 
             if date is None:
                 continue
