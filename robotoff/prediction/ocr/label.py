@@ -95,6 +95,17 @@ LABELS_REGEX = {
     "en:nutriscore": [
         OCRRegex(re.compile(r"NUTRI-SCORE"), field=OCRField.full_text),
     ],
+    "en:nutriscore-v2": [
+        OCRRegex(
+            re.compile(
+                r"nouveau calcul|new calculation|neue berechnung|nuevo c[áa]lculo|"
+                r"nuovo calcolo|nieuwe berekening|novo c[áa]lculo|ny beregning|"
+                r"uusi laskenta|novi izra[čc]un|ново изчисление",
+                re.I,
+            ),
+            field=OCRField.full_text_contiguous,
+        ),
+    ],
     "en:eu-non-eu-agriculture": [
         OCRRegex(
             re.compile(
