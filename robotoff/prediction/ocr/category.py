@@ -11,7 +11,7 @@ from openfoodfacts.ocr import (
 )
 
 from robotoff.off import normalize_tag
-from robotoff.taxonomy import TaxonomyType, get_taxonomy
+from robotoff.taxonomy import TaxonomyType, match_taxonomized_value
 from robotoff.types import JSONType, Prediction, PredictionType
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
-PREDICTOR_VERSION = "1"
+PREDICTOR_VERSION = "2"
 
 
 def category_taxonomisation(lang, match) -> str | None:
@@ -29,17 +29,7 @@ def category_taxonomisation(lang, match) -> str | None:
 
     unchecked_category = lang + normalize_tag(match.group("category"))
 
-    checked_category = get_taxonomy(TaxonomyType.category.name).nodes.get(
-        unchecked_category
-    )
-
-    # TODO: We may want to create a utility function in Taxonomy  to match
-    # also with synonyms of the category existing in the taxonomy
-
-    if checked_category is not None:
-        return checked_category.id
-
-    return None
+    return match_taxonomized_value(unchecked_category, TaxonomyType.category.name)
 
 
 AOC_REGEX = {
