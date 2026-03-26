@@ -41,7 +41,7 @@ requires-python = ">=3.11"
 authors = [{ name = "Open Food Facts Team" }]
 license = "AGPL-3.0-only"
 dependencies = [
-  "requests>=2.31,<2.33",
+  "requests>=2.31,<2.34",
   "peewee~=3.17.6",
   "psycopg2-binary~=2.9.1",
   "gunicorn>=20.1,<23.1",
