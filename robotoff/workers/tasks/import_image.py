@@ -67,6 +67,7 @@ from robotoff.utils.image import (
     convert_bounding_box_absolute_to_relative,
     convert_image_to_array,
 )
+from robotoff.utils.ocr import get_ocr_result_from_url
 from robotoff.workers.queues import (
     enqueue_job,
     get_high_queue,
@@ -680,7 +681,9 @@ def run_logo_object_detection(
             return_type="np",
         ),
     )
-    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+    ocr_result = get_ocr_result_from_url(
+        ocr_url, session=http_session, error_raise=False
+    )
 
     if image is None:
         logger.info("Error while downloading image %s", image_url)
@@ -923,7 +926,14 @@ def extract_ingredients_job(
                 image_prediction.save(only=["data"])
                 ingredient_prediction_data = image_prediction.data
         else:
-            output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
+            ocr_result = get_ocr_result_from_url(
+                ocr_url, session=http_session, error_raise=False
+            )
+            if ocr_result is None:
+                logger.info("Error while downloading OCR JSON %s", ocr_url)
+                return
+
+            output = ingredient_list.predict_from_ocr(ocr_result, triton_uri=triton_uri)
             entities: list[
                 ingredient_list.IngredientPredictionAggregatedEntity
             ] = output.entities  # type: ignore
@@ -1224,7 +1234,9 @@ def extract_nutrition_job(
             logger.info("Error while downloading image %s", image_url)
             return
 
-        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+        ocr_result = get_ocr_result_from_url(
+            ocr_url, session=http_session, error_raise=False
+        )
 
         if ocr_result is None:
             logger.info("Error while downloading OCR JSON %s", ocr_url)

@@ -86,6 +86,7 @@ from robotoff.types import (
 )
 from robotoff.utils import get_image_from_url, get_logger, http_session
 from robotoff.utils.i18n import TranslationStore
+from robotoff.utils.ocr import get_ocr_result_from_url
 from robotoff.utils.text import get_tag
 from robotoff.workers.queues import enqueue_job, get_high_queue, low_queue
 from robotoff.workers.tasks import download_product_dataset_job
@@ -451,7 +452,9 @@ class NutritionPredictorResource:
             }
             return
 
-        ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+        ocr_result = get_ocr_result_from_url(
+            ocr_url, session=http_session, error_raise=False
+        )
 
         if ocr_result is None:
             logger.info("Error while downloading OCR JSON %s", ocr_url)
