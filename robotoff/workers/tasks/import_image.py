@@ -134,7 +134,7 @@ def rerun_import_images(
         return query.count()
 
     for image_model_id, barcode, image_id, server_type_str in query:
-        if not isinstance(barcode, str) and not barcode.isdigit():
+        if not isinstance(barcode, str) or not barcode.isdigit():
             raise ValueError("Invalid barcode: %s" % barcode)
 
         product_id = ProductIdentifier(barcode, ServerType[server_type_str])
