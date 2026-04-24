@@ -6,7 +6,7 @@ dev = [
   "black==26.3.1",
   "factory_boy-peewee==0.0.4",  # This package is archived and not maintained anymore but works and is very lightweight.
   "mypy==1.10.1",
-  "pytest~=7.2.0",
+  "pytest>=7.2,<9.1",
   "pytest-mock~=3.10.0",
   "pre-commit~=4.2.0",
   "toml-sort~=0.20.1",
