@@ -3,7 +3,6 @@ import logging
 from typing import Iterable
 
 import numpy as np
-from openfoodfacts.ocr import OCRResult
 
 from robotoff.models import ImageModel, ImagePrediction
 from robotoff.off import get_source_from_url
@@ -19,6 +18,7 @@ from robotoff.types import (
     ProductIdentifier,
 )
 from robotoff.utils import http_session
+from robotoff.utils.ocr import get_ocr_result_from_url
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,9 @@ def extract_ocr_predictions(
 
     predictions_all: list[Prediction] = []
     source_image = get_source_from_url(ocr_url)
-    ocr_result = OCRResult.from_url(ocr_url, http_session, error_raise=False)
+    ocr_result = get_ocr_result_from_url(
+        ocr_url, session=http_session, error_raise=False
+    )
 
     if ocr_result is None:
         return predictions_all

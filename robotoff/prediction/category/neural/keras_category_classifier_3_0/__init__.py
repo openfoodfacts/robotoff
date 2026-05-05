@@ -5,7 +5,6 @@ from typing import Literal
 
 import numpy as np
 import peewee
-from openfoodfacts.ocr import OCRResult
 from PIL import Image
 from tritonclient.grpc import service_pb2
 
@@ -22,6 +21,7 @@ from robotoff.triton import (
 from robotoff.types import JSONType, NeuralCategoryClassifierModel, ProductIdentifier
 from robotoff.utils import get_image_from_url, http_session
 from robotoff.utils.cache import function_cache_register
+from robotoff.utils.ocr import get_ocr_result_from_url
 
 from .preprocessing import (
     IMAGE_EMBEDDING_DIM,
@@ -245,8 +245,11 @@ def fetch_ocr_texts(product: JSONType, product_id: ProductIdentifier) -> list[st
     image_ids = (id_ for id_ in product.get("images", {}).keys() if id_.isdigit())
     for image_id in image_ids:
         ocr_url = generate_json_ocr_url(product_id, image_id)
-        ocr_result = OCRResult.from_url(
-            ocr_url, http_session, error_raise=False, warning_missing=False
+        ocr_result = get_ocr_result_from_url(
+            ocr_url,
+            session=http_session,
+            error_raise=False,
+            warning_missing=False,
         )
         if ocr_result:
             ocr_texts.append(ocr_result.get_full_text_contiguous())
