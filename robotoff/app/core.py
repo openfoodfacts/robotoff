@@ -10,7 +10,6 @@ from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from peewee import JOIN, SQL, fn
 from pydantic import BaseModel, ValidationError
 
-from robotoff.app import events
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
@@ -485,14 +484,6 @@ def save_annotation(
 
     result = annotate(
         insight, annotation, update, data=data, auth=auth, is_vote=not trusted_annotator
-    )
-    username = auth.get_username() if auth else "unknown annotator"
-    events.event_processor.send_async(
-        "question_answered",
-        username,
-        device_id,
-        insight.barcode,
-        insight.server_type,
     )
     return result
 

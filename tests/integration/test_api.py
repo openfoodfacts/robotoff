@@ -687,38 +687,6 @@ def test_image_collection(client, peewee_db):
     assert data["images"][0]["barcode"] == "00000456"
 
 
-def test_annotation_event(client, monkeypatch, httpserver):
-    """Test that annotation sends an event"""
-    monkeypatch.setenv("EVENTS_API_URL", httpserver.url_for("/"))
-    # setup a new event_processor, to be sure settings is taken into account
-    monkeypatch.setattr(events, "event_processor", events.EventProcessor())
-    # We expect to have a call to events server
-    expected_event = {
-        "event_type": "question_answered",
-        "user_id": "a",
-        "device_id": "test-device",
-        "barcode": "00000001",
-        "server_type": "off",
-    }
-    httpserver.expect_oneshot_request(
-        "/", method="POST", json=expected_event
-    ).respond_with_data("Done")
-    with httpserver.wait(raise_assertions=True, stop_on_nohandler=True, timeout=2):
-        result = client.simulate_post(
-            "/api/v1/insights/annotate",
-            params={
-                "insight_id": insight_id,
-                "annotation": 0,
-                "device_id": "test-device",
-                "server_type": "off",
-            },
-            headers={
-                "Authorization": "Basic " + base64.b64encode(b"a:b").decode("ascii")
-            },
-        )
-    assert result.status_code == 200
-
-
 def test_annotate_category_with_user_input(client, mocker, peewee_db):
     """We test category insight annotation with user input."""
     # mock because as we validate the insight, we will ask mongo for product
