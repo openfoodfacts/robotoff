@@ -7,7 +7,6 @@ import pytest
 import requests
 from falcon import testing
 
-from robotoff.app import events
 from robotoff.app.api import api
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
