@@ -122,15 +122,6 @@ class BaseURLProvider(object):
             prefix=country_code, base_domain=server_type.get_base_domain()
         )
 
-    @staticmethod
-    def event_api() -> str:
-        return os.environ.get(
-            "EVENTS_API_URL",
-            BaseURLProvider._get_url(
-                prefix="events", base_domain=ServerType.off.get_base_domain()
-            ),
-        )
-
 
 PROJECT_DIR = Path(__file__).parent.parent
 DATA_DIR = PROJECT_DIR / "data"
