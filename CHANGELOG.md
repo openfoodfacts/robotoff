@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.85.10](https://github.com/openfoodfacts/robotoff/compare/v1.85.9...v1.85.10) (2026-05-12)
+
+
+### Technical
+
+* **deps-dev:** bump pytest from 7.2.2 to 9.0.3 ([#1889](https://github.com/openfoodfacts/robotoff/issues/1889)) ([2f00b20](https://github.com/openfoodfacts/robotoff/commit/2f00b201ea8e73732d864633d0d41383d0bc37fc))
+* **deps:** bump cryptography from 46.0.5 to 46.0.7 ([#1886](https://github.com/openfoodfacts/robotoff/issues/1886)) ([6bad132](https://github.com/openfoodfacts/robotoff/commit/6bad1328163ea5287c054d1f7851067575ab07fd))
+* **deps:** bump orjson from 3.9.15 to 3.11.6 ([#1869](https://github.com/openfoodfacts/robotoff/issues/1869)) ([b5d4a18](https://github.com/openfoodfacts/robotoff/commit/b5d4a183d0aa75aada9d93d2b06222c852fa6ad3))
+* **deps:** bump pyasn1 from 0.6.2 to 0.6.3 ([#1873](https://github.com/openfoodfacts/robotoff/issues/1873)) ([1e5761f](https://github.com/openfoodfacts/robotoff/commit/1e5761fbd4a0b16b3b3ebc4f57a6936cfb9b8618))
+* **deps:** bump pygments from 2.19.2 to 2.20.0 ([#1882](https://github.com/openfoodfacts/robotoff/issues/1882)) ([b79e527](https://github.com/openfoodfacts/robotoff/commit/b79e5274e1fec785be7cc4a1540fb4f7332393b6))
+* **deps:** bump requests from 2.32.5 to 2.33.0 ([#1879](https://github.com/openfoodfacts/robotoff/issues/1879)) ([de8ca4d](https://github.com/openfoodfacts/robotoff/commit/de8ca4d9e65d7c8177605aac41b899f3086c427f))
+* **deps:** bump urllib3 from 2.6.3 to 2.7.0 ([#1894](https://github.com/openfoodfacts/robotoff/issues/1894)) ([db588b9](https://github.com/openfoodfacts/robotoff/commit/db588b91ec6b28377ee65100fb79d8f8b1cad97d))
+* **deps:** bump vllm from 0.11.0 to 0.20.0 in /batch/spellcheck ([#1891](https://github.com/openfoodfacts/robotoff/issues/1891)) ([9519543](https://github.com/openfoodfacts/robotoff/commit/951954363d54a474d4150c9774607fffa257776a))
+* **deps:** upgrade black ([#1871](https://github.com/openfoodfacts/robotoff/issues/1871)) ([137e519](https://github.com/openfoodfacts/robotoff/commit/137e519c059e9588105c507b00262143b0f282e8))
+* **deps:** upgrade black ([#1874](https://github.com/openfoodfacts/robotoff/issues/1874)) ([962daaa](https://github.com/openfoodfacts/robotoff/commit/962daaa464d44c7d81cf48d0dfd1ec5a14c52868))
+* fix version of black in autoblack.yml ([#1876](https://github.com/openfoodfacts/robotoff/issues/1876)) ([8fe51a8](https://github.com/openfoodfacts/robotoff/commit/8fe51a8a04f5c80ebed37ee8ad7e1ee8aa543190))
+* **models:** add first version of price tag classification model ([#1875](https://github.com/openfoodfacts/robotoff/issues/1875)) ([b5943e1](https://github.com/openfoodfacts/robotoff/commit/b5943e1852f1affd7057e9db75694e101945f5b1))
+* remove events ([#1893](https://github.com/openfoodfacts/robotoff/issues/1893)) ([e197fc7](https://github.com/openfoodfacts/robotoff/commit/e197fc7a9c691ed14781e0f02bdd9e4d32cfdf02))
+
 ## [1.85.9](https://github.com/openfoodfacts/robotoff/compare/v1.85.8...v1.85.9) (2026-03-09)
 
 
