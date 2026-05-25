@@ -1480,22 +1480,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  predictions:
-                    type: array
-                    description: a list of predicted languages, sorted by descending probability
-                    items:
-                      type: object
-                      properties:
-                        lang:
-                          type: string
-                          description: the predicted language (2-letter code)
-                          example: "en"
-                        confidence:
-                          type: number
-                          description: the probability of the predicted language
-                          example: 0.9
+                $ref: "#/components/schemas/LanguagePredictionResponse"
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
     post:
@@ -1537,22 +1522,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  predictions:
-                    type: array
-                    description: a list of predicted languages, sorted by descending probability
-                    items:
-                      type: object
-                      properties:
-                        lang:
-                          type: string
-                          description: the predicted language (2-letter code)
-                          example: "en"
-                        confidence:
-                          type: number
-                          description: the probability of the predicted language
-                          example: 0.9
+                $ref: "#/components/schemas/LanguagePredictionResponse"
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
 
@@ -2040,6 +2010,25 @@ components:
       - "opff"
       - "opf"
       - "off_pro"
+
+    LanguagePredictionResponse:
+      type: object
+      description: the predicted languages, sorted by descending probability
+      properties:
+        predictions:
+          type: array
+          description: a list of predicted languages, sorted by descending probability
+          items:
+            type: object
+            properties:
+              lang:
+                type: string
+                description: the predicted language (2-letter code)
+                example: "en"
+              confidence:
+                type: number
+                description: the probability of the predicted language
+                example: 0.9
 
   parameters:
     image_url:
