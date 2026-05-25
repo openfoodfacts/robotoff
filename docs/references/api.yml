@@ -1225,16 +1225,7 @@ paths:
                     minLength: 1
                     example: "0748162621021"
                   server_type:
-                    type: string
-                    description: |
-                      The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
-                      Only 'off' is currently supported for category prediction
-                    default: "off"
-                    enum:
-                    - "off"
-                    - "obf"
-                    - "opff"
-                    - "opf"
+                    $ref: "#/components/schemas/ServerType"
                   deepest_only:
                     type: boolean
                     description: |
