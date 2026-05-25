@@ -907,7 +907,7 @@ paths:
                     - type
                     - value
                 server_type:
-                  $ref: "#/components/parameters/server_type"
+                  $ref: "#/components/schemas/ServerType"
               required:
               - annotations
       responses:
@@ -1818,7 +1818,7 @@ components:
           type: string
           example: "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg"
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
         source_image_url:
           description: |
             The URL of the image the insight was generated from. This is provided as additional context
@@ -1918,7 +1918,7 @@ components:
           description: The confidence score of the annotation, between 0 and 1. The larger the score is the more confident we are in the annotation.
 
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
 
         source_image:
           type: string
@@ -2010,7 +2010,7 @@ components:
               - `flashtext` for all predictions generated using flashtext library
               - `regex` for all predictions generated using simple regex
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
         confidence:
           type: number
           example: 0.95
@@ -2029,7 +2029,7 @@ components:
           description: the barcode of the product the image is associated with
           example: "5410041040807"
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
         source_image: 
           type: string
           description: the path of the URL of the image
@@ -2050,6 +2050,17 @@ components:
         deleted:
           type: boolean
           description: whether the image has been deleted from our database or not
+
+    ServerType:
+      type: string
+      description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+      default: "off"
+      enum:
+      - "off"
+      - "obf"
+      - "opff"
+      - "opf"
+      - "off_pro"
 
   parameters:
     image_url:
@@ -2103,14 +2114,7 @@ components:
       required: false
       description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
       schema:
-        type: string
-        default: "off"
-        enum:
-        - "off"
-        - "obf"
-        - "opff"
-        - "opf"
-        - "off_pro"
+        $ref: "#/components/schemas/ServerType"
     insight_types:
       name: insight_types
       in: query
