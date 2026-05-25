@@ -145,8 +145,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of questions that meet the provided criteria
-                  # This is an array of tuple. To properly document it we need OpenAPIv3.1
-                  # https://stackoverflow.com/questions/57464633/how-to-define-a-json-array-with-concrete-item-definition-for-every-index-i-e-a
                   questions:
                     type: array
                     items:
