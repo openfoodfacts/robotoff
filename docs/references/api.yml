@@ -1769,6 +1769,9 @@ components:
         source_image:
           type: string
           description: the path of the image the insight was generated from.
+        image: 
+          description: Details about the image associated with the insight, if any.
+          $ref: "#/components/schemas/ImageDetails"
         with_image:
           type: boolean
           description: whether the insight has an associated image or not
@@ -1845,6 +1848,9 @@ components:
             the `value` may also be used to update Product Opener.
           type: string
           example: "en:nutriscore-grade-a"
+        with_image:
+          type: boolean
+          description: whether the insight has an associated image or not
 
     LogoDetails:
       description: Logo annotation details
@@ -1892,7 +1898,7 @@ components:
 
         image:
           description: Details about the image associated with the logo.
-          type: object
+          $ref: "#/components/schemas/ImageDetails"
 
         nearest_neighbors:
           type: object
@@ -2010,6 +2016,40 @@ components:
           example: 0.95
           description: |
             confidence score of the prediction, it is only provided for ML-based predictions. It may be null.
+    ImageDetails:
+      type: object
+      description: Details about a product image
+      properties:
+        image_id:
+          type: string
+          description: the ID of the image
+          example: "3742678"
+        barcode:
+          type: string
+          description: the barcode of the product the image is associated with
+          example: "5410041040807"
+        server_type:
+          $ref: "#/components/parameters/server_type"
+        source_image: 
+          type: string
+          description: the path of the URL of the image
+          example: "/762/221/044/9283/189.jpg"
+        width:
+          type: integer
+          description: the width of the image in pixels
+          example: 400
+        height:
+          type: integer
+          description: the height of the image in pixels
+          example: 300
+        uploaded_at:
+          type: string
+          format: date-time
+          description: the datetime of the image upload
+          example: "2020-12-15T07:32:16"
+        deleted:
+          type: boolean
+          description: whether the image has been deleted from our database or not
 
   parameters:
     image_url:
