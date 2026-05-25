@@ -416,43 +416,31 @@ paths:
       - $ref: "#/components/parameters/image_url"
       - name: y_min
         in: query
-        description: |
-          The minimum y-coordinate for cropping, relative to the image height.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
+        description: The minimum y-coordinate for cropping, relative to the image height.
         example: 0.47795143723487854
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: x_min
-        description: |
-          The minimum x-coordinate for cropping, relative to the image width.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The minimum x-coordinate for cropping, relative to the image width.
         example: 0.5583494305610657
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: y_max
-        description: |
-          The maximum y-coordinate for cropping, relative to the image height.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The maximum y-coordinate for cropping, relative to the image height.
         example: 0.5653171539306641
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: x_max
-        description: |
-          The maximum x-coordinate for cropping, relative to the image width.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The maximum x-coordinate for cropping, relative to the image width.
         example: 0.6795185804367065
         schema:
           type: number
