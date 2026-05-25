@@ -2125,7 +2125,7 @@ components:
       description: Comma separated list, filter by country value (2-letter code)
       schema:
         type: string
-      example: uk
+        example: uk
     brands:
       name: brands
       in: query
@@ -2139,7 +2139,7 @@ components:
       description: Filter by value tag, i.e the value that is going to be sent to Product Opener
       schema:
         type: string
-      example: en:organic
+        example: en:organic
     page:
       name: page
       in: query
@@ -2158,14 +2158,14 @@ components:
     campaigns:
       name: campaigns
       in: query
-      description: Filter by annotation campaigns (the insight must have all the campaigns) An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
+      description: Filter by annotation campaigns (the insight must have all the campaigns). An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
       schema:
         type: string
         example: agribalyse-category
     predictor:
       name: predictor
       in: query
-      description: Filter by predictor value A predictor refers to the model/method that was used to generate the prediction.
+      description: Filter by predictor value. A predictor refers to the model/method that was used to generate the prediction.
       schema:
         type: string
         example: universal-logo-detector
