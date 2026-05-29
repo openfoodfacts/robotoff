@@ -106,16 +106,23 @@ LABELS_REGEX = {
     ],
     "en:eu-agriculture": [
         # The negative lookafter/lookbehind forbid matching "agriculture ue/non
-        # ue"
+        # ue" and the english "eu/non eu agriculture" combined form (where "eu
+        # agriculture" is preceded by "non" or a slash separator)
         OCRRegex(
-            re.compile(r"agriculture ue(?!\s?/)|(?<!-)\s?eu agriculture", re.I),
+            re.compile(
+                r"agriculture ue(?!\s?/)|(?<![-/])(?<!non)(?<!non )\seu agriculture|(?<![-/\sa-z])eu agriculture",
+                re.I,
+            ),
             field=OCRField.full_text_contiguous,
         ),
     ],
     "en:non-eu-agriculture": [
+        # The negative lookbehind forbids matching the "eu / non-eu agriculture"
+        # combined form, where "non-eu agriculture" is preceded by a slash
         OCRRegex(
             re.compile(
-                r"agriculture non\s?(?:-\s?)?ue|non\s?(?:-\s?)?eu agriculture", re.I
+                r"agriculture non\s?(?:-\s?)?ue|(?<![/-])(?<!/ )non\s?(?:-\s?)?eu agriculture",
+                re.I,
             ),
             field=OCRField.full_text_contiguous,
         ),
