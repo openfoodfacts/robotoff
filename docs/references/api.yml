@@ -145,9 +145,6 @@ paths:
                   count:
                     type: integer
                     description: The total number of questions that meet the provided criteria
-                  # Each item is a [value_tag, count] tuple. Inner tuple shape cannot
-                  # be expressed precisely in OpenAPI 3.0 — use `prefixItems` in 3.1.
-                  # https://stackoverflow.com/questions/57464633/how-to-define-a-json-array-with-concrete-item-definition-for-every-index-i-e-a
                   questions:
                     type: array
                     description: |
