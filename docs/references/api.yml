@@ -145,16 +145,25 @@ paths:
                   count:
                     type: integer
                     description: The total number of questions that meet the provided criteria
-                  # This is an array of tuple. To properly document it we need OpenAPIv3.1
+                  # Each item is a [value_tag, count] tuple. Inner tuple shape cannot
+                  # be expressed precisely in OpenAPI 3.0 — use `prefixItems` in 3.1.
                   # https://stackoverflow.com/questions/57464633/how-to-define-a-json-array-with-concrete-item-definition-for-every-index-i-e-a
                   questions:
                     type: array
+                    description: |
+                      A list of `[value_tag, count]` tuples, where `value_tag` is a string
+                      and `count` is the number of unanswered questions for that `value_tag`.
                     items:
-                      oneOf:
-                      - type: string
-                        description: The `value_tag`
-                      - type: integer
-                        description: The number of questions for this `value_tag`
+                      type: array
+                      minItems: 2
+                      maxItems: 2
+                      example: ["en:organic", 42]
+                      items:
+                        oneOf:
+                        - type: string
+                          description: The `value_tag`
+                        - type: integer
+                          description: The number of questions for this `value_tag`
                   status:
                     type: string
                     description: The request status
