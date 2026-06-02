@@ -1219,7 +1219,16 @@ paths:
                     minLength: 1
                     example: "0748162621021"
                   server_type:
-                    $ref: "#/components/schemas/ServerType"
+                    type: string
+                    description: |
+                      The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+                      Only 'off' is currently supported for category prediction
+                    default: "off"
+                    enum:
+                    - "off"
+                    - "obf"
+                    - "opff"
+                    - "opf"
                   deepest_only:
                     type: boolean
                     description: |
@@ -1726,8 +1735,6 @@ components:
         source_image:
           type: string
           description: the path of the image the insight was generated from.
-        image:
-          $ref: "#/components/schemas/ImageDetails"
         with_image:
           type: boolean
           description: whether the insight has an associated image or not
@@ -1804,9 +1811,6 @@ components:
             the `value` may also be used to update Product Opener.
           type: string
           example: "en:nutriscore-grade-a"
-        with_image:
-          type: boolean
-          description: whether the insight has an associated image or not
 
     LogoDetails:
       description: Logo annotation details
@@ -1985,9 +1989,11 @@ components:
           example: "5410041040807"
         server_type:
           $ref: "#/components/schemas/ServerType"
-        source_image: 
+        source_image:
           type: string
-          description: the path of the URL of the image
+          description: |
+            The path portion of the image URL (not the full URL).
+            Prefix with `https://images.openfoodfacts.org/images/products` to obtain the absolute URL.
           example: "/762/221/044/9283/189.jpg"
         width:
           type: integer
@@ -2001,7 +2007,7 @@ components:
           type: string
           format: date-time
           description: the datetime of the image upload
-          example: "2020-12-15T07:32:16"
+          example: "2020-12-15T07:32:16+00:00"
         deleted:
           type: boolean
           description: whether the image has been deleted from our database or not
