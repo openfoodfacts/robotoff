@@ -146,6 +146,7 @@ paths:
                     type: integer
                     description: The total number of questions that meet the provided criteria
                   questions:
+
                     type: array
                     description: |
                       A list of `[value_tag, count]` tuples, where `value_tag` is a string
@@ -156,6 +157,8 @@ paths:
                       maxItems: 2
                       example: ["en:organic", 42]
                       items:
+                        # This is an array of tuple. To properly document it we need OpenAPIv3.1
+                        # https://stackoverflow.com/questions/57464633/how-to-define-a-json-array-with-concrete-item-definition-for-every-index-i-e-a
                         oneOf:
                         - type: string
                           description: The `value_tag`
