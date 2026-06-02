@@ -146,13 +146,24 @@ paths:
                     type: integer
                     description: The total number of questions that meet the provided criteria
                   questions:
+
                     type: array
+                    description: |
+                      A list of `[value_tag, count]` tuples, where `value_tag` is a string
+                      and `count` is the number of unanswered questions for that `value_tag`.
                     items:
-                      oneOf:
-                      - type: string
-                        description: The `value_tag`
-                      - type: integer
-                        description: The number of questions for this `value_tag`
+                      type: array
+                      minItems: 2
+                      maxItems: 2
+                      example: ["en:organic", 42]
+                      items:
+                        # This is an array of tuple. To properly document it we need OpenAPIv3.1
+                        # https://stackoverflow.com/questions/57464633/how-to-define-a-json-array-with-concrete-item-definition-for-every-index-i-e-a
+                        oneOf:
+                        - type: string
+                          description: The `value_tag`
+                        - type: integer
+                          description: The number of questions for this `value_tag`
                   status:
                     type: string
                     description: The request status
@@ -414,43 +425,31 @@ paths:
       - $ref: "#/components/parameters/image_url"
       - name: y_min
         in: query
-        description: |
-          The minimum y-coordinate for cropping, relative to the image height.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
+        description: The minimum y-coordinate for cropping, relative to the image height.
         example: 0.47795143723487854
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: x_min
-        description: |
-          The minimum x-coordinate for cropping, relative to the image width.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The minimum x-coordinate for cropping, relative to the image width.
         example: 0.5583494305610657
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: y_max
-        description: |
-          The maximum y-coordinate for cropping, relative to the image height.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The maximum y-coordinate for cropping, relative to the image height.
         example: 0.5653171539306641
         schema:
           type: number
           minimum: 0
           maximum: 1
       - name: x_max
-        description: |
-          The maximum x-coordinate for cropping, relative to the image width.
-          We use relative coordinates, with (0, 0) being the upper left corner and
-          (1, 1) being the lower right corner.
         in: query
+        description: The maximum x-coordinate for cropping, relative to the image width.
         example: 0.6795185804367065
         schema:
           type: number
@@ -907,7 +906,7 @@ paths:
                     - type
                     - value
                 server_type:
-                  $ref: "#/components/parameters/server_type"
+                  $ref: "#/components/schemas/ServerType"
               required:
               - annotations
       responses:
@@ -1499,22 +1498,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  predictions:
-                    type: array
-                    description: a list of predicted languages, sorted by descending probability
-                    items:
-                      type: object
-                      properties:
-                        lang:
-                          type: string
-                          description: the predicted language (2-letter code)
-                          example: "en"
-                        confidence:
-                          type: number
-                          description: the probability of the predicted language
-                          example: 0.9
+                $ref: "#/components/schemas/LanguagePredictionResponse"
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
     post:
@@ -1556,22 +1540,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  predictions:
-                    type: array
-                    description: a list of predicted languages, sorted by descending probability
-                    items:
-                      type: object
-                      properties:
-                        lang:
-                          type: string
-                          description: the predicted language (2-letter code)
-                          example: "en"
-                        confidence:
-                          type: number
-                          description: the probability of the predicted language
-                          example: 0.9
+                $ref: "#/components/schemas/LanguagePredictionResponse"
         "400":
           description: "An HTTP 400 is returned if the provided parameters are invalid"
 
@@ -1815,7 +1784,7 @@ components:
           type: string
           example: "https://static.openfoodfacts.org/images/attributes/dist/nutriscore-a.svg"
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
         source_image_url:
           description: |
             The URL of the image the insight was generated from. This is provided as additional context
@@ -1891,8 +1860,7 @@ components:
           type: integer
 
         image:
-          description: Details about the image associated with the logo.
-          type: object
+          $ref: "#/components/schemas/ImageDetails"
 
         nearest_neighbors:
           type: object
@@ -1912,7 +1880,7 @@ components:
           description: The confidence score of the annotation, between 0 and 1. The larger the score is the more confident we are in the annotation.
 
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
 
         source_image:
           type: string
@@ -2004,12 +1972,78 @@ components:
               - `flashtext` for all predictions generated using flashtext library
               - `regex` for all predictions generated using simple regex
         server_type:
-          $ref: "#/components/parameters/server_type"
+          $ref: "#/components/schemas/ServerType"
         confidence:
           type: number
           example: 0.95
           description: |
             confidence score of the prediction, it is only provided for ML-based predictions. It may be null.
+    ImageDetails:
+      type: object
+      description: Details about a product image
+      properties:
+        image_id:
+          type: string
+          description: the ID of the image
+          example: "3742678"
+        barcode:
+          type: string
+          description: the barcode of the product the image is associated with
+          example: "5410041040807"
+        server_type:
+          $ref: "#/components/schemas/ServerType"
+        source_image:
+          type: string
+          description: |
+            The path portion of the image URL (not the full URL).
+            Prefix with `https://images.openfoodfacts.org/images/products` to obtain the absolute URL.
+          example: "/762/221/044/9283/189.jpg"
+        width:
+          type: integer
+          description: the width of the image in pixels
+          example: 400
+        height:
+          type: integer
+          description: the height of the image in pixels
+          example: 300
+        uploaded_at:
+          type: string
+          format: date-time
+          description: the datetime of the image upload
+          example: "2020-12-15T07:32:16+00:00"
+        deleted:
+          type: boolean
+          description: whether the image has been deleted from our database or not
+
+    ServerType:
+      type: string
+      description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+      default: "off"
+      enum:
+      - "off"
+      - "obf"
+      - "opff"
+      - "opf"
+      - "off_pro"
+
+    LanguagePredictionResponse:
+      type: object
+      description: the predicted languages, sorted by descending probability
+      properties:
+        predictions:
+          type: array
+          description: a list of predicted languages, sorted by descending probability
+          items:
+            type: object
+            properties:
+              lang:
+                type: string
+                description: the predicted language (2-letter code)
+                example: "en"
+              confidence:
+                type: number
+                description: the probability of the predicted language
+                example: 0.9
 
   parameters:
     image_url:
@@ -2063,14 +2097,7 @@ components:
       required: false
       description: The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
       schema:
-        type: string
-        default: "off"
-        enum:
-        - "off"
-        - "obf"
-        - "opff"
-        - "opf"
-        - "off_pro"
+        $ref: "#/components/schemas/ServerType"
     insight_types:
       name: insight_types
       in: query
@@ -2090,7 +2117,7 @@ components:
       description: Comma separated list, filter by country value (2-letter code)
       schema:
         type: string
-      example: uk
+        example: uk
     brands:
       name: brands
       in: query
@@ -2104,7 +2131,7 @@ components:
       description: Filter by value tag, i.e the value that is going to be sent to Product Opener
       schema:
         type: string
-      example: en:organic
+        example: en:organic
     page:
       name: page
       in: query
@@ -2123,14 +2150,14 @@ components:
     campaigns:
       name: campaigns
       in: query
-      description: Filter by annotation campaigns (the insight must have all the campaigns) An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
+      description: Filter by annotation campaigns (the insight must have all the campaigns). An annotation campaign allows to only retrieve questions or insights based on arbitrary criteria defined during insight import.
       schema:
         type: string
         example: agribalyse-category
     predictor:
       name: predictor
       in: query
-      description: Filter by predictor value A predictor refers to the model/method that was used to generate the prediction.
+      description: Filter by predictor value. A predictor refers to the model/method that was used to generate the prediction.
       schema:
         type: string
         example: universal-logo-detector
