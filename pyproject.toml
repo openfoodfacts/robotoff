@@ -79,7 +79,7 @@ dependencies = [
   "duckdb>=1.0,<1.2",
   "google-cloud-storage~=2.14.0",
   "pandas~=2.2.2",
-  "pyarrow~=17.0.0",
+  "pyarrow>=17.0,<23.1",
   "rich~=13.9.2",  # Used for CLI pretty print
   "backoff==2.2.1",
   "albumentations==2.0.8",
