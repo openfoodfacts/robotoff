@@ -23,15 +23,13 @@ from robotoff.workers.queues import get_high_queue
 from robotoff.workers.tasks.import_image import (
     extract_ingredients_job,
     extract_nutrition_job,
-)
-from robotoff.workers.tasks.import_image import (
-    nutrition_extraction as nutrition_extraction_module,
-)
-from robotoff.workers.tasks.import_image import (
     process_created_logos,
     process_ingredient_prediction_job,
     process_nutrition_prediction_job,
     save_logo_embeddings,
+)
+from robotoff.workers.tasks.import_image import (
+    nutrition_extraction as nutrition_extraction_module,
 )
 
 from ...models_utils import (

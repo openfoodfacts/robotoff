@@ -229,7 +229,9 @@ class CategoryQuestionFormatter(QuestionFormatter):
                 or key.startswith("ingredients_")
                 or key.startswith("packaging_")
             ):
-                image_type = key.split("_")[
+                image_type = key.split(
+                    "_"
+                )[
                     0
                 ]  # to get image type: `front`, `nutrition`, `ingredients` or `packaging`
                 language = key.split("_")[1]  # splitting to get the language name

@@ -8,28 +8,27 @@ x-robotoff-dev: &robotoff-dev
       OFF_GID: ${OFF_GID:-1000}
       PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
   volumes:
-  # make updates to code available
-  - ./robotoff:/opt/robotoff/robotoff
-  - ./scripts:/opt/robotoff/scripts
-  - ./pyproject.toml:/opt/robotoff/pyproject.toml
-  - ./uv.lock:/opt/robotoff/uv.lock
-  - ./.flake8:/opt/robotoff/.flake8
-  # make tests available
-  - ./tests:/opt/robotoff/tests
-  - ./.cov:/opt/robotoff/.cov
-  # make i18N available
-  - ./i18n:/opt/robotoff/i18n
-  # make data available
-  - ./data:/opt/robotoff/data
-  - ./cache:/opt/robotoff/cache
-  # make migration files available
-  - ./migrations:/opt/robotoff/migrations
-  # make doc generation available
-  - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
-  - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
-  - ./README.md:/opt/robotoff/README.md
-  - ./docs:/opt/robotoff/docs
-  - ./gh_pages:/opt/robotoff/gh_pages
+    # make updates to code available
+    - ./robotoff:/opt/robotoff/robotoff
+    - ./scripts:/opt/robotoff/scripts
+    - ./pyproject.toml:/opt/robotoff/pyproject.toml
+    - ./uv.lock:/opt/robotoff/uv.lock
+    # make tests available
+    - ./tests:/opt/robotoff/tests
+    - ./.cov:/opt/robotoff/.cov
+    # make i18N available
+    - ./i18n:/opt/robotoff/i18n
+    # make data available
+    - ./data:/opt/robotoff/data
+    - ./cache:/opt/robotoff/cache
+    # make migration files available
+    - ./migrations:/opt/robotoff/migrations
+    # make doc generation available
+    - ./mkdocs.yml:/opt/robotoff/mkdocs.yml
+    - ./build_mkdocs.sh:/opt/robotoff/build_mkdocs.sh
+    - ./README.md:/opt/robotoff/README.md
+    - ./docs:/opt/robotoff/docs
+    - ./gh_pages:/opt/robotoff/gh_pages
 
 services:
   api:
@@ -59,7 +58,7 @@ services:
 
   elasticsearch:
     ports:
-    - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9200:9200"
 
 volumes:
   postgres-data:

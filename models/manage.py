@@ -27,7 +27,7 @@ import tempfile
 import tomllib
 import typing
 from pathlib import Path
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 
 import typer
 from huggingface_hub import snapshot_download
@@ -131,7 +131,7 @@ def model_metadata_has_changed(
 
 
 def load_model_config(
-    model_config_path: Path, include: Optional[list[str]]
+    model_config_path: Path, include: list[str] | None
 ) -> list[HuggingFaceModel]:
     models = []
     with model_config_path.open("rb") as f:
@@ -152,7 +152,7 @@ def load_model_config(
 @app.command()
 def download_models(
     include: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option(help="Only download models whose name are in this list."),
     ] = None,
     model_config_path: Path = TRITON_MODELS_DIR.parent / "models.toml",
@@ -240,7 +240,7 @@ def download_models(
 @app.command()
 def copy_config(
     include: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Option(help="Only download models whose name are in this list."),
     ] = None,
     cpu: Annotated[
@@ -409,7 +409,7 @@ def unload_model(
 def get_model_config(
     model_name: Annotated[str, typer.Argument(help="Name of the model.")],
     model_version: Annotated[
-        Optional[str],
+        str | None,
         typer.Option(
             help="Version of the model to choose. "
             "If not specified, the Triton server will choose a model based "

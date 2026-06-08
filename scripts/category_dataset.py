@@ -16,7 +16,7 @@ train/test/val datasets,
 
 import json
 import os
-from typing import Iterator
+from collections.abc import Iterator
 
 from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from sklearn.model_selection import train_test_split
@@ -70,13 +70,11 @@ def generate_base_dataset(
                 if ingredient_tag in ingredient_taxonomy
             ]
             ingredients_text_field = (
-                "ingredients_text_{}".format(lang) if lang else "ingredients_text"
+                f"ingredients_text_{lang}" if lang else "ingredients_text"
             )
             ingredients_text = product.get(ingredients_text_field, None) or None
 
-            product_name_field = (
-                "product_name_{}".format(lang) if lang else "product_name"
-            )
+            product_name_field = f"product_name_{lang}" if lang else "product_name"
             yield {
                 "code": product["code"],
                 "nutriments": product.get("nutriments") or None,
@@ -114,7 +112,7 @@ def run(lang: str | None = None):
     if lang is not None:
         training_stream = training_stream.filter_text_field(
             "lang", lang
-        ).filter_nonempty_text_field("product_name_{}".format(lang))
+        ).filter_nonempty_text_field(f"product_name_{lang}")
     else:
         training_stream = training_stream.filter_nonempty_text_field("product_name")
 

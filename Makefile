@@ -130,23 +130,14 @@ toml-check:
 toml-lint:
 	${DOCKER_COMPOSE} run --rm --no-deps api uv run toml-sort --in-place pyproject.toml
 
-flake8:
-	${DOCKER_COMPOSE} run --rm --no-deps api flake8
+ruff-check:
+	${DOCKER_COMPOSE} run --rm --no-deps api ruff check
 
-black-check:
-	${DOCKER_COMPOSE} run --rm --no-deps api black --check .
-
-black:
-	${DOCKER_COMPOSE} run --rm --no-deps api black .
+ruff-format:
+	${DOCKER_COMPOSE} run --rm --no-deps api ruff format
 
 mypy:
 	${DOCKER_COMPOSE} run --rm --no-deps api mypy .
-
-isort-check:
-	${DOCKER_COMPOSE} run --rm --no-deps api isort --check .
-
-isort:
-	${DOCKER_COMPOSE} run --rm --no-deps api isort .
 
 docs:
 	@echo "🥫 Generationg docs…"
@@ -160,9 +151,9 @@ api-lint-check:
 	@echo "🥫 Checking OpenAPI specification…"
 	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint docs/references/api.yml --fail-severity=error
 
-checks: create_external_networks toml-check flake8 black-check mypy isort-check docs
+checks: create_external_networks toml-check ruff-check mypy docs
 
-lint: toml-lint isort black
+lint: toml-lint ruff-format ruff-check
 
 tests: create_external_networks i18n-compile unit-tests integration-tests
 

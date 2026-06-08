@@ -12,14 +12,14 @@ from pydantic import BaseModel, ConfigDict, model_validator
 JSONType = dict[str, Any]
 
 
-class ObjectDetectionModel(str, enum.Enum):
+class ObjectDetectionModel(enum.StrEnum):
     nutriscore = "nutriscore"
     universal_logo_detector = "universal_logo_detector"
     nutrition_table = "nutrition_table"
     price_tag_detection = "price_tag_detection"
 
 
-class ImageClassificationModel(str, enum.Enum):
+class ImageClassificationModel(enum.StrEnum):
     price_proof_classification = enum.auto()
     front_image_classification = enum.auto()
 
@@ -30,7 +30,7 @@ class NeuralCategoryClassifierModel(enum.Enum):
 
 
 @enum.unique
-class PredictionType(str, enum.Enum):
+class PredictionType(enum.StrEnum):
     """PredictionType defines the type of the prediction.
 
     See `InsightType` documentation for further information about each type.
@@ -60,7 +60,7 @@ class PredictionType(str, enum.Enum):
 
 
 @enum.unique
-class InsightType(str, enum.Enum):
+class InsightType(enum.StrEnum):
     """InsightType defines the type of the insight."""
 
     # The 'ingredient spellcheck' insight corrects the spelling in the given
@@ -169,7 +169,7 @@ class InsightType(str, enum.Enum):
 ProductTypeLiteral = Literal["food", "beauty", "petfood", "product"]
 
 
-class ServerType(str, enum.Enum):
+class ServerType(enum.StrEnum):
     """ServerType is used to refer to a specific Open*Facts project:
 
     - Open Food Facts
@@ -285,7 +285,7 @@ class ProductIdentifier:
     server_type: ServerType
 
     def __repr__(self) -> str:
-        return "<Product %s | %s>" % (self.barcode, self.server_type.name)
+        return f"<Product {self.barcode} | {self.server_type.name}>"
 
     def __hash__(self) -> int:
         return hash((self.barcode, self.server_type))
@@ -295,7 +295,7 @@ class ProductIdentifier:
 
 
 @enum.unique
-class ElasticSearchIndex(str, enum.Enum):
+class ElasticSearchIndex(enum.StrEnum):
     logo = "logo"
 
 
@@ -435,7 +435,7 @@ class NutrientData(BaseModel):
         return self
 
 
-class ImportImageFlag(str, enum.Enum):
+class ImportImageFlag(enum.StrEnum):
     add_image_fingerprint = "add_image_fingerprint"
     import_insights_from_image = "import_insights_from_image"
     extract_ingredients = "extract_ingredients"

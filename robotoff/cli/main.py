@@ -1,6 +1,5 @@
 import datetime
 from pathlib import Path
-from typing import Optional
 
 import typer
 from openfoodfacts.types import Environment, Flavor
@@ -35,7 +34,7 @@ def download_taxonomies(
         help="If True, we check if a new version of the taxonomies is available and "
         "download it if so. If False, we only download the taxonomies if they are not "
         "already cached locally.",
-    )
+    ),
 ):
     """Download all taxonomies."""
     from robotoff.taxonomy import download_taxonomies as _download_taxonomies
@@ -76,7 +75,7 @@ def run_update_listener():
 def process_updates_since(
     since: datetime.datetime = typer.Argument(
         ..., help="Datetime to start processing updates from"
-    )
+    ),
 ):
     """Process all updates since a given datetime."""
     from robotoff import settings
@@ -99,10 +98,8 @@ def create_redis_update(
     flavor: str = typer.Option(default="off", help="flavor of the product"),
     user_id: str = typer.Option(default="app-user", help="user id"),
     action: str = typer.Option(default="updated", help="user action"),
-    comment: Optional[str] = typer.Option(
-        default="modification: ", help="user comment"
-    ),
-    uploaded_image_id: Optional[int] = typer.Option(
+    comment: str | None = typer.Option(default="modification: ", help="user comment"),
+    uploaded_image_id: int | None = typer.Option(
         default=None, help="ID of the uploaded image"
     ),
 ):
@@ -183,7 +180,7 @@ def create_redis_ocr_ready_event(
         "product_type": product_type,
         "image_id": image_id,
         "json_url": json_url,
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).timestamp(),
+        "timestamp": datetime.datetime.now(datetime.UTC).timestamp(),
     }
 
     client.xadd(settings.OCR_READY_STREAM_NAME, event)
@@ -198,7 +195,7 @@ def regenerate_ocr_insights(
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the product"
     ),
-    ocr_prediction_types: Optional[list[PredictionType]] = typer.Option(
+    ocr_prediction_types: list[PredictionType] | None = typer.Option(
         None, help="Types of OCR prediction to use"
     ),
 ) -> None:
@@ -250,7 +247,7 @@ def generate_ocr_predictions(
     server_type: ServerType = typer.Option(
         ServerType.off, help="Server type of the archive"
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         help="File to write output to, stdout if not specified. Gzipped output are supported.",
         dir_okay=False,
@@ -299,8 +296,8 @@ def categorize(
         help="The environment to use, production (org) or staging (net)",
     ),
     deepest_only: bool = False,
-    threshold: Optional[float] = typer.Option(0.5, help="detection threshold to use"),
-    triton_uri: Optional[str] = typer.Option(
+    threshold: float | None = typer.Option(0.5, help="detection threshold to use"),
+    triton_uri: str | None = typer.Option(
         None,
         help="URI of the Triton server to use. If not provided, the default value from settings is used.",
     ),
@@ -368,11 +365,11 @@ def import_insights(
     batch_size: int = typer.Option(
         128, help="Number of insights that are imported in each atomic SQL transaction"
     ),
-    input_path: Optional[Path] = typer.Option(
+    input_path: Path | None = typer.Option(
         None,
         help="Input path of the JSONL archive, is incompatible with --generate-from",
     ),
-    generate_from: Optional[Path] = typer.Option(
+    generate_from: Path | None = typer.Option(
         None, help="Input path of the OCR archive, is incompatible with --input-path"
     ),
     server_type: ServerType = typer.Option(
@@ -416,11 +413,11 @@ def import_insights(
 
 @app.command()
 def refresh_insights(
-    barcode: Optional[str] = typer.Option(
+    barcode: str | None = typer.Option(
         None,
         help="Refresh a specific product. If not provided, all products are updated",
     ),
-    prediction_type: Optional[PredictionType] = typer.Option(
+    prediction_type: PredictionType | None = typer.Option(
         None,
         help="Type of the prediction to refresh, if any. This option is only "
         "used when --barcode is not used.",
@@ -552,11 +549,11 @@ def import_images_in_db(
 
 @app.command()
 def run_category_prediction(
-    triton_uri: Optional[str] = typer.Option(
+    triton_uri: str | None = typer.Option(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
     ),
-    limit: Optional[int] = typer.Option(
+    limit: int | None = typer.Option(
         None, help="Maximum numbers of job to launch (default: all)"
     ),
 ):
@@ -622,7 +619,7 @@ def run_object_detection_model(
     model_name: ObjectDetectionModel = typer.Argument(
         ..., help="Name of the object detection model"
     ),
-    input_path: Optional[Path] = typer.Option(
+    input_path: Path | None = typer.Option(
         None,
         exists=True,
         file_okay=True,
@@ -631,15 +628,15 @@ def run_object_detection_model(
         "If null, a query is performed in DB to fetch images without image predictions "
         "for the specified model.",
     ),
-    limit: Optional[int] = typer.Option(None, help="Maximum numbers of job to launch"),
-    triton_uri: Optional[str] = typer.Option(
+    limit: int | None = typer.Option(None, help="Maximum numbers of job to launch"),
+    triton_uri: str | None = typer.Option(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
     ),
 ):
     """Launch object detection model jobs on all missing images (images
     without an ImagePrediction item for this model) in DB."""
-    from typing import Callable
+    from collections.abc import Callable
     from urllib.parse import urlparse
 
     import tqdm
@@ -797,11 +794,11 @@ def run_nutrition_extraction(
     image_url: str = typer.Argument(
         ..., help="URL of the image to run nutrition extraction on"
     ),
-    triton_uri: Optional[str] = typer.Option(
+    triton_uri: str | None = typer.Option(
         None,
         help="URI of the Triton Inference Server to use. If not provided, the default value from settings is used.",
     ),
-    model_version: Optional[str] = typer.Option(
+    model_version: str | None = typer.Option(
         None, help="Version of the model to use, defaults to the latest"
     ),
 ) -> None:
@@ -859,7 +856,7 @@ def add_logo_to_ann(
     sleep_time: float = typer.Option(
         0.0, help="Time to sleep between each query (in s)"
     ),
-    existing_ids_path: Optional[Path] = typer.Argument(
+    existing_ids_path: Path | None = typer.Argument(
         None,
         file_okay=True,
         dir_okay=False,

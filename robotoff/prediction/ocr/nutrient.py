@@ -1,5 +1,4 @@
 import re
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -148,9 +147,7 @@ def generate_nutrient_regex(
     nutrient_names_str = "|".join(nutrient_names)
     units_str = "|".join(units)
     return re.compile(
-        r"(?<!\w)({}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({})(?!\w)".format(
-            nutrient_names_str, units_str
-        ),
+        rf"(?<!\w)({nutrient_names_str}) ?(?:[:-] ?)?([0-9]+[,.]?[0-9]*) ?({units_str})(?!\w)",
         re.I,
     )
 
@@ -160,7 +157,7 @@ def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
     )
-    return re.compile(r"(?<!\w){}(?!\w)".format(sub_re), re.I)
+    return re.compile(rf"(?<!\w){sub_re}(?!\w)", re.I)
 
 
 NUTRIENT_VALUES_REGEX = {
@@ -187,7 +184,7 @@ NUTRIENT_MENTIONS_REGEX["nutrient_value"] = OCRRegex(
 )
 
 
-def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_nutrient_values(content: OCRResult | str) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for regex_code, ocr_regex in NUTRIENT_VALUES_REGEX.items():
@@ -222,7 +219,7 @@ def find_nutrient_values(content: Union[OCRResult, str]) -> list[Prediction]:
     ]
 
 
-def find_nutrient_mentions(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_nutrient_mentions(content: OCRResult | str) -> list[Prediction]:
     nutrients: JSONType = {}
 
     for nutrient_name, ocr_regex in NUTRIENT_MENTIONS_REGEX.items():

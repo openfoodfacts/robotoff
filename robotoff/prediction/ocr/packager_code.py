@@ -1,6 +1,5 @@
 import re
 from functools import cache
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -29,19 +28,19 @@ def process_fr_packaging_match(match) -> str:
 
 def process_de_packaging_match(match) -> str:
     federal_state_tag, company_tag = match.group(1, 2)
-    return "DE {}-{} EC".format(federal_state_tag, company_tag).upper()
+    return f"DE {federal_state_tag}-{company_tag} EC".upper()
 
 
 def process_fr_emb_match(match) -> str:
     city_code, company_code = match.group(1, 2)
     city_code = city_code.replace(" ", "")
     company_code = company_code or ""
-    return "EMB {}{}".format(city_code, company_code).upper()
+    return f"EMB {city_code}{company_code}".upper()
 
 
 def process_fsc_match(match) -> str:
     fsc_code = match.group(1)
-    return "FSC-{}".format(fsc_code).upper()
+    return f"FSC-{fsc_code}".upper()
 
 
 def process_USDA_match_to_flashtext(match) -> str | None:
@@ -142,7 +141,7 @@ PACKAGER_CODE = {
 }
 
 
-def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_packager_codes_regex(content: OCRResult | str) -> list[Prediction]:
     results: list[Prediction] = []
 
     for regex_code, regex_list in PACKAGER_CODE.items():
@@ -186,11 +185,11 @@ def find_packager_codes_regex(content: Union[OCRResult, str]) -> list[Prediction
 @cache
 def generate_fishing_code_keyword_processor() -> KeywordProcessor:
     codes = text_file_iter(settings.OCR_FISHING_FLASHTEXT_DATA_PATH)
-    return generate_keyword_processor(("{}||{}".format(c.upper(), c) for c in codes))
+    return generate_keyword_processor(f"{c.upper()}||{c}" for c in codes)
 
 
 def extract_fishing_code(
-    processor: KeywordProcessor, content: Union[OCRResult, str]
+    processor: KeywordProcessor, content: OCRResult | str
 ) -> list[Prediction]:
     predictions = []
     text = get_text(content)
@@ -219,7 +218,7 @@ def extract_fishing_code(
     return predictions
 
 
-def find_packager_codes(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_packager_codes(content: OCRResult | str) -> list[Prediction]:
     predictions = find_packager_codes_regex(content)
     processor = generate_fishing_code_keyword_processor()
     predictions += extract_fishing_code(processor, content)

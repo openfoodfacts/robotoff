@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -89,7 +88,7 @@ AOC_REGEX = {
 }
 
 
-def find_category(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_category(content: OCRResult | str) -> list[Prediction]:
     """This function returns a prediction of the product category.
     For now we are extracting categories via REGEX
     only thanks to an AOP syntax but we may find in the future

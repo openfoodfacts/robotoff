@@ -1,8 +1,9 @@
 import datetime
 import functools
 import logging
+from collections.abc import Iterable
 from enum import Enum
-from typing import Iterable, Literal, NamedTuple, Union
+from typing import Literal, NamedTuple
 
 import falcon
 import peewee
@@ -410,7 +411,7 @@ def save_annotation(
     should be subject to the voting system.
     """
     try:
-        insight: Union[ProductInsight, None] = ProductInsight.get_by_id(insight_id)
+        insight: ProductInsight | None = ProductInsight.get_by_id(insight_id)
     except ProductInsight.DoesNotExist:
         insight = None
 
@@ -615,4 +616,4 @@ def validate_params(params: JSONType, schema: type) -> BaseModel:
         errors = e.errors(include_url=False)
         plural = "s" if len(errors) > 1 else ""
         description = f"{len(errors)} validation error{plural}: {errors}"
-        raise falcon.HTTPBadRequest(description=description)
+        raise falcon.HTTPBadRequest(description=description) from None

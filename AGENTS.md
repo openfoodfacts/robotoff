@@ -36,18 +36,15 @@ make pytest args='tests/unit/path/to/test_file.py::test_function_name --pdb'
 ### Linting and Code Quality
 
 ```bash
-# Run all checks (toml, flake8, black, mypy, isort, docs)
+# Run all checks (toml, ruff, mypy, docs)
 make checks
 
 # Run individual linters
-make flake8        # flake8 linting
-make black         # auto-format code
-make black-check   # check black formatting
-make mypy          # type checking
-make isort         # sort imports
-make isort-check   # check import sorting
+make ruff-format  # auto-format code
+make ruff-check   # lint code
+make mypy         # type checking
 
-# Format code (isort + black)
+# Run all linter + formatter
 make lint
 ```
 
@@ -65,18 +62,13 @@ make tests args='...' # Run specific pytest args
 ### Formatting
 
 - **Line length**: 88 characters (matches Black default)
-- **Formatter**: Black (v26.3.1)
-- **Import sorting**: isort (v6.0.1) with:
-  - `multi_line_output = 3` (hanging indent)
-  - `include_trailing_comma = true`
-  - `use_parentheses = true`
-  - `line_length = 88`
+- **Formatter**: Ruff
 
 Run `make lint` to auto-format code.
 
 ### Linting
 
-- **Linter**: flake8 (v7.2.0)
+- **Linter**: ruff
 - **Max line length**: 88
 - **Ignored rules**: E203 (whitespace before ':'), E501 (line too long), W503 (line break before binary operator)
 - **Max doc length**: 88
@@ -155,10 +147,7 @@ class MyModel(BaseModel):
 
 ### Pre-commit Hooks
 
-The project uses pre-commit with:
-- Black (formatting)
-- Flake8 (linting)
-- isort (import sorting)
+The project uses Ruff as a formatter, linter and import sorter.
 
 Install hooks with: `pre-commit install`
 
@@ -176,7 +165,6 @@ Install hooks with: `pre-commit install`
 
 - `pyproject.toml`: Project configuration and dependencies
 - `Makefile`: Development commands
-- `.flake8`: Flake8 configuration
 - `.pre-commit-config.yaml`: Pre-commit hooks
 - `robotoff/settings.py`: Application settings
 

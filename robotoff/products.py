@@ -9,8 +9,8 @@ import os
 import shutil
 import tempfile
 import typing
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Iterable, Iterator, Union
 
 import requests
 from huggingface_hub import snapshot_download
@@ -68,7 +68,7 @@ def has_nutrition_image(images: JSONType, lang: str | None = None) -> bool:
 
 
 def has_special_image(images: JSONType, key: str, lang: str | None = None) -> bool:
-    field_name = "{}_".format(key) if lang is None else "{}_{}".format(key, lang)
+    field_name = f"{key}_" if lang is None else f"{key}_{lang}"
     for image_key in images:
         if image_key.startswith(field_name):
             return True
@@ -92,7 +92,7 @@ def is_special_image(
             if lang is None:
                 return True
 
-            elif image_key.endswith("_{}".format(lang)):
+            elif image_key.endswith(f"_{lang}"):
                 return True
 
     return False
@@ -109,11 +109,9 @@ def minify_product_dataset(dataset_path: Path, output_path: Path):
             available_fields = Product.get_fields(item)
 
             minified_item = dict(
-                (
-                    (field, value)
-                    for (field, value) in item.items()
-                    if field in available_fields
-                )
+                (field, value)
+                for (field, value) in item.items()
+                if field in available_fields
             )
             output_.write(json.dumps(minified_item) + "\n")
 
@@ -122,7 +120,7 @@ def get_product_dataset_etag() -> str | None:
     if not settings.JSONL_DATASET_ETAG_PATH.is_file():
         return None
 
-    with open(settings.JSONL_DATASET_ETAG_PATH, "r") as f:
+    with open(settings.JSONL_DATASET_ETAG_PATH) as f:
         return f.readline()
 
 
@@ -232,7 +230,7 @@ class ComparisonOperator(enum.Enum):
             if operator.name == value:
                 return operator
 
-        raise ValueError("unknown operator: {}".format(value))
+        raise ValueError(f"unknown operator: {value}")
 
 
 def apply_comparison_operator(
@@ -293,8 +291,8 @@ class ProductStream:
     def filter_number_field(
         self,
         field: str,
-        ref: Union[int, float],
-        default: Union[int, float],
+        ref: int | float,
+        default: int | float,
         operator: str = "eq",
     ) -> "ProductStream":
         operator_ = ComparisonOperator.get_from_string(operator)

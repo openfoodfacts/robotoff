@@ -36,9 +36,7 @@ class TestKPExtractorSpan(unittest.TestCase):
                 self.assertEqual(
                     kwd[0].lower(),
                     test_case["sentence"].lower()[kwd[1] : kwd[2]],
-                    "keywords span don't match the expected results for test case: {}".format(
-                        test_id
-                    ),
+                    f"keywords span don't match the expected results for test case: {test_id}",
                 )
 
     def test_extract_keywords_case_sensitive(self):
@@ -58,9 +56,7 @@ class TestKPExtractorSpan(unittest.TestCase):
                 self.assertEqual(
                     kwd[0],
                     test_case["sentence"][kwd[1] : kwd[2]],
-                    "keywords span don't match the expected results for test case: {}".format(
-                        test_id
-                    ),
+                    f"keywords span don't match the expected results for test case: {test_id}",
                 )
 
 

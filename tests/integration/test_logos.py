@@ -26,7 +26,7 @@ def _fake_store(monkeypatch, product_id: ProductIdentifier):
                         "2": {
                             "rev": 1,
                             "uploaded_t": datetime.datetime.now(
-                                datetime.timezone.utc
+                                datetime.UTC
                             ).timestamp(),
                         }
                     },

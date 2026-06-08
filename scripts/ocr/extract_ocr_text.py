@@ -178,7 +178,7 @@ class OCRResult:
             return self.get_text_annotations(lowercase)
 
         else:
-            raise ValueError("invalid field: {}".format(field))
+            raise ValueError(f"invalid field: {field}")
 
     def get_text(self, ocr_regex):
         return self._get_text(ocr_regex.field, ocr_regex.lowercase)
@@ -205,7 +205,7 @@ class OCRResult:
             return None
 
         if "error" in response:
-            print("error in OCR response: " "{}".format(response["error"]))
+            print("error in OCR response: {}".format(response["error"]))
             return None
 
         try:
@@ -242,7 +242,7 @@ def get_text(
 
             return text
 
-    raise TypeError("invalid type: {}".format(type(content)))
+    raise TypeError(f"invalid type: {type(content)}")
 
 
 class OCRFullTextAnnotation:
@@ -411,7 +411,7 @@ class DetectedBreak:
         self.is_prefix = data.get("isPrefix", False)
 
     def __repr__(self):
-        return "<DetectedBreak {}>".format(self.type)
+        return f"<DetectedBreak {self.type}>"
 
     def get_value(self):
         if self.type in ("UNKNOWN", "HYPHEN"):
@@ -424,7 +424,7 @@ class DetectedBreak:
             return "\n"
 
         else:
-            raise ValueError("unknown type: {}".format(self.type))
+            raise ValueError(f"unknown type: {self.type}")
 
 
 class DetectedLanguage:
@@ -435,9 +435,7 @@ class DetectedLanguage:
         self.confidence = data.get("confidence", 0)
 
     def __repr__(self):
-        return "<DetectedLanguage: {} (confidence: {})>".format(
-            self.language, self.confidence
-        )
+        return f"<DetectedLanguage: {self.language} (confidence: {self.confidence})>"
 
 
 class BoundingPoly:
@@ -503,7 +501,7 @@ def extract_ocr_text(input_path, output_path):
                 try:
                     data = orjson.loads(line)
                 except orjson.JSONDecodeError as e:
-                    print("Error during JSON decode: {}".format(e))
+                    print(f"Error during JSON decode: {e}")
                     continue
 
                 ocr_result_data = data.pop("content")
@@ -533,5 +531,5 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     if not args.input.is_file():
-        sys.exit("input file {} does not exist".format(args.input))
+        sys.exit(f"input file {args.input} does not exist")
     extract_ocr_text(args.input, args.output)

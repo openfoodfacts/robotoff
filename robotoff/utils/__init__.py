@@ -1,7 +1,8 @@
 import gzip
 import logging
 import pathlib
-from typing import Any, Callable, Iterable, Union
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import orjson
 import requests
@@ -16,7 +17,7 @@ from .logger import get_logger  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
-def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[JSONType]:
+def jsonl_iter(jsonl_path: str | pathlib.Path) -> Iterable[JSONType]:
     """Iterate over elements of a JSONL file.
 
     :param jsonl_path: the path of the JSONL file. Both plain (.jsonl) and
@@ -29,7 +30,7 @@ def jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[JSONType]:
         yield from jsonl_iter_fp(f)
 
 
-def gzip_jsonl_iter(jsonl_path: Union[str, pathlib.Path]) -> Iterable[dict]:
+def gzip_jsonl_iter(jsonl_path: str | pathlib.Path) -> Iterable[dict]:
     with gzip.open(jsonl_path, "rt", encoding="utf-8") as f:
         yield from jsonl_iter_fp(f)
 
@@ -41,9 +42,7 @@ def jsonl_iter_fp(fp) -> Iterable[dict]:
             yield orjson.loads(line)
 
 
-def load_json(
-    path: Union[str, pathlib.Path], compressed: bool = False
-) -> Union[dict, list]:
+def load_json(path: str | pathlib.Path, compressed: bool = False) -> dict | list:
     """Load a JSON file.
 
     :param path: the path of the file
@@ -58,7 +57,7 @@ def load_json(
             return orjson.loads(f.read())
 
 
-def dump_json(path: Union[str, pathlib.Path], item: Any, compressed: bool = False):
+def dump_json(path: str | pathlib.Path, item: Any, compressed: bool = False):
     """Dump an object in a JSON file.
 
     :param path: the path of the file
@@ -74,7 +73,7 @@ def dump_json(path: Union[str, pathlib.Path], item: Any, compressed: bool = Fals
 
 
 def dump_jsonl(
-    filepath: Union[str, pathlib.Path],
+    filepath: str | pathlib.Path,
     json_iter: Iterable[Any],
 ) -> int:
     count = 0
@@ -88,7 +87,7 @@ def dump_jsonl(
     return count
 
 
-def get_open_fn(filepath: Union[str, pathlib.Path]) -> Callable:
+def get_open_fn(filepath: str | pathlib.Path) -> Callable:
     filepath = str(filepath)
     if filepath.endswith(".gz"):
         return gzip.open
@@ -96,9 +95,7 @@ def get_open_fn(filepath: Union[str, pathlib.Path]) -> Callable:
         return open
 
 
-def text_file_iter(
-    filepath: Union[str, pathlib.Path], comment: bool = True
-) -> Iterable[str]:
+def text_file_iter(filepath: str | pathlib.Path, comment: bool = True) -> Iterable[str]:
     open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "rt") as f:
@@ -111,7 +108,7 @@ def text_file_iter(
                     yield item
 
 
-def dump_text(filepath: Union[str, pathlib.Path], text_iter: Iterable[str]):
+def dump_text(filepath: str | pathlib.Path, text_iter: Iterable[str]):
     open_fn = get_open_fn(filepath)
 
     with open_fn(str(filepath), "wt") as f:

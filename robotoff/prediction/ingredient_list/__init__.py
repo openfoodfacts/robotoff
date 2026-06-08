@@ -3,7 +3,6 @@ import functools
 import logging
 import time
 from pathlib import Path
-from typing import Union
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -72,9 +71,9 @@ class IngredientPredictionOutput:
     # `IngredientPredictionRawEntity` (if aggregation_strategy ==
     # AggregationStrategy.None) or a list of
     # `IngredientPredictionAggregatedEntity` otherwise
-    entities: Union[
-        list[IngredientPredictionRawEntity], list[IngredientPredictionAggregatedEntity]
-    ]
+    entities: (
+        list[IngredientPredictionRawEntity] | list[IngredientPredictionAggregatedEntity]
+    )
     # Original input text
     text: str
 
@@ -244,10 +243,10 @@ def predict_batch(
                 ):
                     agg_entities[i].lang = language_predictions[0]
 
-        entities: Union[
-            list[IngredientPredictionRawEntity],
-            list[IngredientPredictionAggregatedEntity],
-        ] = (
+        entities: (
+            list[IngredientPredictionRawEntity]
+            | list[IngredientPredictionAggregatedEntity]
+        ) = (
             raw_entities
             if aggregation_strategy is AggregationStrategy.NONE
             else agg_entities

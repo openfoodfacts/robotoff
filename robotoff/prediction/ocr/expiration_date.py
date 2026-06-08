@@ -1,7 +1,6 @@
 import datetime
 import functools
 import re
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -27,9 +26,7 @@ def process_full_digits_expiration_date(match, short: bool) -> datetime.date | N
         format_str = "%d/%m/%Y"
 
     try:
-        date = datetime.datetime.strptime(
-            "{}/{}/{}".format(day, month, year), format_str
-        ).date()
+        date = datetime.datetime.strptime(f"{day}/{month}/{year}", format_str).date()
     except ValueError:
         return None
 
@@ -54,7 +51,7 @@ EXPIRATION_DATE_REGEX: dict[str, OCRRegex] = {
 }
 
 
-def find_expiration_date(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_expiration_date(content: OCRResult | str) -> list[Prediction]:
     # Parse expiration date
     #        "À consommer de préférence avant",
     results: list[Prediction] = []

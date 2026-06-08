@@ -1,6 +1,5 @@
 import base64
 import logging
-from typing import List
 
 import orjson
 import requests
@@ -10,7 +9,7 @@ from robotoff.utils import http_session
 logger = logging.getLogger(__name__)
 
 
-def run_ocr_on_image_batch(base64_images: List[str], api_key: str) -> requests.Response:
+def run_ocr_on_image_batch(base64_images: list[str], api_key: str) -> requests.Response:
     url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
     return http_session.post(
         url,

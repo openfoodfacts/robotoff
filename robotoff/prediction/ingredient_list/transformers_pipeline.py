@@ -237,7 +237,9 @@ class TokenClassificationPipeline:
         return word_entities
 
     def group_sub_entities(
-        self, entities: list[dict], sentence: str  # DIFF-ORIGINAL
+        self,
+        entities: list[dict],
+        sentence: str,  # DIFF-ORIGINAL
     ) -> dict:
         """
         Group together the adjacent tokens with the same entity predicted.
@@ -276,7 +278,9 @@ class TokenClassificationPipeline:
         return bi, tag
 
     def group_entities(
-        self, entities: list[dict], sentence: str  # DIFF-ORIGINAL
+        self,
+        entities: list[dict],
+        sentence: str,  # DIFF-ORIGINAL
     ) -> list[dict]:
         """
         Find and group together the adjacent tokens with the same entity predicted.

@@ -49,7 +49,7 @@ def test_annotation_fails_is_rolledback(mocker):
         annotator, "process_annotation", side_effect=Exception("Blah")
     )
     insight = ProductInsightFactory()
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         annotator().annotate(insight=insight, annotation=1)
     insight = ProductInsight.get(id=insight.id)
     # unchanged

@@ -7,7 +7,6 @@ import logging
 import typing
 from dataclasses import dataclass
 from enum import Enum
-from typing import Type
 
 from pydantic import ValidationError
 from requests.exceptions import ConnectionError as RequestConnectionError
@@ -210,7 +209,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
 
         insight.username = username
         insight.annotation = annotation
-        insight.completed_at = datetime.datetime.now(datetime.timezone.utc)
+        insight.completed_at = datetime.datetime.now(datetime.UTC)
 
         if annotation in (1, 2) and update:
             # Save insight before processing the annotation
@@ -245,8 +244,7 @@ class InsightAnnotator(metaclass=abc.ABCMeta):
     ) -> AnnotationResult:
         pass
 
-    @classmethod
-    @abc.abstractmethod
+    @classmethod  # noqa: B027
     def validate_data(cls, data: JSONType) -> None:
         """Validate the `data` field submitted by the client.
 
@@ -1208,7 +1206,7 @@ class IngredientDetectionAnnotator(InsightAnnotator):
         )
 
 
-ANNOTATOR_MAPPING: dict[str, Type] = {
+ANNOTATOR_MAPPING: dict[str, type[InsightAnnotator]] = {
     InsightType.packager_code.name: PackagerCodeAnnotator,
     InsightType.label.name: LabelAnnotator,
     InsightType.category.name: CategoryAnnotator,

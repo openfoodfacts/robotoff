@@ -38,9 +38,7 @@ class TestKeywordRemover(unittest.TestCase):
             self.assertEqual(
                 keywords_extracted,
                 test_case["keywords"],
-                "keywords_extracted don't match the expected results for test case: {}".format(
-                    test_id
-                ),
+                f"keywords_extracted don't match the expected results for test case: {test_id}",
             )
 
     def test_remove_keywords_using_list(self):
@@ -62,9 +60,7 @@ class TestKeywordRemover(unittest.TestCase):
             self.assertEqual(
                 keywords_extracted,
                 test_case["keywords"],
-                "keywords_extracted don't match the expected results for test case: {}".format(
-                    test_id
-                ),
+                f"keywords_extracted don't match the expected results for test case: {test_id}",
             )
 
     def test_remove_keywords_dictionary_compare(self):
@@ -96,9 +92,7 @@ class TestKeywordRemover(unittest.TestCase):
             keyword_trie_dict_two = keyword_processor_two.keyword_trie_dict
             self.assertTrue(
                 keyword_trie_dict == keyword_trie_dict_two,
-                "keywords_extracted don't match the expected results for test case: {}".format(
-                    test_id
-                ),
+                f"keywords_extracted don't match the expected results for test case: {test_id}",
             )
 
 

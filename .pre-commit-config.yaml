@@ -1,17 +1,8 @@
 repos:
-# Note for all linters: do not forget to update pyproject.toml when updating version.
-- repo: https://github.com/ambv/black
-  rev: 26.3.1
-  hooks:
-  - id: black
-    language_version: python3.11
-
-- repo: https://github.com/pycqa/flake8
-  rev: 7.2.0
-  hooks:
-  - id: flake8
-
-- repo: https://github.com/timothycrosley/isort
-  rev: 6.0.1
-  hooks:
-  - id: isort
+  # Note for all linters: do not forget to update pyproject.toml when updating version.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.16
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format

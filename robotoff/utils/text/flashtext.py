@@ -5,11 +5,10 @@ fixed (especially https://github.com/vi3k6i5/flashtext/issues/119).
 """
 
 import functools
-import io
 import os
 import string
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 
 class KeywordProcessor:
@@ -310,7 +309,7 @@ class KeywordProcessor:
         return self.__getitem__(word)
 
     def add_keyword_from_file(
-        self, keyword_file: Union[Path, str], encoding: str = "utf-8"
+        self, keyword_file: Path | str, encoding: str = "utf-8"
     ) -> None:
         """To add keywords from a file
 
@@ -339,8 +338,8 @@ class KeywordProcessor:
 
         """
         if not os.path.isfile(keyword_file):
-            raise IOError("Invalid file path {}".format(keyword_file))
-        with io.open(keyword_file, encoding=encoding) as f:
+            raise OSError(f"Invalid file path {keyword_file}")
+        with open(keyword_file, encoding=encoding) as f:
             for line in f:
                 if "=>" in line:
                     keyword, clean_name = line.split("=>")
@@ -369,9 +368,7 @@ class KeywordProcessor:
         """
         for clean_name, keywords in keyword_dict.items():
             if not isinstance(keywords, list):
-                raise AttributeError(
-                    "Value of key {} should be a list".format(clean_name)
-                )
+                raise AttributeError(f"Value of key {clean_name} should be a list")
 
             for keyword in keywords:
                 self.add_keyword(keyword, clean_name)
@@ -396,9 +393,7 @@ class KeywordProcessor:
         """
         for clean_name, keywords in keyword_dict.items():
             if not isinstance(keywords, list):
-                raise AttributeError(
-                    "Value of key {} should be a list".format(clean_name)
-                )
+                raise AttributeError(f"Value of key {clean_name} should be a list")
 
             for keyword in keywords:
                 self.remove_keyword(keyword)
@@ -483,7 +478,7 @@ class KeywordProcessor:
 
     def extract_keywords(
         self, sentence: str, span_info: bool = False, max_cost: int = 0
-    ) -> list[Union[Any, tuple[Any, int, int]]]:
+    ) -> list[Any | tuple[Any, int, int]]:
         """Searches in the string for all keywords present in corpus.
         Keywords present are added to a list `keywords_extracted` and returned.
 
@@ -511,7 +506,7 @@ class KeywordProcessor:
             >>> keywords_found
             >>> ['New York', 'Bay Area']
         """
-        keywords_extracted: list[Union[Any, tuple[Any, int, int]]] = []
+        keywords_extracted: list[Any | tuple[Any, int, int]] = []
         if not sentence:
             # if sentence is empty or none just return empty list
             return keywords_extracted
@@ -533,7 +528,6 @@ class KeywordProcessor:
             char = sentence[idx]
             # when we reach a character that might denote word end
             if char not in self.non_word_boundaries:
-
                 # if end is present in current_dict
                 if self._keyword in current_dict or char in current_dict:
                     # update longest sequence found
@@ -666,7 +660,7 @@ class KeywordProcessor:
             >>> keyword_processor.add_keyword('Big Apple')
             >>> 'Big'
         """
-        next_word = str()
+        next_word = ""
         for char in sentence:
             if char not in self.non_word_boundaries:
                 break

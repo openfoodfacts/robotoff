@@ -37,7 +37,6 @@ def get_polygon_area(box: np.ndarray) -> float:
     """
     x = np.array([pt[1] for pt in box])
     y = np.array([pt[0] for pt in box])
-    x, y
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 

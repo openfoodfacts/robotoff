@@ -4,7 +4,6 @@ import sys
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import List
 
 import requests
 from openfoodfacts.ocr import BoundingPoly, OCRResult
@@ -19,7 +18,7 @@ class FeatureType(Enum):
     SYMBOL = 5
 
 
-def draw_boxes(image, bounds: List[BoundingPoly], color, draw_line: bool = False):
+def draw_boxes(image, bounds: list[BoundingPoly], color, draw_line: bool = False):
     """Draw a border around the image using the hints in the vector list."""
     draw = ImageDraw.Draw(image)
 
@@ -46,7 +45,7 @@ def draw_boxes(image, bounds: List[BoundingPoly], color, draw_line: bool = False
 
 def get_document_bounds(feature: FeatureType, ocr_result: OCRResult):
     """Returns document bounds given an image."""
-    bounds: List[BoundingPoly | None] = []
+    bounds: list[BoundingPoly | None] = []
 
     document = ocr_result.full_text_annotation
 

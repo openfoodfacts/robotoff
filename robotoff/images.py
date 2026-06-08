@@ -86,9 +86,7 @@ def save_image(
             uploaded_t = int(uploaded_t)
 
         if uploaded_t is not None:
-            uploaded_at = datetime.datetime.fromtimestamp(
-                uploaded_t, datetime.timezone.utc
-            )
+            uploaded_at = datetime.datetime.fromtimestamp(uploaded_t, datetime.UTC)
     else:
         uploaded_at = None
         # DB product check is disabled which means we shouldn't rely on having

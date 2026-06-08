@@ -19,9 +19,10 @@ from robotoff.models import (
     LogoAnnotation,
     LogoConfidenceThreshold,
     LogoEmbedding,
+    ProductInsight,
+    db,
 )
 from robotoff.models import Prediction as PredictionModel
-from robotoff.models import ProductInsight, db
 from robotoff.off import OFFAuthentication
 from robotoff.types import (
     ElasticSearchIndex,
@@ -170,7 +171,7 @@ def add_logos_to_ann(
             "embedding": embedding / np.linalg.norm(embedding),
             "server_type": server_type.name,
         }
-        for logo_embedding, embedding in zip(logo_embeddings, embeddings)
+        for logo_embedding, embedding in zip(logo_embeddings, embeddings, strict=False)
     )
     elasticsearch_bulk(es_client, actions)
 
@@ -194,11 +195,11 @@ def save_nearest_neighbors(
         ]
 
         if results:
-            logo_ids, distances = zip(*results)
+            logo_ids, distances = zip(*results, strict=False)
             logo_embedding.logo.nearest_neighbors = {
                 "distances": distances,
                 "logo_ids": logo_ids,
-                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "updated_at": datetime.datetime.now(datetime.UTC).isoformat(),
             }
             updated.append(logo_embedding.logo)
 
@@ -501,7 +502,7 @@ def predict_logo_predictions(
 ) -> list[Prediction]:
     predictions = []
 
-    for logo, probs in zip(logos, logo_probs):
+    for logo, probs in zip(logos, logo_probs, strict=False):
         if not probs:
             continue
 

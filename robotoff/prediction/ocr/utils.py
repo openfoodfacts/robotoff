@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 from robotoff.utils.text import KeywordProcessor
 
@@ -17,7 +17,7 @@ def generate_keyword_processor(
         elif len(splitted) == 3:
             key, name, pattern = splitted
         else:
-            raise ValueError("invalid syntax: '{}'".format(item))
+            raise ValueError(f"invalid syntax: '{item}'")
 
         if keep_func is not None and not keep_func(key, name):
             continue

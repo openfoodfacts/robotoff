@@ -8,8 +8,9 @@ import operator
 import typing
 import uuid
 from collections import defaultdict
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Type, Union
+from typing import Any
 
 from peewee import SQL
 from playhouse.shortcuts import model_to_dict
@@ -17,9 +18,8 @@ from playhouse.shortcuts import model_to_dict
 from robotoff import settings
 from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
 from robotoff.insights.normalize import normalize_emb_code
-from robotoff.models import ImageModel, ImagePrediction
+from robotoff.models import ImageModel, ImagePrediction, ProductInsight, batch_insert
 from robotoff.models import Prediction as PredictionModel
-from robotoff.models import ProductInsight, batch_insert
 from robotoff.prediction.ocr.packaging import SHAPE_ONLY_EXCLUDE_SET
 from robotoff.products import (
     DBProductStore,
@@ -93,14 +93,14 @@ def is_recent_image(
     the most recent image and the provided image.
     """
     image_datetime = datetime.datetime.fromtimestamp(
-        int(images[image_id]["uploaded_t"]), datetime.timezone.utc
+        int(images[image_id]["uploaded_t"]), datetime.UTC
     )
     remaining_datetimes = []
     for key, image_meta in images.items():
         if key.isdigit() and key != image_id:
             remaining_datetimes.append(
                 datetime.datetime.fromtimestamp(
-                    int(image_meta["uploaded_t"]), datetime.timezone.utc
+                    int(image_meta["uploaded_t"]), datetime.UTC
                 )
             )
 
@@ -304,7 +304,7 @@ class InsightImporter(metaclass=abc.ABCMeta):
         It calls the `generate_candidates` method, specific to each insight
         type (and implemented in sub-classes).
         """
-        timestamp = datetime.datetime.now(datetime.timezone.utc)
+        timestamp = datetime.datetime.now(datetime.UTC)
 
         product = product_store[product_id]
         references = get_existing_insight(cls.get_type(), product_id)
@@ -603,10 +603,8 @@ class InsightImporter(metaclass=abc.ABCMeta):
 
         cls.add_optional_fields(insight, product)
 
-    @classmethod
-    def add_optional_fields(  # noqa: B027
-        cls, insight: ProductInsight, product: Product | None
-    ):
+    @classmethod  # noqa: B027
+    def add_optional_fields(cls, insight: ProductInsight, product: Product | None):
         """Overwrite this method in children classes to add optional fields.
 
         The `campaign` field should be populated here.
@@ -674,7 +672,8 @@ class LabelInsightImporter(InsightImporter):
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         return candidate.value_tag == reference.value_tag or cls.is_parent_label(
-            candidate.value_tag, {reference.value_tag}  # type: ignore
+            candidate.value_tag,
+            {reference.value_tag},  # type: ignore
         )
 
     @staticmethod
@@ -749,7 +748,8 @@ class CategoryImporter(InsightImporter):
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
         return candidate.value_tag == reference.value_tag or cls.is_parent_category(
-            candidate.value_tag, {reference.value_tag}  # type: ignore
+            candidate.value_tag,
+            {reference.value_tag},  # type: ignore
         )
 
     @classmethod
@@ -965,7 +965,8 @@ class BrandInsightImporter(InsightImporter):
                 return False
 
             return BrandInsightImporter.is_in_barcode_range(
-                item.barcode, item.value_tag  # type: ignore
+                item.barcode,  # type: ignore
+                item.value_tag,  # type: ignore
             )
 
         # Don't perform barcode range check and for other predictors
@@ -1424,7 +1425,6 @@ class NutritionImageImporter(InsightImporter):
 
 
 class IngredientSpellcheckImporter(InsightImporter):
-
     @staticmethod
     def get_type() -> InsightType:
         return InsightType.ingredient_spellcheck
@@ -1580,8 +1580,7 @@ class NutrientExtractionImporter(InsightImporter):
         """
         if product and (
             # Don't support the legacy nutrition schema
-            product.schema_version
-            < 1003
+            product.schema_version < 1003
         ):
             return False
 
@@ -2002,7 +2001,7 @@ class PackagingImporter(InsightImporter):
         )
 
     @staticmethod
-    def _prediction_sort_fn(prediction: Union[Prediction, ProductInsight]) -> int:
+    def _prediction_sort_fn(prediction: Prediction | ProductInsight) -> int:
         """We use the number of element as an approximation of how much
         informative the prediction is (eg. prioritize predictions with
         recycling, material and shape)."""
@@ -2197,7 +2196,7 @@ def import_product_predictions(
     :return: a (imported, deleted) tuple: the number of predictions imported
         and deleted in DB.
     """
-    timestamp = datetime.datetime.now(datetime.timezone.utc)
+    timestamp = datetime.datetime.now(datetime.UTC)
 
     deleted = 0
     if delete_previous_versions:
@@ -2288,7 +2287,7 @@ def import_product_predictions(
     return batch_insert(PredictionModel, to_import, 50), deleted
 
 
-IMPORTERS: list[Type] = [
+IMPORTERS: list[type[InsightImporter]] = [
     PackagerCodeInsightImporter,
     LabelInsightImporter,
     CategoryImporter,
@@ -2409,7 +2408,10 @@ def import_predictions(
         if (
             # If product validity check is disable, all predictions are valid
             not settings.ENABLE_MONGODB_ACCESS
-            or is_valid_product_prediction(p, product_store[ProductIdentifier(p.barcode, server_type)])  # type: ignore
+            or is_valid_product_prediction(
+                p,
+                product_store[ProductIdentifier(p.barcode, server_type)],  # type: ignore
+            )
         )
     ]
 
@@ -2440,7 +2442,7 @@ def import_predictions(
 def refresh_insights(
     product_id: ProductIdentifier,
     product_store: DBProductStore | None = None,
-) -> list[InsightImportResult]:
+) -> list[ProductInsightImportResult]:
     """Refresh all insights for specific product.
 
     All predictions are fetched, and insights are created/deleted by each

@@ -37,7 +37,7 @@ def test_find_nutrient_mentions(text: str, nutrients: dict[str, list[JSONType]])
 
     for nutrient in nutrients:
         assert nutrient in mentions
-        for ref, current in zip(nutrients[nutrient], mentions[nutrient]):
+        for ref, current in zip(nutrients[nutrient], mentions[nutrient], strict=True):
             for k, v in ref.items():
                 assert k in current
                 assert current[k] == v

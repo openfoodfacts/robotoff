@@ -1,6 +1,5 @@
 import re
 from functools import cache
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -41,7 +40,7 @@ TRACES_REGEX = OCRRegex(
 )
 
 
-def find_traces(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_traces(content: OCRResult | str) -> list[Prediction]:
     predictions = []
 
     text = get_text(content, TRACES_REGEX)

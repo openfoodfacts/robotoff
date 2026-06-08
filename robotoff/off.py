@@ -913,7 +913,7 @@ def parse_ingredients(text: str, lang: str, timeout: int = 10) -> list[JSONType]
     ) as e:
         raise RuntimeError(
             f"Unable to parse ingredients: error during HTTP request: {e}"
-        )
+        ) from e
 
     if not r.ok:
         raise RuntimeError(
@@ -969,7 +969,7 @@ def get_product_type(
     ) as e:
         raise RuntimeError(
             f"Unable to get product type: error during HTTP request: {e}"
-        )
+        ) from e
 
     if r.status_code not in (200, 404):
         raise RuntimeError(

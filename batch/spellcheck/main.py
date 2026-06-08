@@ -4,7 +4,6 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 import requests
@@ -133,8 +132,8 @@ def prepare_instruction(text: str) -> str:
 
 
 def batch_inference(
-    texts: List[str], llm: LLM, sampling_params: SamplingParams
-) -> List[str]:
+    texts: list[str], llm: LLM, sampling_params: SamplingParams
+) -> list[str]:
     """Process batch of texts with vLLM.
 
     Args:
@@ -206,7 +205,7 @@ def run_robotoff_endpoint_batch_import(batch_dir: str) -> None:
             f"Import batch Robotoff API endpoint succesfully requested: {response.text}"
         )
     except requests.exceptions.RequestException as e:
-        raise SystemExit(e)
+        raise SystemExit(e) from e
 
 
 if __name__ == "__main__":

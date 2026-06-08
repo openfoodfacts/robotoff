@@ -1,7 +1,7 @@
 import functools
 import logging
 import re
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -52,9 +52,7 @@ EN_ORGANIC_REGEX_STR = [
 LABELS_REGEX = {
     "en:organic": [
         OCRRegex(
-            re.compile(
-                r"|".join([r"(?:{})".format(x) for x in EN_ORGANIC_REGEX_STR]), re.I
-            ),
+            re.compile(r"|".join([rf"(?:{x})" for x in EN_ORGANIC_REGEX_STR]), re.I),
             field=OCRField.full_text_contiguous,
         ),
     ],
@@ -193,7 +191,7 @@ def generate_label_keyword_processor(labels: Iterable[str] | None = None):
 
 
 def extract_label_flashtext(
-    processor: KeywordProcessor, content: Union[OCRResult, str]
+    processor: KeywordProcessor, content: OCRResult | str
 ) -> list[Prediction]:
     predictions = []
 
@@ -223,7 +221,7 @@ def extract_label_flashtext(
     return predictions
 
 
-def find_labels(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_labels(content: OCRResult | str) -> list[Prediction]:
     predictions = []
     logo_annotation_labels = get_logo_annotation_labels()
 

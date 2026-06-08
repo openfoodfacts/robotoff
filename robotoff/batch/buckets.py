@@ -31,5 +31,5 @@ def fetch_dataframe_from_gcs(bucket_name: str, suffix: str) -> pd.DataFrame:
         except Exception as e:
             raise ValueError(
                 f"Could not read parquet file from {bucket_name}/{suffix}. Error: {e}"
-            )
+            ) from e
         return df

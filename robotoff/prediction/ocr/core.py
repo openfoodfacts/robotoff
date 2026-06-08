@@ -1,6 +1,7 @@
 import logging
 import pathlib
-from typing import Callable, Iterable, TextIO, Union
+from collections.abc import Callable, Iterable
+from typing import TextIO
 
 from openfoodfacts.ocr import OCRResult
 
@@ -25,9 +26,7 @@ from .trace import find_traces
 logger = logging.getLogger(__name__)
 
 
-PREDICTION_TYPE_TO_FUNC: dict[
-    str, Callable[[Union[OCRResult, str]], list[Prediction]]
-] = {
+PREDICTION_TYPE_TO_FUNC: dict[str, Callable[[OCRResult | str], list[Prediction]]] = {
     PredictionType.category: find_category,
     PredictionType.packager_code: find_packager_codes,
     PredictionType.label: find_labels,
@@ -47,7 +46,7 @@ PREDICTION_TYPE_TO_FUNC: dict[
 
 
 def extract_predictions(
-    content: Union[OCRResult, str],
+    content: OCRResult | str,
     prediction_type: PredictionType,
     product_id: ProductIdentifier | None = None,
     source_image: str | None = None,
@@ -83,7 +82,7 @@ def ocr_content_iter(items: Iterable[JSONType]) -> Iterable[tuple[str | None, di
 
 
 def ocr_iter(
-    source: Union[str, TextIO, pathlib.Path],
+    source: str | TextIO | pathlib.Path,
 ) -> Iterable[tuple[str | None, dict]]:
     if isinstance(source, pathlib.Path):
         items = jsonl_iter(source)

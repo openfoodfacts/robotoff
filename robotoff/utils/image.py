@@ -82,15 +82,15 @@ def get_image_from_url(
     if return_type == "PIL":
         try:
             return Image.open(BytesIO(content_bytes))
-        except PIL.UnidentifiedImageError:
+        except PIL.UnidentifiedImageError as e:
             error_message = f"Cannot identify image {image_url}"
             if error_raise:
-                raise AssetLoadingException(error_message)
+                raise AssetLoadingException(error_message) from e
             logger.info(error_message)
-        except PIL.Image.DecompressionBombError:
+        except PIL.Image.DecompressionBombError as e:
             error_message = f"Decompression bomb error for image {image_url}"
             if error_raise:
-                raise AssetLoadingException(error_message)
+                raise AssetLoadingException(error_message) from e
             logger.info(error_message)
 
     elif return_type == "np":
@@ -104,7 +104,7 @@ def get_image_from_url(
         except Exception as e:
             error_message = f"Error decoding image {image_url}: {e}"
             if error_raise:
-                raise AssetLoadingException(error_message)
+                raise AssetLoadingException(error_message) from e
             logger.info(error_message)
 
     elif return_type == "bytes":

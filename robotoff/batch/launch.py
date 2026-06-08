@@ -2,7 +2,6 @@ import datetime
 import logging
 import re
 from pathlib import Path
-from typing import Dict, List
 
 import yaml
 from google.cloud import batch_v1
@@ -31,7 +30,7 @@ class GoogleBatchJobConfig(BaseModel):
         description="The entrypoint for the container. If None, use default entrypoint.",
         examples=["python main.py"],
     )
-    commands: List[str] = Field(
+    commands: list[str] = Field(
         default_factory=list,
         description="Commands to run in the container. If None, use default commands. Can be used to add arguments to the job script.",
         examples=[["--max_tokens", "1024"]],
@@ -85,7 +84,7 @@ class GoogleBatchJobConfig(BaseModel):
         default=True,
         description="Required if GPUs.",
     )
-    env_variables: Dict[str, str] = Field(
+    env_variables: dict[str, str] = Field(
         description="Environment variables to pass during the batch job.",
         default_factory=dict,
     )
@@ -119,7 +118,7 @@ class GoogleBatchJobConfig(BaseModel):
 
         env_variables = env_variables or {}
         # Load config file from job_type
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
         return cls(job_name=unique_job_name, env_variables=env_variables, **config)
 

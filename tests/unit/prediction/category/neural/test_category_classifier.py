@@ -110,6 +110,8 @@ def test_predict(
 
     assert len(predictions) == len(expected_values)
 
-    for prediction, (value_tag, confidence) in zip(predictions, expected_values):
+    for prediction, (value_tag, confidence) in zip(
+        predictions, expected_values, strict=True
+    ):
         assert prediction.value_tag == value_tag
         assert np.isclose(prediction.confidence, confidence)
