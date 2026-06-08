@@ -194,7 +194,7 @@ integration-tests:
 	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
-ml-tests: 
+ml-tests:
 	@echo "🥫 Running ML tests …"
 	${DOCKER_COMPOSE_TEST} up -d triton
 	@echo "Sleeping for 30s, waiting for triton to be ready..."
@@ -277,7 +277,7 @@ create-migration: guard-args
 
 # create network if not exists
 create-po-default-network:
-	docker network create po_default || true 
+	docker network create po_default || true
 
 # Spellcheck
 build-spellcheck:
@@ -289,5 +289,5 @@ push-spellcheck:
 	docker push $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
 
 # Build and push in one command
-deploy-spellcheck: 
+deploy-spellcheck:
 	build-spellcheck push-spellcheck
