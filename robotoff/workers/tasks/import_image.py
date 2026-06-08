@@ -134,7 +134,7 @@ def rerun_import_images(
         return query.count()
 
     for image_model_id, barcode, image_id, server_type_str in query:
-        if not isinstance(barcode, str) and not barcode.isdigit():
+        if not barcode.isdigit():
             raise ValueError("Invalid barcode: %s" % barcode)
 
         product_id = ProductIdentifier(barcode, ServerType[server_type_str])
@@ -924,9 +924,9 @@ def extract_ingredients_job(
                 ingredient_prediction_data = image_prediction.data
         else:
             output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
-            entities: list[
-                ingredient_list.IngredientPredictionAggregatedEntity
-            ] = output.entities  # type: ignore
+            entities: list[ingredient_list.IngredientPredictionAggregatedEntity] = (
+                output.entities
+            )  # type: ignore
             # (we know it's an aggregated entity, so we can ignore the type)
 
             ingredient_prediction_data = generate_ingredient_prediction_data(
