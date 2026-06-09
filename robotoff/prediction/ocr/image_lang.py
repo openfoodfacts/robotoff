@@ -1,4 +1,4 @@
-from typing import TypedDict, Union
+from typing import TypedDict
 
 from openfoodfacts.ocr import OCRResult
 
@@ -14,7 +14,7 @@ class ImageLangDataType(TypedDict):
     percent: dict[str, float]
 
 
-def get_image_lang(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
+def get_image_lang(ocr_result: OCRResult | str) -> list[Prediction]:
     if isinstance(ocr_result, str):
         return []
 

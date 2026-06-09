@@ -40,7 +40,7 @@ def predict_lang_batch(
         predictions.append(
             [
                 LanguagePrediction(lang, confidence)
-                for lang, confidence in zip(lang_list, confidence_list)
+                for lang, confidence in zip(lang_list, confidence_list, strict=True)
             ]
         )
     return predictions

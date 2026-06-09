@@ -2,9 +2,10 @@ import dataclasses
 import gzip
 import json
 import re
+from collections.abc import Iterable
 from functools import cache
 from pathlib import Path
-from typing import BinaryIO, Iterable, Union
+from typing import BinaryIO
 
 from openfoodfacts.ocr import OCRResult
 
@@ -32,7 +33,7 @@ class City:
 
 
 @cache
-def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
+def load_cities_fr(source: Path | BinaryIO | None = None) -> set[City]:
     """Load French cities dataset.
 
     French cities are taken from the La Poste hexasmal dataset:
@@ -77,8 +78,8 @@ def load_cities_fr(source: Union[Path, BinaryIO, None] = None) -> set[City]:
         postal_code = city_data["code_postal"]
         if not len(postal_code) == 5 or not postal_code.isdigit():
             raise ValueError(
-                "{!r}, invalid FR postal code for city {!r}, must be 5-digits "
-                "string".format(postal_code, name)
+                f"{postal_code!r}, invalid FR postal code for city {name!r}, must be 5-digits "
+                "string"
             )
         coords = city_data.get("coordonnees_gps")
         if coords is not None:
@@ -131,7 +132,7 @@ class AddressExtractor:
         for city in self.cities:
             self.cities_processor.add_keyword(city.name, city)
 
-    def extract_addresses(self, content: Union[str, OCRResult]) -> list[Prediction]:
+    def extract_addresses(self, content: str | OCRResult) -> list[Prediction]:
         """Extract addresses from the given OCR result.
 
         Args:
@@ -237,12 +238,10 @@ class AddressExtractor:
             and end indices in the text. If it was not found, returns None.
         """
         if not city.postal_code.isdigit():
-            logger = get_logger(
-                "{}.{}".format(self.__module__, self.__class__.__name__)
-            )
+            logger = get_logger(f"{self.__module__}.{self.__class__.__name__}")
             logger.error("postal code contains non-digit characters: %s", city)
             return None
-        pattern = r"(?:[^0-9]|^)({})(?:[^0-9]|$)".format(city.postal_code)
+        pattern = rf"(?:[^0-9]|^)({city.postal_code})(?:[^0-9]|$)"
 
         sub_start = max(0, city_start - self.postal_code_search_distance)
         sub_end = min(len(text), city_end + self.postal_code_search_distance)
@@ -255,7 +254,7 @@ class AddressExtractor:
             return match.group(1), sub_start + match.start(1), sub_start + match.end(1)
 
 
-def find_locations(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_locations(content: OCRResult | str) -> list[Prediction]:
     """Find location predictions in the text content.
 
     See :class:`.AddressExtractor`.

@@ -130,23 +130,14 @@ toml-check:
 toml-lint:
 	${DOCKER_COMPOSE} run --rm --no-deps api uv run toml-sort --in-place pyproject.toml
 
-flake8:
-	${DOCKER_COMPOSE} run --rm --no-deps api flake8
+ruff-check:
+	${DOCKER_COMPOSE} run --rm --no-deps api ruff check
 
-black-check:
-	${DOCKER_COMPOSE} run --rm --no-deps api black --check .
-
-black:
-	${DOCKER_COMPOSE} run --rm --no-deps api black .
+ruff-format:
+	${DOCKER_COMPOSE} run --rm --no-deps api ruff format
 
 mypy:
 	${DOCKER_COMPOSE} run --rm --no-deps api mypy .
-
-isort-check:
-	${DOCKER_COMPOSE} run --rm --no-deps api isort --check .
-
-isort:
-	${DOCKER_COMPOSE} run --rm --no-deps api isort .
 
 docs:
 	@echo "🥫 Generationg docs…"
@@ -160,9 +151,9 @@ api-lint-check:
 	@echo "🥫 Checking OpenAPI specification…"
 	docker run --rm -v ${PWD}:/workspace -w /workspace stoplight/spectral:latest lint docs/references/api.yml --fail-severity=error
 
-checks: create_external_networks toml-check flake8 black-check mypy isort-check docs
+checks: create_external_networks toml-check ruff-check mypy docs
 
-lint: toml-lint isort black
+lint: toml-lint ruff-format ruff-check
 
 tests: create_external_networks i18n-compile unit-tests integration-tests
 
@@ -194,7 +185,7 @@ integration-tests:
 	${DOCKER_COMPOSE_TEST} run --rm worker-1 uv run pytest -vv --cov-report xml --cov=robotoff --cov-append tests/integration
 	( ${DOCKER_COMPOSE_TEST} down -v || true )
 
-ml-tests: 
+ml-tests:
 	@echo "🥫 Running ML tests …"
 	${DOCKER_COMPOSE_TEST} up -d triton
 	@echo "Sleeping for 30s, waiting for triton to be ready..."
@@ -277,7 +268,7 @@ create-migration: guard-args
 
 # create network if not exists
 create-po-default-network:
-	docker network create po_default || true 
+	docker network create po_default || true
 
 # Spellcheck
 build-spellcheck:
@@ -289,5 +280,5 @@ push-spellcheck:
 	docker push $(SPELLCHECK_REGISTRY)/$(SPELLCHECK_IMAGE_NAME):$(SPELLCHECK_TAG)
 
 # Build and push in one command
-deploy-spellcheck: 
+deploy-spellcheck:
 	build-spellcheck push-spellcheck

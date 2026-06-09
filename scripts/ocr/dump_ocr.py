@@ -17,10 +17,10 @@ added = 0
 
 with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
     for i, image_path_str in enumerate(
-        glob.iglob("{}/**/*.jpg".format(ROOT_DIR), recursive=True)
+        glob.iglob(f"{ROOT_DIR}/**/*.jpg", recursive=True)
     ):
         if i % 10000 == 0:
-            print("step: {}, added: {}".format(i, added))
+            print(f"step: {i}, added: {added}")
 
         image_path = Path(image_path_str)
         if not is_valid_dir(str(image_path.parent)) or not image_path.stem.isdigit():
@@ -33,11 +33,11 @@ with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
         if gz_json_path.is_file() and json_path.is_file():
             assert gz_json_path.stat().st_size
             if os.path.getmtime(str(gz_json_path)) > os.path.getmtime(str(json_path)):
-                print("Gzipped version more recent, deleting {}".format(json_path))
+                print(f"Gzipped version more recent, deleting {json_path}")
                 json_path.unlink()
                 gzip_selected = True
             else:
-                print("Gzipped version less recent: {}".format(gz_json_path))
+                print(f"Gzipped version less recent: {gz_json_path}")
         elif gz_json_path.is_file():
             gzip_selected = True
         elif json_path.is_file():
@@ -51,7 +51,7 @@ with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
             try:
                 data = orjson.loads(f.read())
             except orjson.JSONDecodeError:
-                print("JSON decode error on {}".format(json_path))
+                print(f"JSON decode error on {json_path}")
                 continue
 
         has_error = False
@@ -61,7 +61,7 @@ with gzip.open(str(OUTPUT_PATH), "wb") as output_f:
                 break
 
         if has_error:
-            print("OCR error on {}".format(json_path))
+            print(f"OCR error on {json_path}")
             continue
 
         output_json = {

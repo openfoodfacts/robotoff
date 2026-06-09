@@ -2,17 +2,13 @@
 dev = [
   "types-pytz==2024.1.0.20240417",
   "types-pyyaml==6.0.12.20240808",
-  "flake8==7.2.0",
-  "black==26.3.1",
+  "ruff<0.16",
   "factory_boy-peewee==0.0.4",  # This package is archived and not maintained anymore but works and is very lightweight.
   "mypy==1.10.1",
   "pytest>=7.2,<9.1",
   "pytest-mock~=3.10.0",
   "pre-commit~=4.2.0",
   "toml-sort~=0.20.1",
-  "isort==6.0.1",
-  "flake8-bugbear~=22.10.27",
-  "flake8-github-actions~=0.1.1",
   "pytest-cov~=4.0.0",
   "mkdocs-material~=7.2.3",
   "mdx-truly-sane-lists~=1.2",
@@ -37,7 +33,7 @@ name = "robotoff"
 version = "1.85.9"
 description = "Real-time and batch prediction service for Open Food Facts."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 authors = [{ name = "Open Food Facts Team" }]
 license = "AGPL-3.0-only"
 dependencies = [
@@ -86,23 +82,6 @@ dependencies = [
   "sentry-sdk[falcon]>=2.44.0,<3.0"
 ]
 
-[tool.black]
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-target-version = ["py311"]
-
 [tool.coverage.run]
 data_file = ".cov/.coverage"
 source = ["robotoff"]
@@ -110,13 +89,32 @@ source = ["robotoff"]
 [tool.coverage.xml]
 output = ".cov/coverage.xml"
 
-[tool.isort] # From https://black.readthedocs.io/en/stable/compatible_configs.html#isort
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
-
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = [
+  "B", # flake8-bugbear
+  "UP", # pyupgrade
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "F", # pyflakes
+  "I" # isort
+]
+ignore = [
+  "E501", # line too long (handled by ruff)
+  "B008", # Do not perform function call `typer.Argument` in argument defaults
+]
+exclude = [
+  ".git",
+  ".mypy_cache",
+  ".venv"
+]

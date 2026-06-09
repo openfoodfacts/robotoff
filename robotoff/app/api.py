@@ -115,7 +115,9 @@ def get_server_type_from_req(
     try:
         return ServerType[server_type_str]
     except KeyError:
-        raise falcon.HTTPBadRequest(f"invalid `server_type`: {server_type_str}")
+        raise falcon.HTTPBadRequest(
+            f"invalid `server_type`: {server_type_str}"
+        ) from None
 
 
 COUNTRY_NAME_TO_ENUM = {COUNTRY_CODE_TO_NAME[item]: item for item in Country}
@@ -133,7 +135,7 @@ def get_countries_from_req(req: falcon.Request) -> list[Country] | None:
     except KeyError:
         raise falcon.HTTPBadRequest(
             description=f"invalid `countries` value: {countries_str}"
-        )
+        ) from None
 
 
 def _get_skip_voted_on(auth: OFFAuthentication | None, device_id: str) -> SkipVotedOn:
@@ -194,7 +196,7 @@ class ProductInsightDetail:
         try:
             insight: ProductInsight = ProductInsight.get_by_id(insight_id)
         except ProductInsight.DoesNotExist:
-            raise falcon.HTTPNotFound()
+            raise falcon.HTTPNotFound() from None
 
         resp.media = insight.to_dict()
 
@@ -321,7 +323,7 @@ def parse_auth(req: falcon.Request) -> OFFAuthentication | None:
         except BasicAuthDecodeError:
             raise falcon.HTTPUnauthorized(
                 "Invalid authentication, Basic auth expected."
-            )
+            ) from None
 
     if not session_cookie and not username and not password:
         return None
@@ -354,7 +356,7 @@ def parse_valid_token(req: falcon.Request, ref_token_name: str) -> bool:
         else:
             return True
     except ValueError:
-        raise falcon.HTTPUnauthorized("Invalid authentication scheme.")
+        raise falcon.HTTPUnauthorized("Invalid authentication scheme.") from None
 
 
 def device_id_from_request(req: falcon.Request) -> str:
@@ -487,8 +489,8 @@ def transform_to_prediction_type(value: str) -> PredictionType:
     """
     try:
         return PredictionType[value]
-    except KeyError:
-        raise ValueError()
+    except KeyError as e:
+        raise ValueError() from e
 
 
 class OCRPredictionPredictorResource:
@@ -740,7 +742,7 @@ class ImagePredictionImporterResource:
     @jsonschema.validate(schema.IMAGE_PREDICTION_IMPORTER_SCHEMA)
     def on_post(self, req: falcon.Request, resp: falcon.Response):
         server_type = get_server_type_from_req(req)
-        timestamp = datetime.datetime.now(datetime.timezone.utc)
+        timestamp = datetime.datetime.now(datetime.UTC)
         inserts = []
         media = req.get_media()
 
@@ -1068,7 +1070,7 @@ class ImageLogoDetailResource:
                 annotated_logos = update_logo_annotations(
                     [(type_, value, logo)],
                     username=auth.get_username() or "unknown",
-                    completed_at=datetime.datetime.now(datetime.timezone.utc),
+                    completed_at=datetime.datetime.now(datetime.UTC),
                 )
                 server_type = ServerType[logo.image_prediction.image.server_type]
                 generate_insights_from_annotated_logos(
@@ -1142,7 +1144,7 @@ class ImageLogoAnnotateResource:
             )
         server_type = get_server_type_from_req(req)
         annotations = media["annotations"]
-        completed_at = datetime.datetime.now(datetime.timezone.utc)
+        completed_at = datetime.datetime.now(datetime.UTC)
         annotation_logos = []
 
         with db.atomic():
@@ -1155,7 +1157,9 @@ class ImageLogoAnnotateResource:
                 try:
                     logo = LogoAnnotation.get_by_id(logo_id)
                 except LogoAnnotation.DoesNotExist:
-                    raise falcon.HTTPNotFound(description=f"logo {logo_id} not found")
+                    raise falcon.HTTPNotFound(
+                        description=f"logo {logo_id} not found"
+                    ) from None
 
                 if logo.annotation_type is None:
                     # Don't annotate already annotated logos
@@ -1200,7 +1204,7 @@ class ImageLogoUpdateResource:
 
         auth = parse_auth(req)
         username = None if auth is None else auth.get_username()
-        completed_at = datetime.datetime.now(datetime.timezone.utc)
+        completed_at = datetime.datetime.now(datetime.UTC)
 
         target_value_tag = get_tag(target_value)
         source_value_tag = get_tag(source_value)
@@ -1765,7 +1769,7 @@ class BatchJobImportResource:
         except KeyError:
             raise falcon.HTTPBadRequest(
                 description=f"invalid job_type: {job_type_str}. Valid job_types are: {[elt.value for elt in BatchJobType]}"
-            )
+            ) from None
         # We secure the endpoint.
         if parse_valid_token(req, "batch_job_key"):
             enqueue_job(

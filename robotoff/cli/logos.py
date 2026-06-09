@@ -42,7 +42,7 @@ def import_logos(
 
     for batch in chunked(tqdm.tqdm(jsonl_iter(data_path)), batch_size):
         with db.atomic():
-            timestamp = datetime.datetime.now(datetime.timezone.utc)
+            timestamp = datetime.datetime.now(datetime.UTC)
             for item in batch:
                 barcode = item["barcode"]
                 product_id = ProductIdentifier(barcode, server_type)

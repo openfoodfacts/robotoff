@@ -2,7 +2,7 @@ import logging
 import math
 import time
 import typing
-from typing import Callable
+from collections.abc import Callable
 
 import albumentations as A
 import numpy as np

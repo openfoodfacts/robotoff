@@ -1,7 +1,8 @@
 import datetime
 import re
 import uuid
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 import pytest
 
@@ -569,7 +570,7 @@ class TestInsightImporter:
                             "images": {
                                 "8": {
                                     "uploaded_t": (
-                                        datetime.datetime.now(datetime.timezone.utc)
+                                        datetime.datetime.now(datetime.UTC)
                                         - datetime.timedelta(days=600)
                                     ).timestamp()
                                 }
@@ -638,9 +639,7 @@ class TestInsightImporter:
             def get_required_prediction_types():
                 return {PredictionType.category, PredictionType.image_flag}
 
-        with pytest.raises(
-            ValueError, match="unexpected prediction type: 'PredictionType.label'"
-        ):
+        with pytest.raises(ValueError, match="unexpected prediction type: 'label'"):
             FakeImporter.import_insights(
                 DEFAULT_BARCODE,
                 [Prediction(type=PredictionType.label)],
@@ -960,7 +959,9 @@ class TestLabelInsightImporter:
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected)
         candidates.sort(key=lambda c: c.value_tag)
-        for candidate, (value_tag, automatic_processing) in zip(candidates, expected):
+        for candidate, (value_tag, automatic_processing) in zip(
+            candidates, expected, strict=True
+        ):
             assert candidate.value_tag == value_tag
             assert candidate.automatic_processing is automatic_processing
 
@@ -1063,7 +1064,9 @@ class TestCategoryImporter:
         assert all(isinstance(c, ProductInsight) for c in candidates)
         assert len(candidates) == len(expected_value_tags)
 
-        for candidate, expected_value_tag in zip(candidates, expected_value_tags):
+        for candidate, expected_value_tag in zip(
+            candidates, expected_value_tags, strict=True
+        ):
             assert candidate.value_tag == expected_value_tag
 
     @pytest.mark.parametrize(

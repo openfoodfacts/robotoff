@@ -45,7 +45,7 @@ def get_environment() -> Environment:
     return Environment.org if _get_tld() == "org" else Environment.net
 
 
-class BaseURLProvider(object):
+class BaseURLProvider:
     """BaseURLProvider allows to fetch a base URL for Product Opener/Robotoff.
 
     Example usage: BaseURLProvider.robotoff() returns the Robotoff URL.
@@ -69,9 +69,9 @@ class BaseURLProvider(object):
             data["scheme"] = scheme
 
         if "prefix" in data:
-            return "%(scheme)s://%(prefix)s.%(domain)s" % data
+            return "{scheme}://{prefix}.{domain}".format(**data)
 
-        return "%(scheme)s://%(domain)s" % data
+        return "{scheme}://{domain}".format(**data)
 
     @staticmethod
     def world(server_type: ServerType):

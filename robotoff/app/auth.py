@@ -20,7 +20,7 @@ def basic_decode(encoded_str: str) -> tuple[str, str]:
         try:
             username, password = b64decode(split[0]).decode().split(":", 1)
         except Exception:
-            raise BasicAuthDecodeError()
+            raise BasicAuthDecodeError() from None
 
     # If there are only two elements, check the first and ensure it says
     # 'basic' so that we know we're about to decode the right thing. If not,
@@ -30,7 +30,7 @@ def basic_decode(encoded_str: str) -> tuple[str, str]:
             try:
                 username, password = b64decode(split[1]).decode().split(":", 1)
             except Exception:
-                raise BasicAuthDecodeError()
+                raise BasicAuthDecodeError() from None
         else:
             raise BasicAuthDecodeError()
 

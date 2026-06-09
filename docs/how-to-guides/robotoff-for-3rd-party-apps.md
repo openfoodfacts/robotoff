@@ -22,7 +22,6 @@ For detailed API endpoints and their specifications, refer to the official Robot
       * **Example API Call:**
         ``` 
         https://robotoff.openfoodfacts.org/api/v1/questions/3274570800026?lang=en&count=3
-        
         ```
         This example fetches 3 questions for the barcode `3274570800026` in English.
       * **Response Structure Example:**
@@ -41,7 +40,6 @@ For detailed API endpoints and their specifications, refer to the official Robot
           ],
           "status": "found"
         }
-        
         ```
       * The `lang` field in the request specifies the language of the returned `question` and `value`.
   * **UI Display:** Display the `question` and possible answers in your application's user interface.
@@ -50,16 +48,16 @@ For detailed API endpoints and their specifications, refer to the official Robot
 
 If a user answers a question, send the appropriate ping back to the Open Food Facts server.
 
-  * **API for Annotating Insights:**
-    ``` 
-    https://robotoff.openfoodfacts.org/api/v1/insights/annotate?insight_id=(insight_id)&annotation=(1,0,-1)&update=1
-    
-    ```
-      * Replace `(insight_id)` with the `insight_id` received from the question payload.
-      * Replace `(1,0,-1)` with the user's annotation:
-          * `1`: Yes
-          * `0`: No
-          * `-1`: Skip/Don't know
+#### API for Annotating Insights:
+```
+https://robotoff.openfoodfacts.org/api/v1/insights/annotate?insight_id=(insight_id)&annotation=(1,0,-1)&update=1
+```
+
+* Replace `(insight_id)` with the `insight_id` received from the question payload.
+* Replace `(1,0,-1)` with the user's annotation:
+  * `1`: Yes
+  * `0`: No
+  * `-1`: Skip/Don't know
 
 ## Authentication
 
@@ -71,7 +69,6 @@ Send the following header with your requests:
 
 ``` 
 Authorization: Basic (base64Credentials)
-
 ```
 
 Where `base64Credentials` is the Base64 encoding of your `username:password`.

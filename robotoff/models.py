@@ -2,8 +2,8 @@
 import datetime
 import functools
 import uuid
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import peewee
 from peewee_migrate import Router

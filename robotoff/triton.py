@@ -155,7 +155,7 @@ def serialize_byte_tensor(input_tensor):
             # don't convert it to str as Python will encode the
             # bytes which may distort the meaning
             if input_tensor.dtype == np.object_:
-                if type(obj.item()) == bytes:
+                if isinstance(obj.item(), bytes):
                     s = obj.item()
                 else:
                     s = str(obj.item()).encode("utf-8")

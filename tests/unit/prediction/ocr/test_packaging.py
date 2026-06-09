@@ -144,7 +144,9 @@ def test_find_packaging(text: str, expected_prediction_data: list[dict]):
     predictions = find_packaging(text)
     assert len(predictions) == len(expected_prediction_data)
 
-    for prediction, expected_data in zip(predictions, expected_prediction_data):
+    for prediction, expected_data in zip(
+        predictions, expected_prediction_data, strict=True
+    ):
         assert isinstance(prediction, Prediction)
         assert prediction.type is PredictionType.packaging
         assert prediction.automatic_processing is False

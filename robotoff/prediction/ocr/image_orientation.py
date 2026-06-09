@@ -1,5 +1,3 @@
-from typing import Union
-
 from openfoodfacts.ocr import ImageOrientation, OCRResult
 
 from robotoff.types import Prediction, PredictionType
@@ -21,10 +19,10 @@ def get_rotation_angle_from_orientation(image_orientation: ImageOrientation) -> 
     elif image_orientation == ImageOrientation.down:
         return 180
     else:
-        raise ValueError("unknown image orientation: {}".format(image_orientation))
+        raise ValueError(f"unknown image orientation: {image_orientation}")
 
 
-def find_image_orientation(ocr_result: Union[OCRResult, str]) -> list[Prediction]:
+def find_image_orientation(ocr_result: OCRResult | str) -> list[Prediction]:
     if isinstance(ocr_result, str):
         return []
 

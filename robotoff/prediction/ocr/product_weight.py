@@ -2,7 +2,6 @@ import functools
 import logging
 import math
 import re
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -280,7 +279,7 @@ PRODUCT_WEIGHT_REGEX: dict[str, OCRRegex] = {
 }
 
 
-def find_product_weight(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_product_weight(content: OCRResult | str) -> list[Prediction]:
     results = []
 
     for type_, ocr_regex in PRODUCT_WEIGHT_REGEX.items():

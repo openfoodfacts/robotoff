@@ -28,7 +28,7 @@ import warnings
 try:
     import matplotlib
 except ImportError:
-    warnings.warn("matplotlib library not installed", ImportWarning)
+    warnings.warn("matplotlib library not installed", ImportWarning, stacklevel=2)
 else:
     matplotlib.use("Agg")  # pylint: disable=multiple-statements
 
@@ -295,7 +295,7 @@ def draw_bounding_box_on_image(
     )
     try:
         font = ImageFont.truetype("arial.ttf", 24)
-    except IOError:
+    except OSError:
         font = ImageFont.load_default()
 
     # If the total height of the display strings added to the top of the
@@ -441,9 +441,9 @@ def draw_keypoints_on_image(
     keypoints_x = [k[1] for k in keypoints]
     keypoints_y = [k[0] for k in keypoints]
     if use_normalized_coordinates:
-        keypoints_x = tuple((im_width * x for x in keypoints_x))
-        keypoints_y = tuple((im_height * y for y in keypoints_y))
-    for keypoint_x, keypoint_y in zip(keypoints_x, keypoints_y):
+        keypoints_x = tuple(im_width * x for x in keypoints_x)
+        keypoints_y = tuple(im_height * y for y in keypoints_y)
+    for keypoint_x, keypoint_y in zip(keypoints_x, keypoints_y, strict=False):
         draw.ellipse(
             [
                 (keypoint_x - radius, keypoint_y - radius),
@@ -475,8 +475,8 @@ def draw_mask_on_image_array(image, mask, color="red", alpha=0.4):
         raise ValueError("`mask` elements should be in [0, 1]")
     if image.shape[:2] != mask.shape:
         raise ValueError(
-            "The image has spatial dimensions %s but the mask has "
-            "dimensions %s" % (image.shape[:2], mask.shape)
+            f"The image has spatial dimensions {image.shape[:2]} but the mask has "
+            f"dimensions {mask.shape}"
         )
     rgb = ImageColor.getrgb(color)
     pil_image = Image.fromarray(image)
@@ -581,11 +581,9 @@ def visualize_boxes_and_labels_on_image_array(
                         display_str = str(class_name)
                 if not skip_scores:
                     if not display_str:
-                        display_str = "{}%".format(int(100 * scores[i]))
+                        display_str = f"{int(100 * scores[i])}%"
                     else:
-                        display_str = "{}: {}%".format(
-                            display_str, int(100 * scores[i])
-                        )
+                        display_str = f"{display_str}: {int(100 * scores[i])}%"
                 box_to_display_str_map[box].append(display_str)
                 if agnostic_mode:
                     box_to_color_map[box] = "DarkOrange"

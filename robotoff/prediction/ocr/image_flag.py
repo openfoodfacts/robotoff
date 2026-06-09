@@ -1,5 +1,4 @@
 import functools
-from typing import Union
 
 from openfoodfacts.ocr import OCRResult, SafeSearchAnnotationLikelihood, get_text
 
@@ -47,8 +46,7 @@ LABELS_TO_FLAG = {
     "Cat",
     "Computer",
     "Laptop",
-    "Refrigerator",
-    "Cat",  # https://world.openfoodfacts.org/images/products/761/002/911/3600/1.json
+    "Refrigerator",  # https://world.openfoodfacts.org/images/products/761/002/911/3600/1.json
 }
 
 
@@ -82,7 +80,7 @@ def extract_image_flag_flashtext(
     return None
 
 
-def flag_image(content: Union[OCRResult, str]) -> list[Prediction]:
+def flag_image(content: OCRResult | str) -> list[Prediction]:
     predictions: list[Prediction] = []
 
     text = get_text(content)

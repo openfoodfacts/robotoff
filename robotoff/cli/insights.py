@@ -1,11 +1,11 @@
+import _io
 import contextlib
 import gzip
 import logging
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
-import _io
 import dacite
 import orjson
 import tqdm

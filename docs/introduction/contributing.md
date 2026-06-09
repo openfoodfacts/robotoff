@@ -61,7 +61,7 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
 
 5. code!
 
-6. When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:
+6. When you're done making changes, check that your changes pass ruff linter/formatter, mypy and the tests:
 
    If you are on Windows, make sure you have [Make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm) installed. Don't forget to add its path in your [system environment variables](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417).
 
@@ -89,10 +89,9 @@ Ready to contribute code? Here's how to set up Robotoff for local development.
    If you are on a local install:
 
    ```
-   flake8
-   black --check .
+   ruff check
+   ruff format
    mypy .
-   isort --check .
    uv run pytest tests
    ```
 

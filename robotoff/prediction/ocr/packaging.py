@@ -1,6 +1,5 @@
 import functools
 import logging
-from typing import Union
 
 from lark import Discard, Lark, Transformer
 from openfoodfacts.ocr import OCRResult, get_text
@@ -203,7 +202,7 @@ def match_packaging(text: str) -> list[dict]:
     return PackagingFRTransformer(load_taxonomy_map(lang)).transform(t)
 
 
-def find_packaging(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_packaging(content: OCRResult | str) -> list[Prediction]:
     text = get_text(content)
     lang = "fr"
     if match := match_packaging(text):

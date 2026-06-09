@@ -4,7 +4,7 @@ import random
 import struct
 import threading
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from rq import Queue
 from rq.job import Job

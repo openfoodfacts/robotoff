@@ -3,8 +3,8 @@ import logging
 import os
 import shutil
 import uuid
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import pytz
 import requests.exceptions
@@ -49,8 +49,7 @@ def process_insights() -> None:
             .where(
                 ProductInsight.annotation.is_null(),
                 ProductInsight.process_after.is_null(False),
-                ProductInsight.process_after
-                <= datetime.datetime.now(datetime.timezone.utc),
+                ProductInsight.process_after <= datetime.datetime.now(datetime.UTC),
             )
             .iterator()
         ):
@@ -95,7 +94,7 @@ def refresh_insights(with_deletion: bool = True) -> None:
     # Only OFF is currently supported
     server_type = ServerType.off
 
-    datetime_threshold = datetime.datetime.now(datetime.timezone.utc).replace(
+    datetime_threshold = datetime.datetime.now(datetime.UTC).replace(
         hour=0, minute=0, second=0, microsecond=0
     )
     dataset_datetime = datetime.datetime.fromtimestamp(
@@ -310,12 +309,12 @@ def clean_tmp_files() -> None:
         logger.warning("Temporary directory %s does not exist", tmp_dir)
         return
 
-    datetime_now = datetime.datetime.now(datetime.timezone.utc)
+    datetime_now = datetime.datetime.now(datetime.UTC)
     for dir_path in (
         f for f in tmp_dir.iterdir() if f.is_dir() and f.name.startswith("tmp")
     ):
         last_modified = datetime.datetime.fromtimestamp(
-            dir_path.stat().st_mtime, datetime.timezone.utc
+            dir_path.stat().st_mtime, datetime.UTC
         )
         # check that the directory is older than 2 day
         if (datetime_now - last_modified) > datetime.timedelta(days=2):

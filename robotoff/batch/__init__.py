@@ -51,8 +51,9 @@ def import_spellcheck_batch_predictions(batch_dir: str) -> None:
         predictions = []
         for row in batch:
             lang_predictions = predict_lang(row["text"], k=1)
-            lang, lang_confidence = lang_predictions[0].lang, (
-                lang_predictions[0].confidence if lang_predictions else None
+            lang, lang_confidence = (
+                lang_predictions[0].lang,
+                (lang_predictions[0].confidence if lang_predictions else None),
             )
             predictions.append(
                 Prediction(

@@ -1,6 +1,5 @@
 import functools
 import re
-from typing import Union
 
 from openfoodfacts.ocr import (
     OCRField,
@@ -54,14 +53,14 @@ def get_sorted_stores() -> list[tuple[str, str]]:
 def get_store_ocr_regex() -> OCRRegex:
     sorted_stores = get_sorted_stores()
     store_regex_str = "|".join(
-        r"((?<!\w){}(?!\w))".format(pattern) for _, pattern in sorted_stores
+        rf"((?<!\w){pattern}(?!\w))" for _, pattern in sorted_stores
     )
     return OCRRegex(
         re.compile(store_regex_str, re.I), field=OCRField.full_text_contiguous
     )
 
 
-def find_stores(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_stores(content: OCRResult | str) -> list[Prediction]:
     results = []
     store_ocr_regex = get_store_ocr_regex()
     sorted_stores = get_sorted_stores()

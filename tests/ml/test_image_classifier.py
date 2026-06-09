@@ -98,7 +98,7 @@ def test_detect_from_image(
         assert r is not None
         expected = r.json()
         assert len(results) == len(expected)
-        for predicted_result, expected_result in zip(results, expected):
+        for predicted_result, expected_result in zip(results, expected, strict=True):
             assert predicted_result[0] == expected_result[0]
             assert predicted_result[1] == pytest.approx(expected_result[1], rel=1e-3)
     else:

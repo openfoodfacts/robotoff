@@ -1,6 +1,6 @@
 import functools
 import logging
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 from openfoodfacts.ocr import OCRResult, get_match_bounding_box, get_text
 
@@ -68,7 +68,7 @@ def get_brand_processor():
 
 def extract_brands(
     processor: KeywordProcessor,
-    content: Union[OCRResult, str],
+    content: OCRResult | str,
     data_source_name: str,
     automatic_processing: bool,
 ) -> list[Prediction]:
@@ -122,7 +122,7 @@ def extract_brands_google_cloud_vision(ocr_result: OCRResult) -> list[Prediction
     return predictions
 
 
-def find_brands(content: Union[OCRResult, str]) -> list[Prediction]:
+def find_brands(content: OCRResult | str) -> list[Prediction]:
     predictions: list[Prediction] = []
 
     predictions += extract_brands(

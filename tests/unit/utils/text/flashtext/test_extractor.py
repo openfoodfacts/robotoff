@@ -33,9 +33,7 @@ class TestKeywordExtractor(unittest.TestCase):
             self.assertEqual(
                 keywords_extracted,
                 test_case["keywords"],
-                "keywords_extracted don't match the expected results for test case: {}".format(
-                    test_id
-                ),
+                f"keywords_extracted don't match the expected results for test case: {test_id}",
             )
 
     def test_extract_keywords_case_sensitive(self):
@@ -52,9 +50,7 @@ class TestKeywordExtractor(unittest.TestCase):
             self.assertEqual(
                 keywords_extracted,
                 test_case["keywords_case_sensitive"],
-                "keywords_extracted don't match the expected results for test case: {}".format(
-                    test_id
-                ),
+                f"keywords_extracted don't match the expected results for test case: {test_id}",
             )
 
     def test_extract_keywords_case_insensitive_with_string_length_change(self):

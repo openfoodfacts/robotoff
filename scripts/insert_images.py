@@ -13,12 +13,10 @@ ds = ProductDataset.load()
 saved = 0
 
 seen_set = set(
-    (
-        (x.barcode, x.image_id)
-        for x in ImageModel.select(ImageModel.barcode, ImageModel.image_id)
-        .where(ImageModel.server_type == SERVER_TYPE.name)
-        .iterator()
-    )
+    (x.barcode, x.image_id)
+    for x in ImageModel.select(ImageModel.barcode, ImageModel.image_id)
+    .where(ImageModel.server_type == SERVER_TYPE.name)
+    .iterator()
 )
 
 with db:

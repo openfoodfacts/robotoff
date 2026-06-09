@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from openfoodfacts.ocr import OCRResult
@@ -85,7 +85,7 @@ def run_object_detection_model(
             return None
         return existing_image_prediction
 
-    timestamp = datetime.datetime.now(datetime.timezone.utc)
+    timestamp = datetime.datetime.now(datetime.UTC)
     results = ObjectDetectionModelRegistry.get(model_name).detect_from_image(
         image, output_image=False, triton_uri=triton_uri, threshold=threshold
     )

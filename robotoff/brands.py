@@ -133,7 +133,7 @@ def dump_taxonomy_brands(
     filtered_brands = generate_brand_list(
         threshold, server_type, min_length, blacklisted_brands
     )
-    line_iter = ("{}||{}".format(key, name) for key, name in filtered_brands)
+    line_iter = (f"{key}||{name}" for key, name in filtered_brands)
     dump_text(settings.OCR_TAXONOMY_BRANDS_PATH, line_iter)
 
 

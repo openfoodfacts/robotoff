@@ -134,8 +134,8 @@ def rerun_import_images(
         return query.count()
 
     for image_model_id, barcode, image_id, server_type_str in query:
-        if not barcode.isdigit():
-            raise ValueError("Invalid barcode: %s" % barcode)
+        if not isinstance(barcode, str) and not barcode.isdigit():
+            raise ValueError(f"Invalid barcode: {barcode}")
 
         product_id = ProductIdentifier(barcode, ServerType[server_type_str])
         image_url = generate_image_url(product_id, image_id)
@@ -538,7 +538,7 @@ def run_upc_detection(product_id: ProductIdentifier, image_url: str) -> None:
                     "class": prediction_class.value,
                 },
                 max_confidence=None,
-                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                timestamp=datetime.datetime.now(datetime.UTC),
             )
 
         # no prediction neccessary if the image is not a UPC Image
@@ -924,10 +924,11 @@ def extract_ingredients_job(
                 ingredient_prediction_data = image_prediction.data
         else:
             output = ingredient_list.predict_from_ocr(ocr_url, triton_uri=triton_uri)
-            entities: list[ingredient_list.IngredientPredictionAggregatedEntity] = (
-                output.entities
-            )  # type: ignore
             # (we know it's an aggregated entity, so we can ignore the type)
+            entities = typing.cast(
+                list[ingredient_list.IngredientPredictionAggregatedEntity],
+                output.entities,
+            )
 
             ingredient_prediction_data = generate_ingredient_prediction_data(
                 output, image_model.width, image_model.height
@@ -938,7 +939,7 @@ def extract_ingredients_job(
                 model_name=ingredient_list.MODEL_NAME,
                 model_version=ingredient_list.MODEL_VERSION,
                 data=ingredient_prediction_data,
-                timestamp=datetime.datetime.now(datetime.timezone.utc),
+                timestamp=datetime.datetime.now(datetime.UTC),
                 max_confidence=(
                     max(entity.score for entity in entities) if entities else None
                 ),
@@ -1254,7 +1255,7 @@ def extract_nutrition_job(
             model_name=nutrition_extraction.MODEL_NAME,
             model_version=nutrition_extraction.MODEL_VERSION,
             data=data,
-            timestamp=datetime.datetime.now(datetime.timezone.utc),
+            timestamp=datetime.datetime.now(datetime.UTC),
             max_confidence=max_confidence,
         )
 

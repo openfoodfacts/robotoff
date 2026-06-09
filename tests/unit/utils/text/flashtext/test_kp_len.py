@@ -54,7 +54,7 @@ class TestKPLen(unittest.TestCase):
             self.assertEqual(
                 kp_len,
                 kp_len_two,
-                "keyword processor length doesn't match for Text ID {}".format(test_id),
+                f"keyword processor length doesn't match for Text ID {test_id}",
             )
 
 
