@@ -1106,16 +1106,14 @@
 <p>Traditional evaluation metrics, such as <a href="https://en.wikipedia.org/wiki/ROUGE_(metric)">ROUGE</a>, <a href="https://en.wikipedia.org/wiki/BLEU">BLEU</a>, or <a href="https://en.wikipedia.org/wiki/METEOR">METEOR</a> fall short in assessing the quality of the spellcheck process. They don't provide a detailed analysis about how many words were correctly rectified versus those that weren't...</p>
 <p>Therefore, we developed an algorithm that takes 3 inputs: the original, the reference, and the prediction of a  list of ingredients.</p>
 <p>Example:
-<div class="highlight"><pre><span></span><code>Original:       &quot;Th cat si on the fride,&quot;
-Reference:      &quot;The cat is on the fridge.&quot;
-Prediction:     &quot;Th big cat is in the fridge.&quot;
-</code></pre></div></p>
+<code>Original:       "Th cat si on the fride,"
+Reference:      "The cat is on the fridge."
+Prediction:     "Th big cat is in the fridge."</code></p>
 <p>We transform each text into a sequence of tokens and perform a <a href="https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm">sequence alignment method</a> to align identical tokens between respectively original-reference, and prediction-reference. We assign 1 or 0 whether the tokens is modified.</p>
 <p>By comparing these 2 pairs of sequences, we calculate the number of True Positives (TP), False Positives (FP), and True Negatives (TN). Therefore, the overall Precision and Recall.</p>
-<div class="highlight"><pre><span></span><code>Orig-Ref:          1    0    0    1    0    1    1    1    1
+<p><code>Orig-Ref:          1    0    0    1    0    1    1    1    1
 Orig-Pred:         0    1    0    1    1    1    1    1    1
-Signification:     FN   FP   TN   TP   FP   TP   TP   TP   TP
-</code></pre></div>
+Signification:     FN   FP   TN   TP   FP   TP   TP   TP   TP</code></p>
 <p>Coupled with a benchmark carefully prepared using the <a href="#guidelines">Spellcheck Guidelines</a>, the algorithm is capable of evaluating any solution, from Regular Expression techniques to LLMs.</p>
 <p>You'll find more details about the evaluation algorithm<sup id="fnref:evaluation-algo"><a class="footnote-ref" href="#fn:evaluation-algo">1</a></sup> in the project <a href="https://github.com/openfoodfacts/openfoodfacts-ai/tree/develop/spellcheck">README</a>.</p>
 <h2 id="guidelines">Guidelines</h2>
@@ -1136,13 +1134,13 @@ Signification:     FN   FP   TN   TP   FP   TP   TP   TP   TP
 <p><img alt="Human-evaluation with Argilla" src="../../assets/argilla.png" />
 <em>Human-evaluation with Argilla</em></p>
 <p>The model and dataset versions are handled by Hugging Face repository as branch (v1, v2) and commits (v1.1, v1.2). You can easily access any version using the <em>Dataset</em> library from Hugging Face.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
-<span class="n">dataset</span>  <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span>
-    <span class="n">path</span><span class="o">=</span><span class="s2">&quot;openfoodfacts/spellcheck-dataset&quot;</span><span class="p">,</span>
-    <span class="n">revision</span><span class="o">=</span><span class="s2">&quot;v8&quot;</span><span class="p">,</span>
-    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span>
-<span class="p">)</span>
-</code></pre></div>
+<p><code>python
+from datasets import load_dataset
+dataset  = load_dataset(
+    path="openfoodfacts/spellcheck-dataset",
+    revision="v8",
+    split="train+test"
+)</code></p>
 <h2 id="integration-with-batch-job">Integration with Batch Job</h2>
 <p>Once the model is selected, the inference script with its dependencies are containerized in a Docker Image<sup id="fnref:spellcheck-inference"><a class="footnote-ref" href="#fn:spellcheck-inference">6</a></sup> before being pushed to the Image Registry<sup id="fnref:makefile"><a class="footnote-ref" href="#fn:makefile">7</a></sup> (currently Google Artifact Registry). The image is then used within the <a href="../batch-job/">batch job pipeline</a>, defined by the batch job type <code>ingredients-spellcheck</code>.</p>
 <div class="footnote">

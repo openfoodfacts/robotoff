@@ -1022,19 +1022,17 @@ Robotoff can be installed <a href="../../how-to-guides/deployment/dev-install/">
 <p>First, download the dataset: <code>python -m robotoff download-dataset</code></p>
 <p>Robotoff includes a set of tools to easily handle the OFF dataset.
 As an example, we can print the product name of all complete products from France that have ingredients in French with:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">robotoff.products</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProductDataset</span>
-
-<span class="n">ds</span> <span class="o">=</span> <span class="n">ProductDataset</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
-
-<span class="n">product_iter</span> <span class="o">=</span> <span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">stream</span><span class="p">()</span>
-                  <span class="o">.</span><span class="n">filter_by_country_tag</span><span class="p">(</span><span class="s1">&#39;en:france&#39;</span><span class="p">)</span>
-                  <span class="o">.</span><span class="n">filter_nonempty_text_field</span><span class="p">(</span><span class="s1">&#39;ingredients_text_fr&#39;</span><span class="p">)</span>
-                  <span class="o">.</span><span class="n">filter_by_state_tag</span><span class="p">(</span><span class="s1">&#39;en:complete&#39;</span><span class="p">)</span>
-                  <span class="o">.</span><span class="n">iter</span><span class="p">())</span>
-
-<span class="k">for</span> <span class="n">product</span> <span class="ow">in</span> <span class="n">product_iter</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">product</span><span class="p">[</span><span class="s1">&#39;product_name&#39;</span><span class="p">])</span>
-</code></pre></div>
+<p>```py
+from robotoff.products import ProductDataset</p>
+<p>ds = ProductDataset.load()</p>
+<p>product_iter = (ds.stream()
+                  .filter_by_country_tag('en:france')
+                  .filter_nonempty_text_field('ingredients_text_fr')
+                  .filter_by_state_tag('en:complete')
+                  .iter())</p>
+<p>for product in product_iter:
+    print(product['product_name'])
+```</p>
 <p>We first lazily load the dataset using <code>ProductDataset.load()</code>.
 Then, we create a ProductStream using the <code>ProductDataset.stream()</code> method, and apply filters on the stream of products.</p>
 <p>The following filters are currently available:</p>
@@ -1050,34 +1048,27 @@ Then, we create a ProductStream using the <code>ProductDataset.stream()</code> m
 <h2 id="play-with-the-taxonomies">Play with the taxonomies</h2>
 <p>Taxonomies contains items (such as ingredients, labels or categories) organized in a hierarchical way.
 Some items are children of other items. For instance, <code>en:brown-rice</code> is a child of <code>en:rice</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">robotoff.taxonomy</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_taxonomy</span>
-
-<span class="c1"># supported taxonomies: ingredient, category, label</span>
-<span class="n">taxonomy</span> <span class="o">=</span> <span class="n">get_taxonomy</span><span class="p">(</span><span class="s1">&#39;category&#39;</span><span class="p">)</span>
-
-<span class="n">brown_rice</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="p">[</span><span class="s1">&#39;en:brown-rices&#39;</span><span class="p">]</span>
-<span class="n">rice</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="p">[</span><span class="s1">&#39;en:rices&#39;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">brown_rice</span><span class="p">)</span>
-<span class="c1"># Output: &lt;TaxonomyNode en:brown-rices&gt;</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">brown_rice</span><span class="o">.</span><span class="n">children</span><span class="p">)</span>
-<span class="c1"># Output: [&lt;TaxonomyNode en:brown-jasmine-rices&gt;, &lt;TaxonomyNode en:brown-basmati-rices&gt;]</span>
-
-<span class="k">assert</span> <span class="n">brown_rice</span><span class="o">.</span><span class="n">is_child_of</span><span class="p">(</span><span class="n">rice</span><span class="p">)</span>
-<span class="k">assert</span> <span class="n">rice</span><span class="o">.</span><span class="n">is_parent_of</span><span class="p">(</span><span class="n">brown_rice</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">brown_rice</span><span class="o">.</span><span class="n">get_localized_name</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Riz complet&#39;</span>
-
-<span class="c1"># find_deepest_item takes a list of string as input and outputs a string</span>
-<span class="n">deepest_node</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">find_deepest_nodes</span><span class="p">([</span><span class="n">rice</span><span class="p">,</span> <span class="n">brown_rice</span><span class="p">])</span>
-<span class="k">assert</span> <span class="n">deepest_node</span> <span class="o">==</span> <span class="p">[</span><span class="n">brown_rice</span><span class="p">]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">brown_rice</span><span class="o">.</span><span class="n">get_synonyms</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">))</span>
-<span class="c1"># Output: [&#39;Riz complet&#39;, &#39;riz cargo&#39;, &#39;riz brun&#39;, &#39;riz semi-complet&#39;]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">brown_rice</span><span class="o">.</span><span class="n">get_parents_hierarchy</span><span class="p">())</span>
-<span class="c1"># Output: [&lt;TaxonomyNode en:rices&gt;, &lt;TaxonomyNode en:cereal-grains&gt;, &lt;TaxonomyNode en:cereals-and-their-products&gt;, &lt;TaxonomyNode en:cereals-and-potatoes&gt;, &lt;TaxonomyNode en:plant-based-foods&gt;, &lt;TaxonomyNode en:plant-based-foods-and-beverages&gt;, &lt;TaxonomyNode en:seeds&gt;]</span>
-</code></pre></div>
+<p>```py
+from robotoff.taxonomy import get_taxonomy</p>
+<h1 id="supported-taxonomies-ingredient-category-label">supported taxonomies: ingredient, category, label</h1>
+<p>taxonomy = get_taxonomy('category')</p>
+<p>brown_rice = taxonomy['en:brown-rices']
+rice = taxonomy['en:rices']
+print(brown_rice)</p>
+<h1 id="output">Output: <TaxonomyNode en:brown-rices></h1>
+<p>print(brown_rice.children)</p>
+<h1 id="output_1">Output: [<TaxonomyNode en:brown-jasmine-rices>, <TaxonomyNode en:brown-basmati-rices>]</h1>
+<p>assert brown_rice.is_child_of(rice)
+assert rice.is_parent_of(brown_rice)</p>
+<p>assert brown_rice.get_localized_name('fr') == 'Riz complet'</p>
+<h1 id="find_deepest_item-takes-a-list-of-string-as-input-and-outputs-a-string">find_deepest_item takes a list of string as input and outputs a string</h1>
+<p>deepest_node = taxonomy.find_deepest_nodes([rice, brown_rice])
+assert deepest_node == [brown_rice]</p>
+<p>print(brown_rice.get_synonyms('fr'))</p>
+<h1 id="output-riz-complet-riz-cargo-riz-brun-riz-semi-complet">Output: ['Riz complet', 'riz cargo', 'riz brun', 'riz semi-complet']</h1>
+<p>print(brown_rice.get_parents_hierarchy())</p>
+<h1 id="output_2">Output: [<TaxonomyNode en:rices>, <TaxonomyNode en:cereal-grains>, <TaxonomyNode en:cereals-and-their-products>, <TaxonomyNode en:cereals-and-potatoes>, <TaxonomyNode en:plant-based-foods>, <TaxonomyNode en:plant-based-foods-and-beverages>, <TaxonomyNode en:seeds>]</h1>
+<p>```</p>
                 
               
               

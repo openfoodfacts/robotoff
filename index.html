@@ -287,20 +287,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    Configuration
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ci-integration" class="md-nav__link">
-    CI Integration
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -308,27 +294,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#licence" class="md-nav__link">
-    👩‍⚖️ Licence
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#weekly-meetings" class="md-nav__link">
-    📆 Weekly meetings
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributors" class="md-nav__link">
-    Contributors
-  </a>
   
 </li>
       
@@ -1052,20 +1017,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#configuration" class="md-nav__link">
-    Configuration
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ci-integration" class="md-nav__link">
-    CI Integration
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1073,27 +1024,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#licence" class="md-nav__link">
-    👩‍⚖️ Licence
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#weekly-meetings" class="md-nav__link">
-    📆 Weekly meetings
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributors" class="md-nav__link">
-    Contributors
-  </a>
   
 </li>
       
@@ -1162,12 +1092,12 @@
 <p>Robotoff uses <a href="https://stoplight.io/open-source/spectral">Spectral</a> to lint the OpenAPI specification file located at <code>docs/references/api.yml</code>. This ensures the API documentation follows best practices and remains consistent.</p>
 <h4 id="running-api-linting">Running API Linting</h4>
 <p>All linting commands use Docker, so you don't need to install Spectral locally:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Lint the API specification with pretty formatting</span>
-make<span class="w"> </span>api-lint
-
-<span class="c1"># Check the API specification and fail on errors (used in CI)</span>
-make<span class="w"> </span>api-lint-check
-</code></pre></div>
+<p>```bash</p>
+<h1 id="lint-the-api-specification-with-pretty-formatting">Lint the API specification with pretty formatting</h1>
+<p>make api-lint</p>
+<h1 id="check-the-api-specification-and-fail-on-errors-used-in-ci">Check the API specification and fail on errors (used in CI)</h1>
+<p>make api-lint-check
+```</p>
 <h4 id="configuration">Configuration</h4>
 <p>The linting rules are configured in <code>.spectral.yml</code> at the root of the repository. The configuration extends the standard OpenAPI ruleset with custom rules specific to the Robotoff API.</p>
 <h4 id="ci-integration">CI Integration</h4>

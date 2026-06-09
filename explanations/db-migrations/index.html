@@ -1022,16 +1022,16 @@ automatically. You can skip it if you want <code>peewee_migrate</code> to create
 <p><code>make migrate-db</code></p>
 <h2 id="what-if-i-had-a-previous-installation-of-robotoff-with-an-initialized-db">What if I had a previous installation of Robotoff with an initialized DB?</h2>
 <p>You should then create yourself the migration table:</p>
-<div class="highlight"><pre><span></span><code><span class="k">CREATE</span><span class="w"> </span><span class="k">TABLE</span><span class="w"> </span><span class="k">IF</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">EXISTS</span><span class="w"> </span><span class="ss">&quot;migratehistory&quot;</span>
-<span class="p">(</span>
-<span class="w">    </span><span class="ss">&quot;id&quot;</span><span class="w"> </span><span class="nb">SERIAL</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="w"> </span><span class="k">PRIMARY</span><span class="w"> </span><span class="k">KEY</span><span class="p">,</span>
-<span class="w">    </span><span class="ss">&quot;name&quot;</span><span class="w"> </span><span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span><span class="p">,</span>
-<span class="w">    </span><span class="ss">&quot;migrated_at&quot;</span><span class="w"> </span><span class="k">TIMESTAMP</span><span class="w"> </span><span class="k">NOT</span><span class="w"> </span><span class="k">NULL</span>
-<span class="p">)</span>
-</code></pre></div>
+<p><code>sql
+CREATE TABLE IF NOT EXISTS "migratehistory"
+(
+    "id" SERIAL NOT NULL PRIMARY KEY,
+    "name" VARCHAR(255) NOT NULL,
+    "migrated_at" TIMESTAMP NOT NULL
+)</code></p>
 <p>Then add manually the the initial migration file in database:</p>
-<div class="highlight"><pre><span></span><code><span class="k">INSERT</span><span class="w"> </span><span class="k">INTO</span><span class="w"> </span><span class="ss">&quot;migratehistory&quot;</span><span class="w"> </span><span class="k">VALUES</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;001_initial&#39;</span><span class="p">,</span><span class="w"> </span><span class="k">CURRENT_TIMESTAMP</span><span class="p">);</span>
-</code></pre></div>
+<p><code>sql
+INSERT INTO "migratehistory" VALUES (1, '001_initial', CURRENT_TIMESTAMP);</code></p>
 <p>Then you can apply remaining migrations with <code>make migrate-db</code>.</p>
                 
               

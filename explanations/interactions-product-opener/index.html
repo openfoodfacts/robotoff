@@ -1075,12 +1075,12 @@
 </ul>
 <h3 id="image-uploaded">Image uploaded</h3>
 <p>Uploaded images trigger an <code>updated</code> event, with the following diffs:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;uploaded_images&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;add&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
+<p><code>json
+{
+    "uploaded_images": {
+        "add": ["1"]
+    }
+}</code></p>
 <p>with <code>1</code> being the ID of the uploaded image.</p>
 <p>After receiving this event, Robotoff does the following <sup id="fnref:image_import"><a class="footnote-ref" href="#fn:image_import">2</a></sup>:</p>
 <ul>

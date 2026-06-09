@@ -395,6 +395,19 @@
     Sending Answers
   </a>
   
+    <nav class="md-nav" aria-label="Sending Answers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-for-annotating-insights" class="md-nav__link">
+    API for Annotating Insights:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1058,6 +1071,19 @@
     Sending Answers
   </a>
   
+    <nav class="md-nav" aria-label="Sending Answers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-for-annotating-insights" class="md-nav__link">
+    API for Annotating Insights:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1129,43 +1155,44 @@
   * <strong>Prompt for Non-Logged Users:</strong> If a non-logged user attempts to answer a question, display a prompt to log in or create an account (or let them use our anonymous statistical voting system). Provide a setting to hide these prompts if they annoy the user.
   * <strong>Fetching Questions:</strong> When a product is opened in your application, fetch the relevant Robotoff questions.
       * <strong>Example API Call:</strong>
-        <div class="highlight"><pre><span></span><code>https://robotoff.openfoodfacts.org/api/v1/questions/3274570800026?lang=en&amp;count=3
-</code></pre></div>
+        <code>https://robotoff.openfoodfacts.org/api/v1/questions/3274570800026?lang=en&amp;count=3</code>
         This example fetches 3 questions for the barcode <code>3274570800026</code> in English.
       * <strong>Response Structure Example:</strong>
-        <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;questions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;barcode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;3274570800026&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;add-binary&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Scallop&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Does the product belong to this category?&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;insight_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;5cac03bc-a5a7-4ec2-a548-17fd9319fee7&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;insight_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;category&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;source_image_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://static.openfoodfacts.org/images/products/327/457/080/0026/front_en.4.400.jpg&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">],</span>
-<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;found&quot;</span>
-<span class="p">}</span>
-</code></pre></div>
+        <code>json
+        {
+          "questions": [
+            {
+              "barcode": "3274570800026",
+              "type": "add-binary",
+              "value": "Scallop",
+              "question": "Does the product belong to this category?",
+              "insight_id": "5cac03bc-a5a7-4ec2-a548-17fd9319fee7",
+              "insight_type": "category",
+              "source_image_url": "https://static.openfoodfacts.org/images/products/327/457/080/0026/front_en.4.400.jpg"
+            }
+          ],
+          "status": "found"
+        }</code>
       * The <code>lang</code> field in the request specifies the language of the returned <code>question</code> and <code>value</code>.
   * <strong>UI Display:</strong> Display the <code>question</code> and possible answers in your application's user interface.</p>
 <h3 id="sending-answers">Sending Answers</h3>
 <p>If a user answers a question, send the appropriate ping back to the Open Food Facts server.</p>
-<p>* <strong>API for Annotating Insights:</strong>
-    <div class="highlight"><pre><span></span><code>https://robotoff.openfoodfacts.org/api/v1/insights/annotate?insight_id=(insight_id)&amp;annotation=(1,0,-1)&amp;update=1
-</code></pre></div>
-      * Replace <code>(insight_id)</code> with the <code>insight_id</code> received from the question payload.
-      * Replace <code>(1,0,-1)</code> with the user's annotation:
-          * <code>1</code>: Yes
-          * <code>0</code>: No
-          * <code>-1</code>: Skip/Don't know</p>
+<h4 id="api-for-annotating-insights">API for Annotating Insights:</h4>
+<p><code>https://robotoff.openfoodfacts.org/api/v1/insights/annotate?insight_id=(insight_id)&amp;annotation=(1,0,-1)&amp;update=1</code></p>
+<ul>
+<li>Replace <code>(insight_id)</code> with the <code>insight_id</code> received from the question payload.</li>
+<li>Replace <code>(1,0,-1)</code> with the user's annotation:<ul>
+<li><code>1</code>: Yes</li>
+<li><code>0</code>: No</li>
+<li><code>-1</code>: Skip/Don't know</li>
+</ul>
+</li>
+</ul>
 <h2 id="authentication">Authentication</h2>
 <p>To give credit to contributors for their answers, you need to authenticate your requests to Robotoff.</p>
 <h3 id="header-based-authentication">Header-based Authentication</h3>
 <p>Send the following header with your requests:</p>
-<div class="highlight"><pre><span></span><code>Authorization: Basic (base64Credentials)
-</code></pre></div>
+<p><code>Authorization: Basic (base64Credentials)</code></p>
 <p>Where <code>base64Credentials</code> is the Base64 encoding of your <code>username:password</code>.</p>
 <h3 id="cookie-based-authentication">Cookie-based Authentication</h3>
 <p>Note: we have a cookie auth for tools hosted on *.openfoodfacts.org. Please reachout to the Robotoff team if needed.</p>

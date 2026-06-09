@@ -1125,8 +1125,7 @@
 </li>
 <li>
 <p>Clone your fork locally:</p>
-<div class="highlight"><pre><span></span><code>git clone git@github.com:your_name_here/robotoff.git
-</code></pre></div>
+<p><code>git clone git@github.com:your_name_here/robotoff.git</code></p>
 </li>
 <li>
 <p>Robotoff uses git lfs to store binary files necessary for it to work. To setup git lfs:</p>
@@ -1143,39 +1142,33 @@
 <p>code!</p>
 </li>
 <li>
-<p>When you're done making changes, check that your changes pass flake8, mypy and the tests. In addition, ensure that your code is formatted using black:</p>
+<p>When you're done making changes, check that your changes pass ruff linter/formatter, mypy and the tests:</p>
 <p>If you are on Windows, make sure you have <a href="http://gnuwin32.sourceforge.net/packages/make.htm">Make for Windows</a> installed. Don't forget to add its path in your <a href="https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho/44272417#44272417">system environment variables</a>.</p>
 <p>A sample path may look like this: <code>C:\Program Files (x86)\GnuWin32\bin</code></p>
 <p>It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  </p>
 <p>If you are using docker:</p>
-<p><div class="highlight"><pre><span></span><code>make lint
-make checks
-make tests
-</code></pre></div>
+<p><code>make lint
+ make checks
+ make tests</code>
  To test the APIs on your localhost run </p>
-<div class="highlight"><pre><span></span><code>docker compose up
-</code></pre></div>
+<p><code>docker compose up</code></p>
 <p>You can make a post request through <a href="https://www.postman.com/">Postman</a> or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/</p>
 <p>The mapping of functions and API path is at the end of <code>robotoff/app/api.py</code></p>
 <p>If you are on a local install:</p>
-<div class="highlight"><pre><span></span><code>flake8
-black --check .
-mypy .
-isort --check .
-uv run pytest tests
-</code></pre></div>
+<p><code>ruff check
+ ruff format
+ mypy .
+ uv run pytest tests</code></p>
 <p>Before running the test cases make sure you have a database created. Have a look at <code>.env</code> and <code>robotoff/settings.py</code> the default database name, user, and password is:</p>
-<p><div class="highlight"><pre><span></span><code>postgres
-</code></pre></div>
+<p><code>postgres</code>
  Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
 </li>
 <li>
 <p>Commit your changes and push your branch to Github:</p>
-<div class="highlight"><pre><span></span><code>git status
-git add files-you-have-modified
-git commit -m &quot;fix: your detailed description of your changes&quot;
-git push origin name-of-your-bugfix-or-feature
-</code></pre></div>
+<p><code>git status
+ git add files-you-have-modified
+ git commit -m "fix: your detailed description of your changes"
+ git push origin name-of-your-bugfix-or-feature</code></p>
 <p>In brief, commit messages should follow these conventions:</p>
 <blockquote>
 <ul>
