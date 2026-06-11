@@ -1225,7 +1225,8 @@
 <p>The processed taxonomy is stored in <code>OCR_TAXONOMY_BRANDS_PATH</code> (<code>brand_from_taxonomy.gz</code>).</p>
 <h3 id="logo-annotation">Logo Annotation</h3>
 <p>Google Cloud Vision logo detection results are matched against a mapping file (<code>OCR_LOGO_ANNOTATION_BRANDS_DATA_PATH</code> - <code>brand_logo_annotation.txt</code>). The file uses <code>||</code> as separator:</p>
-<p><code>logo_description||brand_tag</code></p>
+<div class="highlight"><pre><span></span><code>logo_description||brand_tag
+</code></pre></div>
 <h2 id="prediction-process">Prediction Process</h2>
 <p>The brand prediction process (defined in <code>robotoff/prediction/ocr/brand.py</code>) works as follows:</p>
 <ol>

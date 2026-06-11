@@ -1089,204 +1089,204 @@ If some entities (i.e. ingredient lists) are detected, we create a <code>Predict
 <li>60% or more of the ingredients in the extracted ingredient list are recognized by Open Food Facts as ingredients (using the Product Opener parser)</li>
 </ul>
 <p>The insight has a null <code>value</code> and the detected language as <code>value_tag</code>. An example of the <code>data</code> field is given below:</p>
-<p><code>json
-{
-    "entities": [
-        {
-            "end": 455,
-            "lang": {
-                "lang": "fr",
-                "confidence": 0.69290453
-            },
-            "text": "entier partiellement concentré pasteurisé 81% (origine: France), eau, sucre 6,9%, miel 1,6%, Poids net biscuits poudre 0,66% (farine de blé, sucre, beurre, sel), amidon de maïs, jus de citron concentré, cannelle 0,16%, badiane 280a 0,16%, arôme naturel de cannelle 0,16%, ferments lactiques (dont lait). Peut contenir des traces d'oeuf",
-            "score": 0.9999919533729553,
-            "start": 120,
-            "raw_end": 423,
-            "ingredients": [
-                {
-                    "id": "fr:entier-partiellement-concentre-pasteurise",
-                    "text": "entier partiellement concentré pasteurisé",
-                    "origins": "en:france",
-                    "percent": 81,
-                    "in_taxonomy": false,
-                    "percent_max": 81,
-                    "percent_min": 81,
-                    "percent_estimate": 81
-                },
-                {
-                    "id": "en:water",
-                    "text": "eau",
-                    "vegan": "yes",
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 9.04,
-                    "percent_min": 7.88,
-                    "ciqual_food_code": "18066",
-                    "percent_estimate": 8.46
-                },
-                {
-                    "id": "en:sugar",
-                    "text": "sucre",
-                    "vegan": "yes",
-                    "percent": 6.9,
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 6.9,
-                    "percent_min": 6.9,
-                    "percent_estimate": 6.9
-                },
-                {
-                    "id": "en:honey",
-                    "text": "miel",
-                    "vegan": "no",
-                    "percent": 1.6,
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 1.6,
-                    "percent_min": 1.6,
-                    "ciqual_food_code": "31008",
-                    "percent_estimate": 1.6
-                },
-                {
-                    "id": "fr:poids-net-biscuits-poudre",
-                    "text": "Poids net biscuits poudre",
-                    "percent": 0.66,
-                    "in_taxonomy": false,
-                    "ingredients": [
-                        {
-                            "id": "en:wheat-flour",
-                            "text": "farine de blé",
-                            "vegan": "yes",
-                            "vegetarian": "yes",
-                            "in_taxonomy": true,
-                            "percent_max": 0.66,
-                            "percent_min": 0.165,
-                            "percent_estimate": 0.4125
-                        },
-                        {
-                            "id": "en:sugar",
-                            "text": "sucre",
-                            "vegan": "yes",
-                            "vegetarian": "yes",
-                            "in_taxonomy": true,
-                            "percent_max": 0.33,
-                            "percent_min": 0,
-                            "percent_estimate": 0.12375
-                        },
-                        {
-                            "id": "en:butter",
-                            "text": "beurre",
-                            "vegan": "no",
-                            "vegetarian": "yes",
-                            "in_taxonomy": true,
-                            "percent_max": 0.22,
-                            "percent_min": 0,
-                            "percent_estimate": 0.061875
-                        },
-                        {
-                            "id": "en:salt",
-                            "text": "sel",
-                            "vegan": "yes",
-                            "vegetarian": "yes",
-                            "in_taxonomy": true,
-                            "percent_max": 0.22,
-                            "percent_min": 0,
-                            "ciqual_food_code": "11058",
-                            "percent_estimate": 0.061875
-                        }
-                    ],
-                    "percent_max": 0.66,
-                    "percent_min": 0.66,
-                    "percent_estimate": 0.66
-                },
-                {
-                    "id": "en:corn-starch",
-                    "text": "amidon de maïs",
-                    "vegan": "yes",
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 0.66,
-                    "percent_min": 0.16,
-                    "ciqual_food_code": "9510",
-                    "percent_estimate": 0.41
-                },
-                {
-                    "id": "en:concentrated-lemon-juice",
-                    "text": "jus de citron concentré",
-                    "vegan": "yes",
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 0.66,
-                    "percent_min": 0.16,
-                    "ciqual_food_code": "2028",
-                    "percent_estimate": 0.41
-                },
-                {
-                    "id": "en:cinnamon",
-                    "text": "cannelle",
-                    "vegan": "yes",
-                    "percent": 0.16,
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "percent_max": 0.16,
-                    "percent_min": 0.16,
-                    "percent_estimate": 0.16
-                },
-                {
-                    "id": "fr:badiane-280a",
-                    "text": "badiane 280a",
-                    "percent": 0.16,
-                    "in_taxonomy": false,
-                    "percent_max": 0.16,
-                    "percent_min": 0.16,
-                    "percent_estimate": 0.16
-                },
-                {
-                    "id": "en:natural-cinammon-flavouring",
-                    "text": "arôme naturel de cannelle",
-                    "vegan": "maybe",
-                    "percent": 0.16,
-                    "vegetarian": "maybe",
-                    "in_taxonomy": true,
-                    "percent_max": 0.16,
-                    "percent_min": 0.16,
-                    "percent_estimate": 0.16
-                },
-                {
-                    "id": "en:lactic-ferments",
-                    "text": "ferments lactiques",
-                    "vegan": "maybe",
-                    "vegetarian": "yes",
-                    "in_taxonomy": true,
-                    "ingredients": [
-                        {
-                            "id": "en:milk",
-                            "text": "dont lait",
-                            "vegan": "no",
-                            "vegetarian": "yes",
-                            "in_taxonomy": true,
-                            "percent_max": 0.16,
-                            "percent_min": 0,
-                            "percent_estimate": 0.0800000000000267
-                        }
-                    ],
-                    "percent_max": 0.16,
-                    "percent_min": 0,
-                    "percent_estimate": 0.0800000000000267
-                }
-            ],
-            "bounding_box": [
-                1502,
-                237,
-                1839,
-                3831
-            ],
-            "ingredients_n": 16,
-            "known_ingredients_n": 13,
-            "unknown_ingredients_n": 3
-        }
-    ]
-}</code></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;entities&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">455</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;lang&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;lang&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.69290453</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entier partiellement concentré pasteurisé 81% (origine: France), eau, sucre 6,9%, miel 1,6%, Poids net biscuits poudre 0,66% (farine de blé, sucre, beurre, sel), amidon de maïs, jus de citron concentré, cannelle 0,16%, badiane 280a 0,16%, arôme naturel de cannelle 0,16%, ferments lactiques (dont lait). Peut contenir des traces d&#39;oeuf&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9999919533729553</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;start&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;raw_end&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">423</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:entier-partiellement-concentre-pasteurise&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;entier partiellement concentré pasteurisé&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;origins&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:france&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:water&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;eau&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">9.04</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">7.88</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;18066&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">8.46</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:sugar&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sucre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6.9</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:honey&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;miel&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;31008&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.6</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:poids-net-biscuits-poudre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Poids net biscuits poudre&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:wheat-flour&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;farine de blé&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.165</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4125</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:sugar&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sucre&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.33</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.12375</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:butter&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;beurre&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.22</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061875</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:salt&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sel&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.22</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;11058&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061875</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">],</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:corn-starch&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;amidon de maïs&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9510&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.41</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:concentrated-lemon-juice&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;jus de citron concentré&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ciqual_food_code&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2028&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.41</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:cinnamon&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cannelle&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;fr:badiane-280a&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;badiane 280a&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:natural-cinammon-flavouring&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arôme naturel de cannelle&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:lactic-ferments&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ferments lactiques&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;maybe&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;ingredients&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;en:milk&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dont lait&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegan&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;vegetarian&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;yes&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;in_taxonomy&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0800000000000267</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">],</span>
+<span class="w">                    </span><span class="nt">&quot;percent_max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.16</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;percent_estimate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0800000000000267</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;bounding_box&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="mi">1502</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">237</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">1839</span><span class="p">,</span>
+<span class="w">                </span><span class="mi">3831</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;known_ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;unknown_ingredients_n&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
 <h3 id="annotation">Annotation</h3>
 <p>To annotate the insight, use the usual route <code>POST https://robotoff.openfoodfacts.org/api/v1/insights/annotate</code>.</p>
 <p>The request body depends on whether the user validates the ingredient list as-it or updates it.</p>

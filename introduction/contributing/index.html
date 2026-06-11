@@ -1125,7 +1125,8 @@
 </li>
 <li>
 <p>Clone your fork locally:</p>
-<p><code>git clone git@github.com:your_name_here/robotoff.git</code></p>
+<div class="highlight"><pre><span></span><code>git clone git@github.com:your_name_here/robotoff.git
+</code></pre></div>
 </li>
 <li>
 <p>Robotoff uses git lfs to store binary files necessary for it to work. To setup git lfs:</p>
@@ -1147,28 +1148,33 @@
 <p>A sample path may look like this: <code>C:\Program Files (x86)\GnuWin32\bin</code></p>
 <p>It is recommended to use Window's default command prompt instead of Power shell for smooth installation.  </p>
 <p>If you are using docker:</p>
-<p><code>make lint
- make checks
- make tests</code>
+<p><div class="highlight"><pre><span></span><code>make lint
+make checks
+make tests
+</code></pre></div>
  To test the APIs on your localhost run </p>
-<p><code>docker compose up</code></p>
+<div class="highlight"><pre><span></span><code>docker compose up
+</code></pre></div>
 <p>You can make a post request through <a href="https://www.postman.com/">Postman</a> or simply paste the url in a web browser to make a get request like this one http://localhost:5500/api/v1/insights/</p>
 <p>The mapping of functions and API path is at the end of <code>robotoff/app/api.py</code></p>
 <p>If you are on a local install:</p>
-<p><code>ruff check
- ruff format
- mypy .
- uv run pytest tests</code></p>
+<div class="highlight"><pre><span></span><code>ruff check
+ruff format
+mypy .
+uv run pytest tests
+</code></pre></div>
 <p>Before running the test cases make sure you have a database created. Have a look at <code>.env</code> and <code>robotoff/settings.py</code> the default database name, user, and password is:</p>
-<p><code>postgres</code>
+<p><div class="highlight"><pre><span></span><code>postgres
+</code></pre></div>
  Configure them through environment (you may use <code>.env</code> if you use docker) as you like. See <a href="../../how-to-guides/deployment/dev-install/">dev install</a> for more information about how to restore database dumps.</p>
 </li>
 <li>
 <p>Commit your changes and push your branch to Github:</p>
-<p><code>git status
- git add files-you-have-modified
- git commit -m "fix: your detailed description of your changes"
- git push origin name-of-your-bugfix-or-feature</code></p>
+<div class="highlight"><pre><span></span><code>git status
+git add files-you-have-modified
+git commit -m &quot;fix: your detailed description of your changes&quot;
+git push origin name-of-your-bugfix-or-feature
+</code></pre></div>
 <p>In brief, commit messages should follow these conventions:</p>
 <blockquote>
 <ul>

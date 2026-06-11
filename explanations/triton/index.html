@@ -1110,58 +1110,58 @@ A CLI is available to easily manage models (add new model, load/unload, enable/d
 <h2 id="triton-deployment">Triton deployment</h2>
 <p>Triton can be run directly on the same server as Robotoff, but in production it runs on a distinct server with GPUs (server <code>gpu-01</code>, deployed on Google Cloud). </p>
 <p>To deploy Triton on a distinct server, go to <code>models</code>, where you will find a <code>docker-compose.yml</code> file to run the Triton server in a Docker container:</p>
-<p><code>bash
-cd models
-docker-compose up -d</code></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>models
+docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</code></pre></div>
 <p>For local development, you can also run Triton on your local machine with Docker. Simply make sure that you <code>docker/ml.yml</code> is part of your COMPOSE_FILE envvar in your <code>.env</code> (ex: <code>COMPOSE_FILE=docker-compose.yml;docker/dev.yml;docker/ml.yml</code>).</p>
 <h2 id="triton-model-management">Triton model management</h2>
 <p>A script <code>manage.py</code> can be found in the <code>models</code> directory to help manage models on the Triton server. It can be used to download, list, load, and unload models.</p>
 <p>The easiest way to launch the script is using <a href="https://docs.astral.sh/uv/">uv</a>.</p>
 <h3 id="downloading-models">Downloading models</h3>
 <p>To download all models, run:</p>
-<p><code>bash
-uv run manage.py download-models</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>download-models
+</code></pre></div>
 <p>It downloads all models defined in the <code>models/models.toml</code> file and store them in the <code>models/triton</code> directory.</p>
 <p>If you need to download a specific model (and ignore the remaining models defined in the toml file), you can provide its name with the <code>--include</code> option:</p>
-<p><code>bash
-uv run manage.py download-models --include MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>download-models<span class="w"> </span>--include<span class="w"> </span>MODEL_NAME
+</code></pre></div>
 <h3 id="copying-configuration-files">Copying configuration files</h3>
 <p>Triton can generate automatically a configuration file for ONNX model, but we have custom configuration files as it allows us to have more control over the model behavior.</p>
 <p>Configuration files are stored in the <code>models/triton-config</code> directory. To copy them to the <code>models/triton</code> directory, run:</p>
-<p><code>bash
-uv run manage.py copy-config</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>copy-config
+</code></pre></div>
 <p>By default, it copies the GPU configuration files. If you're running on CPU, use the <code>--cpu</code> option.</p>
 <p>Once the configuration files are copied, you can restart the Triton server:</p>
-<p><code>bash
-docker compose restart triton</code></p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>restart<span class="w"> </span>triton
+</code></pre></div>
 <p>Make sure to check the logs to ensure that the models are loaded correctly:</p>
-<p><code>bash
-docker compose logs -f triton</code></p>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>compose<span class="w"> </span>logs<span class="w"> </span>-f<span class="w"> </span>triton
+</code></pre></div>
 <h3 id="listing-models">Listing models</h3>
 <p>To list the models currently loaded on the Triton server, run:</p>
-<p><code>bash
-uv run manage.py list-models</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>list-models
+</code></pre></div>
 <p>Make sure that the Triton server is running before executing this command.</p>
 <h3 id="loading-and-unloading-models">Loading and unloading models</h3>
 <p>All models present in the <code>models/triton</code> directory are loaded at Triton startup. If you add a new model, you don't need to restart the server, you can load it dynamically.</p>
 <p>Use the following command to load a model:</p>
-<p><code>bash
-uv run manage.py load-model --model MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>load-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
+</code></pre></div>
 <p>You can unload a model with the following command:
-<code>bash
-uv run manage.py unload-model --model MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>unload-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
+</code></pre></div></p>
 <h3 id="disabling-models">Disabling models</h3>
 <p>When you work locally, you don't always want to load all models, as it can take a lot of RAM. You can disable a model by using the following command:</p>
-<p><code>bash
-uv run manage.py disable-model --model MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>disable-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
+</code></pre></div>
 <p>This command moves the model directory from <code>models/triton</code> to <code>models/triton-disabled</code>.</p>
 <p>You can re-enable a model by moving it back:</p>
-<p><code>bash
-uv run manage.py enable-model --model MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>enable-model<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
+</code></pre></div>
 <h3 id="get-a-model-configuration-from-triton">Get a model configuration from Triton</h3>
 <p>You can get the configuration of a model currently loaded in Triton with the following command:</p>
-<p><code>bash
-uv run manage.py get-model-config --model MODEL_NAME</code></p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>manage.py<span class="w"> </span>get-model-config<span class="w"> </span>--model<span class="w"> </span>MODEL_NAME
+</code></pre></div>
 <p>This command retrieves the model configuration from the Triton server and displays it in the console.</p>
 <h2 id="reference-on-triton-model-management-configuration">Reference on Triton model management &amp; configuration</h2>
 <p>Models are exported in ONNX format and added in the <code>models/triton</code> directory.</p>
