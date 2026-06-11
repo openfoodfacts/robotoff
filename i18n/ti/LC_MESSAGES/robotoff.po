@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "እቲ ፍርያት ኣብዚ ምድብ ይኣቱ ድዩ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "እቲ ፍርያት እዚ ምልክት ኣለዎ ድዩ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "እቲ ፍርያት ናይዚ ምልክት ድዩ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "እዚ ክብደት እዚ ምስቲ ኣብቲ ፍርያት ዚርአ ክብደት ይሰማማዕ ድዩ፧"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "እዚ ምስሊ እዚ ነዚ ቋንቋ እዚ ናይ ኣመጋግባ ምስሊ ድዩ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "እቲ ፍርያት እዚ ናይ መዐሸጊ ባእታ ኣለዎ ድዩ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
