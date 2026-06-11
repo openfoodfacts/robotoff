@@ -25,19 +25,19 @@ msgstr "Al label-mañ a zo war ar produ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "Ha perc'henn eo ar produ war ar merk-mañ ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Ha klotañ a ra ar pouez-mañ gant ar pouez diskouezet war ar produ ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Ur skeudenn magadurezh evit ar yezh-mañ eo ar skeudenn-mañ ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Hag an elfenn pakañ-mañ a zo er produ ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"

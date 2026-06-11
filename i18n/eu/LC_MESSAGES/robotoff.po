@@ -25,15 +25,15 @@ msgstr "Produktuak badu etiketa hori?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "Produktua marka honena al da?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Pisu hau produktuan agertzen den pisuarekin bat dator?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "Irudi hau hizkuntza honetarako nutrizio-irudia al da?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"

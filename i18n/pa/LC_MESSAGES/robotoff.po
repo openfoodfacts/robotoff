@@ -25,19 +25,19 @@ msgstr "ਕੀ ਉਤਪਾਦ ਉੱਤੇ ਇਹ ਲੇਬਲ ਹੈ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "ਕੀ ਇਹ ਉਤਪਾਦ ਇਸ ਬ੍ਰਾਂਡ ਦਾ ਹੈ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "ਕੀ ਇਹ ਭਾਰ ਉਤਪਾਦ 'ਤੇ ਦਿਖਾਏ ਗਏ ਭਾਰ ਨਾਲ ਮੇਲ ਖਾਂਦਾ ਹੈ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "ਕੀ ਇਹ ਤਸਵੀਰ ਇਸ ਭਾਸ਼ਾ ਲਈ ਪੋਸ਼ਣ ਸੰਬੰਧੀ ਤਸਵੀਰ ਹੈ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "ਕੀ ਉਤਪਾਦ ਵਿੱਚ ਇਹ ਪੈਕੇਜਿੰਗ ਤੱਤ ਹੈ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"

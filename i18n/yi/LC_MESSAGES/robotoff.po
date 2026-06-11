@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "געהערט דער פּראָדוקט צו דעם קאַטעגאָריע?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "האט דער פּראָדוקט דעם לייבל?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "געהערט דער פּראָדוקט צו דעם בראַנד?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "צי שטימט דאָס וואָג מיט דעם וואָג וואָס ווערט אָנגעוויזן אויף דעם פּראָדוקט?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "איז דאָס בילד אַ דערנערונג בילד פֿאַר דער שפּראַך?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "צי האט דער פּראָדוקט דעם פּאַקאַדזשינג עלעמענט?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"

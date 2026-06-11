@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "ຜະລິດຕະພັນດັ່ງກ່າວເປັນຂອງໝວດໝູ່ນີ້ບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "ຜະລິດຕະພັນມີປ້າຍນີ້ບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "ຜະລິດຕະພັນເປັນຂອງຍີ່ຫໍ້ນີ້ບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "ນ້ຳໜັກນີ້ກົງກັບນ້ຳໜັກທີ່ສະແດງຢູ່ໃນຜະລິດຕະພັນບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "ຮູບພາບນີ້ແມ່ນຮູບພາບໂພຊະນາການສຳລັບພາສານີ້ບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "ຜະລິດຕະພັນມີອົງປະກອບການຫຸ້ມຫໍ່ນີ້ບໍ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"

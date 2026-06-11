@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "उत्पादः अस्मिन् वर्गे अस्ति वा ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "उत्पादे एतत् लेबलं भवति वा ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "किं उत्पादः अस्य ब्राण्डस्य अस्ति ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "किं एतत् भारं उत्पादे प्रदर्शितस्य भारस्य सङ्गतिं करोति ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "किम् एषा बिम्बम् अस्याः भाषायाः पोषणप्रतिबिम्बम् अस्ति ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "किं उत्पादे एतत् पैकेजिंग्-तत्त्वम् अस्ति ?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
