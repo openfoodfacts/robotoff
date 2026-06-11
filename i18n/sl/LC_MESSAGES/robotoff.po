@@ -37,7 +37,7 @@ msgstr "Ali je ta slika, prehranska slika tega jezika?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "Ali ima izdelek ta element embalaže?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
