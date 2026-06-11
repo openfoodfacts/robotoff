@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "O produto pertence a esta categoría?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "O produto ten esta etiqueta?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "O produto pertence a esta marca?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "Coincide este peso co peso que se mostra no produto?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "É esta imaxe unha imaxe nutricional para esta lingua?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "O produto ten este elemento de embalaxe?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
