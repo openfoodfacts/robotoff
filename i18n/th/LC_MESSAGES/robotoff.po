@@ -17,27 +17,27 @@ msgstr ""
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this category?"
-msgstr ""
+msgstr "ผลิตภัณฑ์นี้จัดอยู่ในหมวดหมู่นี้หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this label?"
-msgstr ""
+msgstr "ผลิตภัณฑ์นี้มีฉลากนี้หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "ผลิตภัณฑ์นี้เป็นของแบรนด์นี้หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "น้ำหนักนี้ตรงกับน้ำหนักที่ระบุไว้บนผลิตภัณฑ์หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "ภาพนี้เป็นภาพเกี่ยวกับโภชนาการสำหรับภาษานี้หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "ผลิตภัณฑ์นี้มีบรรจุภัณฑ์แบบนี้หรือไม่?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
