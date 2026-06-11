@@ -25,19 +25,19 @@ msgstr "தயாரிப்புக்கு இந்த லேபிள் 
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product belong to this brand?"
-msgstr ""
+msgstr "இந்தத் தயாரிப்பு இந்த பிராண்டைச் சேர்ந்ததா?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does this weight match the weight displayed on the product?"
-msgstr ""
+msgstr "இந்த எடை, பொருளின் மீது காட்டப்பட்டுள்ள எடையுடன் பொருந்துகிறதா?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image a nutrition image for this language?"
-msgstr ""
+msgstr "இந்தப் படம் இந்த மொழிக்கான ஊட்டச்சத்துப் படமா?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Does the product have this packaging element?"
-msgstr ""
+msgstr "தயாரிப்பில் இந்த பேக்கேஜிங் அம்சம் உள்ளதா?"
 
 # Question that appears for logged-in users on the Web and Android
 msgid "Is this image rotated with the following orientation?"
