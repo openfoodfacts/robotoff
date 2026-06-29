@@ -32,6 +32,22 @@ def test_es_ocr_regex(input_str: str, is_match: bool, output: str | None):
         ("homologation LA 42/05", ["fr:label-rouge"]),
         ("Homologation n°LA19/05", ["fr:label-rouge"]),
         ("Homologation n°LA 02/91", ["fr:label-rouge"]),
+        # The combined "eu/non-eu agriculture" form must only yield
+        # en:eu-non-eu-agriculture, never the narrow en:eu-agriculture or
+        # en:non-eu-agriculture tags (see #1245)
+        ("agriculture ue/non ue", ["en:eu-non-eu-agriculture"]),
+        ("agriculture ue / non ue", ["en:eu-non-eu-agriculture"]),
+        ("agriculture ue/non-ue", ["en:eu-non-eu-agriculture"]),
+        ("eu/non eu agriculture", ["en:eu-non-eu-agriculture"]),
+        ("eu/non-eu agriculture", ["en:eu-non-eu-agriculture"]),
+        ("eu / non-eu agriculture", ["en:eu-non-eu-agriculture"]),
+        # Genuine narrow forms must still be detected
+        ("agriculture ue", ["en:eu-agriculture"]),
+        ("eu agriculture", ["en:eu-agriculture"]),
+        ("agriculture non ue", ["en:non-eu-agriculture"]),
+        ("agriculture non-ue", ["en:non-eu-agriculture"]),
+        ("non eu agriculture", ["en:non-eu-agriculture"]),
+        ("non-eu agriculture", ["en:non-eu-agriculture"]),
     ],
 )
 def test_find_labels(text: str, value_tags: list[str]):
