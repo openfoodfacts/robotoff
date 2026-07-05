@@ -101,7 +101,7 @@ def generate_brand_list(
 ) -> list[tuple[str, str]]:
     min_length = min_length or 0
     brand_taxonomy = get_taxonomy(TaxonomyType.brand.name)
-    url = settings.BaseURLProvider.world(server_type) + "/brands.json"
+    url = settings.BaseURLProvider.world(server_type) + "/facets/brands.json"
     brand_count_list = http_session.get(url).json()["tags"]
 
     brand_count = {tag["id"]: tag for tag in brand_count_list}

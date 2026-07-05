@@ -16,11 +16,11 @@ from robotoff.utils import http_session
 logger = logging.getLogger(__name__)
 
 URL_PATHS: list[str] = [
-    "/ingredients-analysis?json=1",
-    "/data-quality?json=1",
-    "/ingredients?stats=1&json=1",
-    "/states?json=1",
-    "/misc?json=1",
+    "/facets/ingredients-analysis?json=1",
+    "/facets/data-quality?json=1",
+    "/facets/ingredients?stats=1&json=1",
+    "/facets/states?json=1",
+    "/facets/misc?json=1",
 ]
 
 COUNTRY_TAGS = [
@@ -136,7 +136,7 @@ def save_facet_metrics():
             inserts += generate_metrics_from_path(
                 server_type,
                 country_tag,
-                "/entry-date/{}/contributors?json=1".format(
+                "/facets/entry-date/{}/contributors?json=1".format(
                     # get contribution metrics for the previous day
                     (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
                 ),
@@ -148,7 +148,7 @@ def save_facet_metrics():
 
     try:
         inserts += generate_metrics_from_path(
-            server_type, "world", "/countries?json=1", target_datetime
+            server_type, "world", "/facets/countries?json=1", target_datetime
         )
     except Exception:
         logger.exception()
@@ -159,7 +159,10 @@ def save_facet_metrics():
 
 
 def get_facet_name(url: str) -> str:
-    return urlparse(url)[2].strip("/").replace("-", "_")
+    path = urlparse(url)[2].strip("/")
+    # facet pages now live under a common "/facets/" prefix (ex:
+    # "/facets/states"), so only the last path segment is the facet name
+    return path.rsplit("/", 1)[-1].replace("-", "_")
 
 
 def generate_metrics_from_path(
