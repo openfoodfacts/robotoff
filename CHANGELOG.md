@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.85.11](https://github.com/openfoodfacts/robotoff/compare/v1.85.10...v1.85.11) (2026-08-10)
+
+
+### Bug Fixes
+
+* replace obsolete facet URLs with /facets/ prefix ([#1909](https://github.com/openfoodfacts/robotoff/issues/1909)) ([939d02f](https://github.com/openfoodfacts/robotoff/commit/939d02f92c33bddbc5fb59f1d57fec7519f94a3f)), closes [#1548](https://github.com/openfoodfacts/robotoff/issues/1548)
+
+
+### Technical
+
+* add new price tag detection model ([1b80f33](https://github.com/openfoodfacts/robotoff/commit/1b80f339cbb133967aa874ec110d919124b7c8d5))
+* **deps:** bump the all-actions group with 2 updates ([#1907](https://github.com/openfoodfacts/robotoff/issues/1907)) ([8d58538](https://github.com/openfoodfacts/robotoff/commit/8d58538fee8f8fba34b002e3670ff3625b39418a))
+* **deps:** bump transformers from 4.53.3 to 5.3.0 ([#1908](https://github.com/openfoodfacts/robotoff/issues/1908)) ([4c6366c](https://github.com/openfoodfacts/robotoff/commit/4c6366cd82409a512523738649f074397fed25e4))
+* **deps:** upgrade transformers ([633a0ab](https://github.com/openfoodfacts/robotoff/commit/633a0abb21dcde71bb949322ebb22e79d3b3e11c))
+* downgrade to previous hf version ([#1924](https://github.com/openfoodfacts/robotoff/issues/1924)) ([2fe4603](https://github.com/openfoodfacts/robotoff/commit/2fe4603ce12a84d318d39b0368caf83ac7e65fd2))
+
 ## [1.85.10](https://github.com/openfoodfacts/robotoff/compare/v1.85.9...v1.85.10) (2026-06-22)
 
 
