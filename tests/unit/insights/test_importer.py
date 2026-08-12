@@ -26,6 +26,7 @@ from robotoff.insights.importer import (
     is_recent_image,
     is_selected_image,
     is_valid_insight_image,
+    refresh_insights,
     select_deepest_taxonomized_candidates,
 )
 from robotoff.models import ProductInsight
@@ -3022,3 +3023,59 @@ class TestIngredientSpellcheckImporter:
             IngredientSpellcheckImporter._keep_prediction(prediction, product)
             is expected
         )
+
+
+class TestRefreshInsights:
+    def test_refresh_insights_runs_importer_with_existing_insight_no_prediction(
+        self, mocker
+    ):
+        """#1349: an importer must run during a refresh when the product still
+        has non-annotated insights of its type, even if no prediction of its
+        required type remains, so that stale insights (e.g. a brand insight
+        after the brand was filled) get deleted. Importers whose type has
+        neither predictions nor existing insights must not run.
+        """
+        mocker.patch(
+            "robotoff.insights.importer.get_product_predictions", return_value=[]
+        )
+        mocker.patch(
+            "robotoff.insights.importer.get_product_insight_types",
+            return_value={InsightType.brand},
+        )
+        brand_import_mock = mocker.patch.object(
+            BrandInsightImporter, "import_insights", return_value="brand-result"
+        )
+        label_import_mock = mocker.patch.object(
+            LabelInsightImporter, "import_insights", return_value="label-result"
+        )
+
+        results = refresh_insights(DEFAULT_PRODUCT_ID, product_store={})
+
+        # The brand importer runs (so it can delete the stale insight)...
+        brand_import_mock.assert_called_once()
+        assert brand_import_mock.call_args.args[0] == DEFAULT_PRODUCT_ID
+        # ...it is called with an empty prediction list (no prediction remains).
+        assert brand_import_mock.call_args.args[1] == []
+        # ...but the label importer, with neither prediction nor existing
+        # insight, is left untouched.
+        label_import_mock.assert_not_called()
+        assert "brand-result" in results
+
+    def test_refresh_insights_skips_importer_without_prediction_or_insight(
+        self, mocker
+    ):
+        """When the product has neither predictions nor existing insights of a
+        type, the corresponding importer must not run (unchanged behaviour)."""
+        mocker.patch(
+            "robotoff.insights.importer.get_product_predictions", return_value=[]
+        )
+        mocker.patch(
+            "robotoff.insights.importer.get_product_insight_types",
+            return_value=set(),
+        )
+        brand_import_mock = mocker.patch.object(BrandInsightImporter, "import_insights")
+
+        results = refresh_insights(DEFAULT_PRODUCT_ID, product_store={})
+
+        brand_import_mock.assert_not_called()
+        assert results == []
