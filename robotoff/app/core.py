@@ -110,7 +110,8 @@ def get_insights(
         (popularity), by number of votes on this insight (n_votes), by
         decreasing confidence score (confidence) or don't order results
         (None), defaults to None
-    :param value_tag: only keep insights with this value_tag, defaults to None
+    :param value_tag: only keep insights with this value_tag, defaults to None.
+        For brand insights, accept both legacy tags and their `xx:`-prefixed form.
     :param reserved_barcode: only keep insights with reserved barcodes (True)
         or without reserved barcode (False), defaults to None
     :param as_dict: if True, return results as dict instead of ProductInsight
@@ -163,7 +164,15 @@ def get_insights(
         where_clauses.append(ProductInsight.barcode == barcode)
 
     if value_tag:
-        where_clauses.append(ProductInsight.value_tag == value_tag)
+        value_clause = ProductInsight.value_tag == value_tag
+        # Brand insights can still contain legacy, unprefixed tags while
+        # clients now receive xx:-prefixed IDs from the brands taxonomy.
+        brand_tag = value_tag.removeprefix("xx:")
+        if brand_tag and ":" not in brand_tag:
+            value_clause |= (ProductInsight.type == "brand") & (
+                ProductInsight.value_tag.in_([brand_tag, f"xx:{brand_tag}"])
+            )
+        where_clauses.append(value_clause)
 
     if keep_types is not None:
         where_clauses.append(ProductInsight.type.in_(keep_types))
