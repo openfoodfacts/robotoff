@@ -10,6 +10,9 @@ on:
       - 'docs/references/api.yml'
       - '.spectral.yml'
 
+permissions:
+  contents: read
+
 jobs:
   lint-api-spec:
     name: Lint OpenAPI Specification
