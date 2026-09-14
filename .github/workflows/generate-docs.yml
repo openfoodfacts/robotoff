@@ -21,6 +21,8 @@ env:
 jobs:
   publish-docs:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
