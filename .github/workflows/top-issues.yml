@@ -2,6 +2,10 @@ name: Top issues action.
 on:
   schedule:
   - cron:  '0 0 */1 * *'
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 jobs:
   ShowAndLabelTopIssues:
     name: Display and label top issues.
