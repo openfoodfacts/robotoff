@@ -103,9 +103,9 @@ def test_questions_brand_value_tag(client, mocker, peewee_db, value_tag):
     with peewee_db:
         ProductInsightFactory(
             barcode="1",
-            type="brand",
+            type=InsightType.brand.name,
             value="Nestlé",
-            value_tag="nestle",
+            value_tag="xx:nestle",
             unique_scans_n=20,
         )
         ProductInsightFactory(
@@ -128,7 +128,7 @@ def test_questions_brand_value_tag(client, mocker, peewee_db, value_tag):
         )
 
     params = {"insight_types": "brand", "value_tag": value_tag, "count": 1}
-    for page, barcode, stored_tag in [(1, "1", "nestle"), (2, "2", "xx:nestle")]:
+    for page, barcode, stored_tag in [(1, "1", "xx:nestle"), (2, "2", "xx:nestle")]:
         result = client.simulate_get(
             "/api/v1/questions", params={**params, "page": page}
         )
