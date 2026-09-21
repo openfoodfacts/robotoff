@@ -602,7 +602,7 @@ paths:
         schema:
           type: string
       - name: taxonomy_value
-        description: Filter by taxonomy value, i.e. the canonical value present is the associated taxonomy. This parameter is mutually exclusive with `value`, and should be used for `label` type.
+        description: Filter by a canonical taxonomy tag. The tag is resolved to the value stored with the logo annotation before filtering. This parameter is mutually exclusive with `value`, and should be used for taxonomized types such as `brand` and `label`.
         in: query
         example: en:organic
         schema:

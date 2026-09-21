@@ -989,7 +989,12 @@ class ImageLogoSearchResource:
             where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
 
         if taxonomy_value is not None:
-            where_clauses.append(LogoAnnotation.taxonomy_value == taxonomy_value)
+            assert type_ is not None
+            canonical_taxonomy_value = match_taxonomized_value(taxonomy_value, type_)
+            where_clauses.append(
+                LogoAnnotation.taxonomy_value
+                == (canonical_taxonomy_value or taxonomy_value)
+            )
 
         query = LogoAnnotation.select()
         query = query.join(ImagePrediction).join(ImageModel)

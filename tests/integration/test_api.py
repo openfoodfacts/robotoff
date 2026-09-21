@@ -686,6 +686,58 @@ def test_image_collection(client, peewee_db):
     assert data["images"][0]["barcode"] == "00000456"
 
 
+def test_logo_search_resolves_taxonomy_value(client, peewee_db, mocker):
+    with peewee_db:
+        expected = LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value="cora",
+            annotation_value_tag="cora",
+            taxonomy_value="Cora",
+        )
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value="carrefour",
+            annotation_value_tag="carrefour",
+            taxonomy_value="Carrefour",
+        )
+
+    match_taxonomized_value = mocker.patch(
+        "robotoff.app.api.match_taxonomized_value", return_value="Cora"
+    )
+
+    result = client.simulate_get(
+        "/api/v1/images/logos/search",
+        params={"type": "brand", "taxonomy_value": "en:cora"},
+    )
+
+    assert result.status_code == 200
+    assert result.json["count"] == 1
+    assert [logo["id"] for logo in result.json["logos"]] == [expected.id]
+    match_taxonomized_value.assert_called_once_with("en:cora", "brand")
+
+
+def test_logo_search_keeps_unknown_taxonomy_value(client, peewee_db, mocker):
+    with peewee_db:
+        expected = LogoAnnotationFactory(
+            annotation_type="brand",
+            taxonomy_value="unknown-taxonomy-value",
+        )
+
+    mocker.patch("robotoff.app.api.match_taxonomized_value", return_value=None)
+
+    result = client.simulate_get(
+        "/api/v1/images/logos/search",
+        params={
+            "type": "brand",
+            "taxonomy_value": "unknown-taxonomy-value",
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.json["count"] == 1
+    assert [logo["id"] for logo in result.json["logos"]] == [expected.id]
+
+
 def test_annotate_category_with_user_input(client, mocker, peewee_db):
     """We test category insight annotation with user input."""
     # mock because as we validate the insight, we will ask mongo for product
