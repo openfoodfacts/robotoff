@@ -1690,7 +1690,7 @@ class ImagePredictionCollection:
         response: JSONType = {}
         count: int = req.get_param_as_int("count", min_value=1, default=25)
         page: int = req.get_param_as_int("page", min_value=1, default=1)
-        with_logo: bool | None = req.get_param_as_bool("with_logo", default=False)
+        with_logo: bool | None = req.get_param_as_bool("with_logo", default=None)
         barcode: str | None = normalize_req_barcode(req.get_param("barcode"))
         type: str | None = req.get_param("type")
         server_type = get_server_type_from_req(req)
