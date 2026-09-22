@@ -989,12 +989,15 @@ class ImageLogoSearchResource:
             where_clauses.append(LogoAnnotation.annotation_value_tag == value_tag)
 
         if taxonomy_value is not None:
-            assert type_ is not None
-            canonical_taxonomy_value = match_taxonomized_value(taxonomy_value, type_)
-            where_clauses.append(
-                LogoAnnotation.taxonomy_value
-                == (canonical_taxonomy_value or taxonomy_value)
-            )
+            taxonomy_filter = LogoAnnotation.taxonomy_value == taxonomy_value
+            if type_ == "brand" and is_prefixed_value(taxonomy_value):
+                # Brand annotations also store the unprefixed tag. Use that
+                # indexed field for legacy display-name taxonomy values,
+                # without loading a taxonomy on the search request path.
+                taxonomy_filter |= (
+                    LogoAnnotation.annotation_value_tag == taxonomy_value[3:]
+                )
+            where_clauses.append(taxonomy_filter)
 
         query = LogoAnnotation.select()
         query = query.join(ImagePrediction).join(ImageModel)

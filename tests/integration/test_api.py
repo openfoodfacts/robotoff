@@ -7,7 +7,9 @@ import pytest
 import requests
 from falcon import testing
 
+from robotoff import taxonomy
 from robotoff.app.api import api
+from robotoff.app.core import update_logo_annotations
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.langid import LanguagePrediction
@@ -686,50 +688,102 @@ def test_image_collection(client, peewee_db):
     assert data["images"][0]["barcode"] == "00000456"
 
 
-def test_logo_search_resolves_taxonomy_value(client, peewee_db, mocker):
+@pytest.mark.parametrize(
+    "brand,query",
+    [
+        ("cora", "en:cora"),
+        ("carrefour-bio", "xx:carrefour-bio"),
+        ("etorki", "en:etorki"),
+    ],
+)
+def test_logo_search_matches_legacy_brand_annotation(
+    client, peewee_db, monkeypatch, brand, query
+):
+    # Use the checked-in taxonomy and the real annotation writer/resolver.
+    brand_taxonomy = taxonomy.get_taxonomy("brand", offline=True)
+    monkeypatch.setattr(
+        taxonomy, "get_taxonomy", lambda *args, **kwargs: brand_taxonomy
+    )
+    taxonomy.get_taxonomy_mapping.cache_clear()
     with peewee_db:
-        expected = LogoAnnotationFactory(
-            annotation_type="brand",
-            annotation_value="cora",
-            annotation_value_tag="cora",
-            taxonomy_value="Cora",
+        expected = LogoAnnotationFactory(annotation_type=None)
+        update_logo_annotations(
+            [("brand", brand, expected)],
+            "test-user",
+            datetime.datetime.now(datetime.UTC),
         )
+        assert expected.taxonomy_value is not None
+        assert expected.taxonomy_value != query
         LogoAnnotationFactory(
             annotation_type="brand",
             annotation_value="carrefour",
             annotation_value_tag="carrefour",
             taxonomy_value="Carrefour",
         )
+        LogoAnnotationFactory(
+            annotation_type="label", annotation_value_tag=brand, taxonomy_value=query
+        )
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value_tag=brand,
+            image_prediction__image__deleted=True,
+        )
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value_tag=brand,
+            image_prediction__image__server_type="obf",
+        )
 
-    match_taxonomized_value = mocker.patch(
-        "robotoff.app.api.match_taxonomized_value", return_value="Cora"
-    )
+    def forbid_taxonomy_load(*args, **kwargs):
+        pytest.fail("Logo search must not load taxonomies")
+
+    monkeypatch.setattr(taxonomy, "get_taxonomy", forbid_taxonomy_load)
 
     result = client.simulate_get(
         "/api/v1/images/logos/search",
-        params={"type": "brand", "taxonomy_value": "en:cora"},
+        params={"type": "brand", "taxonomy_value": query},
     )
 
     assert result.status_code == 200
     assert result.json["count"] == 1
     assert [logo["id"] for logo in result.json["logos"]] == [expected.id]
-    match_taxonomized_value.assert_called_once_with("en:cora", "brand")
 
 
-def test_logo_search_keeps_unknown_taxonomy_value(client, peewee_db, mocker):
+@pytest.mark.parametrize(
+    "type_,value",
+    [
+        ("brand", "unknown-taxonomy-value"),
+        ("brand", "xx:cora"),
+        ("label", "en:eu-organic"),
+        ("category", "en:beverages"),
+    ],
+)
+def test_logo_search_preserves_exact_taxonomy_matching(
+    client, peewee_db, monkeypatch, type_, value
+):
     with peewee_db:
         expected = LogoAnnotationFactory(
-            annotation_type="brand",
-            taxonomy_value="unknown-taxonomy-value",
+            annotation_type=type_,
+            taxonomy_value=value,
         )
+        # An unprefixed tag must not broaden label/category searches.
+        if type_ != "brand":
+            LogoAnnotationFactory(
+                annotation_type=type_,
+                annotation_value_tag=value.split(":")[-1],
+                taxonomy_value="different",
+            )
 
-    mocker.patch("robotoff.app.api.match_taxonomized_value", return_value=None)
+    def forbid_taxonomy_load(*args, **kwargs):
+        pytest.fail("Logo search must not load taxonomies")
+
+    monkeypatch.setattr(taxonomy, "get_taxonomy", forbid_taxonomy_load)
 
     result = client.simulate_get(
         "/api/v1/images/logos/search",
         params={
-            "type": "brand",
-            "taxonomy_value": "unknown-taxonomy-value",
+            "type": type_,
+            "taxonomy_value": value,
         },
     )
 
