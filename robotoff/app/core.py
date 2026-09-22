@@ -350,14 +350,13 @@ def get_image_predictions(
     if min_confidence is not None:
         where_clauses.append(ImagePrediction.max_confidence >= min_confidence)
 
-    if not with_logo:
-        # return only images without logo
+    if with_logo is not None:
         query = (
             query.switch(
                 ImagePrediction
             )  # we need this because we may have joined with ImageModel
             .join(LogoAnnotation, JOIN.LEFT_OUTER)
-            .where(LogoAnnotation.image_prediction.is_null())
+            .where(LogoAnnotation.image_prediction.is_null(not with_logo))
         )
 
     if where_clauses:
