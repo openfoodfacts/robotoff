@@ -164,6 +164,8 @@ TAXONOMY_URLS = {
     + "/data/taxonomies/packaging_recycling.full.json",
     "allergen": BaseURLProvider.static(ServerType.off)
     + "/data/taxonomies/allergen.full.json",
+    "nova_group": BaseURLProvider.static(ServerType.off)
+    + "/data/taxonomies/nova_groups.full.json",
 }
 
 _off_password = os.environ.get("OFF_PASSWORD", "")
