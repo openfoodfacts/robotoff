@@ -1832,6 +1832,8 @@ api.add_route("/api/v1/insights/annotate", AnnotateInsightResource())
 api.add_route("/api/v1/insights/dump", DumpResource())
 api.add_route("/api/v1/predict/nutrition", NutritionPredictorResource())
 api.add_route("/api/v1/predict/ocr_prediction", OCRPredictionPredictorResource())
+# The /predict/category route is disabled temporarily, to check whether it's
+# behind the API memory leaks
 # api.add_route("/api/v1/predict/category", CategoryPredictorResource())
 api.add_route("/api/v1/predict/ingredient_list", IngredientListPredictorResource())
 api.add_route("/api/v1/predict/lang", LanguagePredictorResource())

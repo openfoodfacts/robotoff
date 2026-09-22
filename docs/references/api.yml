@@ -1195,161 +1195,163 @@ paths:
         "200":
           description: Dataset update triggered
 
-  /predict/category:
-    post:
-      tags:
-      - Predict
-      summary: Predict categories for a product
-      operationId: predictCategory
-      description: |
-        Predictions are performed using a neural model.
-        As input, you can either provide:
+  # The /predict/category route is disabled temporarily, to check whether it's
+  # behind the API memory leaks
+  # /predict/category:
+  #   post:
+  #     tags:
+  #     - Predict
+  #     summary: Predict categories for a product
+  #     operationId: predictCategory
+  #     description: |
+  #       Predictions are performed using a neural model.
+  #       As input, you can either provide:
 
-        - the `barcode` of a product: Robotoff will fetch the product from
-          Product Opener and will use this data as inputs to predict categories.
-        - expected inputs under a `product` key. The neural category model
-          accepts the following fields as input: `product_name`, `ingredients_tags`,
-          `ocr`, `nutriments`, `image_embeddings`. All fields are optional (but you should at least provide one).
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-              - type: object
-                properties:
-                  barcode:
-                    type: string
-                    description: The barcode of the product to categorize
-                    minLength: 1
-                    example: "0748162621021"
-                  server_type:
-                    type: string
-                    description: |
-                      The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
-                      Only 'off' is currently supported for category prediction
-                    default: "off"
-                    enum:
-                    - "off"
-                    - "obf"
-                    - "opff"
-                    - "opf"
-                  deepest_only:
-                    type: boolean
-                    description: |
-                      If true, only return the deepest elements in the category taxonomy
-                      (don't return categories that are parents of other predicted categories)
-                  threshold:
-                    type: number
-                    description: |
-                      The score above which we consider the category to be detected
-                    default: 0.5
-                required:
-                - barcode
-              - type: object
-                properties:
-                  product:
-                    type: object
-                    description: |
-                      product information used as model input. All fields are optional, but at
-                      least one field must be provided.
-                    properties:
-                      product_name:
-                        type: string
-                        minLength: 1
-                        example: roasted chicken
-                      ingredients_tags:
-                        description: the ingredient list, as an ordered list of ingredient tags
-                        type: array
-                        items:
-                          type: string
-                        example:
-                        - "en:chicken"
-                        - "en:salts"
-                      image_embeddings:
-                        description: |
-                          Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
-                          Each item of the list is the embedding of a single image, provided as a list of dimension 512.
-                          Shape: (num_images, 512)
-                        type: array
-                        maxItems: 10
-                        items:
-                          description: a single image embedding
-                          type: array
-                          items:
-                            type: number
-                          minItems: 512
-                          maxItems: 512
-                      ocr:
-                        description: |
-                          A list of string corresponding to the text extracted from the product images with OCR.
-                          Each element of the list is the text of a single image, the list order doesn't affect predictions.
-                          We use OCR text to detect ingredient mentions and use it as a model input.
-                          For optimal results, this field should be provided even if `ingredients_tags` is provided.
-                        type: array
-                        items:
-                          type: string
-                      nutriments:
-                        type: object
-                        description: |
-                          Nutriment values. These fields have exactly the same meaning as those of Product Opener.
-                          All fields are optional, only send data for the field for which the value is not missing.
-                        properties:
-                          fat_100g:
-                            type: number
-                          saturated-fat_100g:
-                            type: number
-                          carbohydrates_100g:
-                            type: number
-                          sugars_100g:
-                            type: number
-                          fiber_100g:
-                            type: number
-                          proteins_100g:
-                            type: number
-                          salt_100g:
-                            type: number
-                          energy-kcal_100g:
-                            type: number
-                          fruits-vegetables-nuts_100g:
-                            type: number
-                        additionalProperties: false
-                    minProperties: 1 # at least one input must be provided
-                  deepest_only:
-                    type: boolean
-                    description: |
-                      If true, only return the deepest elements in the category taxonomy
-                      (don't return categories that are parents of other predicted categories)
-                  threshold:
-                    type: number
-                    description: |
-                      The score above which we consider the category to be detected
-                    default: 0.5
-                required:
-                - product
-      responses:
-        "200":
-          description: the category predictions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  neural:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        value_tag:
-                          type: string
-                          description: The predicted `value_tag`
-                          example: en:roast-chicken
-                        confidence:
-                          type: number
-                          description: The confidence score of the model
-                          example: 0.6
-                      required:
-                      - value_tag
-                      - confidence
+  #       - the `barcode` of a product: Robotoff will fetch the product from
+  #         Product Opener and will use this data as inputs to predict categories.
+  #       - expected inputs under a `product` key. The neural category model
+  #         accepts the following fields as input: `product_name`, `ingredients_tags`,
+  #         `ocr`, `nutriments`, `image_embeddings`. All fields are optional (but you should at least provide one).
+  #     requestBody:
+  #       content:
+  #         application/json:
+  #           schema:
+  #             anyOf:
+  #             - type: object
+  #               properties:
+  #                 barcode:
+  #                   type: string
+  #                   description: The barcode of the product to categorize
+  #                   minLength: 1
+  #                   example: "0748162621021"
+  #                 server_type:
+  #                   type: string
+  #                   description: |
+  #                     The server type (=project) to use, such as 'off' (Open Food Facts), 'obf' (Open Beauty Facts),...
+  #                     Only 'off' is currently supported for category prediction
+  #                   default: "off"
+  #                   enum:
+  #                   - "off"
+  #                   - "obf"
+  #                   - "opff"
+  #                   - "opf"
+  #                 deepest_only:
+  #                   type: boolean
+  #                   description: |
+  #                     If true, only return the deepest elements in the category taxonomy
+  #                     (don't return categories that are parents of other predicted categories)
+  #                 threshold:
+  #                   type: number
+  #                   description: |
+  #                     The score above which we consider the category to be detected
+  #                   default: 0.5
+  #               required:
+  #               - barcode
+  #             - type: object
+  #               properties:
+  #                 product:
+  #                   type: object
+  #                   description: |
+  #                     product information used as model input. All fields are optional, but at
+  #                     least one field must be provided.
+  #                   properties:
+  #                     product_name:
+  #                       type: string
+  #                       minLength: 1
+  #                       example: roasted chicken
+  #                     ingredients_tags:
+  #                       description: the ingredient list, as an ordered list of ingredient tags
+  #                       type: array
+  #                       items:
+  #                         type: string
+  #                       example:
+  #                       - "en:chicken"
+  #                       - "en:salts"
+  #                     image_embeddings:
+  #                       description: |
+  #                         Embeddings of the 10 most recent product images generated with clip-vit-base-patch32 model.
+  #                         Each item of the list is the embedding of a single image, provided as a list of dimension 512.
+  #                         Shape: (num_images, 512)
+  #                       type: array
+  #                       maxItems: 10
+  #                       items:
+  #                         description: a single image embedding
+  #                         type: array
+  #                         items:
+  #                           type: number
+  #                         minItems: 512
+  #                         maxItems: 512
+  #                     ocr:
+  #                       description: |
+  #                         A list of string corresponding to the text extracted from the product images with OCR.
+  #                         Each element of the list is the text of a single image, the list order doesn't affect predictions.
+  #                         We use OCR text to detect ingredient mentions and use it as a model input.
+  #                         For optimal results, this field should be provided even if `ingredients_tags` is provided.
+  #                       type: array
+  #                       items:
+  #                         type: string
+  #                     nutriments:
+  #                       type: object
+  #                       description: |
+  #                         Nutriment values. These fields have exactly the same meaning as those of Product Opener.
+  #                         All fields are optional, only send data for the field for which the value is not missing.
+  #                       properties:
+  #                         fat_100g:
+  #                           type: number
+  #                         saturated-fat_100g:
+  #                           type: number
+  #                         carbohydrates_100g:
+  #                           type: number
+  #                         sugars_100g:
+  #                           type: number
+  #                         fiber_100g:
+  #                           type: number
+  #                         proteins_100g:
+  #                           type: number
+  #                         salt_100g:
+  #                           type: number
+  #                         energy-kcal_100g:
+  #                           type: number
+  #                         fruits-vegetables-nuts_100g:
+  #                           type: number
+  #                       additionalProperties: false
+  #                   minProperties: 1 # at least one input must be provided
+  #                 deepest_only:
+  #                   type: boolean
+  #                   description: |
+  #                     If true, only return the deepest elements in the category taxonomy
+  #                     (don't return categories that are parents of other predicted categories)
+  #                 threshold:
+  #                   type: number
+  #                   description: |
+  #                     The score above which we consider the category to be detected
+  #                   default: 0.5
+  #               required:
+  #               - product
+  #     responses:
+  #       "200":
+  #         description: the category predictions
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 neural:
+  #                   type: array
+  #                   items:
+  #                     type: object
+  #                     properties:
+  #                       value_tag:
+  #                         type: string
+  #                         description: The predicted `value_tag`
+  #                         example: en:roast-chicken
+  #                       confidence:
+  #                         type: number
+  #                         description: The confidence score of the model
+  #                         example: 0.6
+  #                     required:
+  #                     - value_tag
+  #                     - confidence
 
   /predict/nutrition:
     get:
