@@ -35,7 +35,8 @@ jobs:
         echo "INFLUXDB_PORT=8087" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.net/api/v1/flags" >> $GITHUB_ENV
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.net,static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.net,images.openfoodfacts.org,prices.openfoodfacts.net,prices.openfoodfacts.org" >> $GITHUB_ENV
-        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=8GB" >> $GITHUB_ENV
+        # Warning: shm_size settings in docker-compose.yml needs to be updated when increasing ROBOTOFF_POSTGRES_SHARED_BUFFERS!
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=4GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=1GB" >> $GITHUB_ENV
         echo "DEFAULT_TRITON_URI=triton:8001" >> $GITHUB_ENV
     - name: Set various variable for production deployment
@@ -58,7 +59,8 @@ jobs:
         echo "INFLUXDB_PORT=8086" >> $GITHUB_ENV
         echo "IMAGE_MODERATION_SERVICE_URL=https://nutripatrol.openfoodfacts.org/api/v1/flags" >> $GITHUB_ENV
         echo "CROP_ALLOWED_DOMAINS=static.openfoodfacts.org,openfoodfacts-images.s3.eu-west-3.amazonaws.com,images.openfoodfacts.org,prices.openfoodfacts.org" >> $GITHUB_ENV
-        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=16GB" >> $GITHUB_ENV
+        # Warning: shm_size settings in docker-compose.yml needs to be updated when increasing ROBOTOFF_POSTGRES_SHARED_BUFFERS!
+        echo "ROBOTOFF_POSTGRES_SHARED_BUFFERS=4GB" >> $GITHUB_ENV
         echo "ROBOTOFF_POSTGRES_WORK_MEM=2GB" >> $GITHUB_ENV
         # Triton server for production is running on a separate server with 2 GPUs
         echo "DEFAULT_TRITON_URI=10.3.0.101:5504" >> $GITHUB_ENV

@@ -66,9 +66,9 @@ x-robotoff-base-env:
   # Used by Google SDK to know where to find the credentials
   GOOGLE_APPLICATION_CREDENTIALS: /opt/robotoff/credentials/google/credentials.json
   GOOGLE_CREDENTIALS: # JSON credentials pasted as environment variable
-  BATCH_JOB_KEY: # Secure Batch job import with a token key 
+  BATCH_JOB_KEY: # Secure Batch job import with a token key
   INSIGHT_AUTOMATIC_PROCESSING_WAIT:
-  
+
 x-robotoff-worker-base:
   &robotoff-worker
   restart: $RESTART_POLICY
@@ -145,7 +145,7 @@ services:
     <<: *robotoff-worker
     container_name: ${COMPOSE_PROJECT_NAME:-robotoff}-worker-ml-2
     command: python -m robotoff run-worker robotoff-ml-model robotoff-low
-  
+
   scheduler:
     <<: *robotoff-base
     environment: *robotoff-base-env
@@ -165,7 +165,7 @@ services:
       - ./scripts/backup_postgres.sh:/opt/backup_postgres.sh
     command: postgres -c shared_buffers=${ROBOTOFF_POSTGRES_SHARED_BUFFERS} -c work_mem=${ROBOTOFF_POSTGRES_WORK_MEM}
     mem_limit: 20g
-    shm_size: 1g
+    shm_size: 5g
     ports:
       - "${POSTGRES_EXPOSE:-127.0.0.1:5501}:5432"
 
