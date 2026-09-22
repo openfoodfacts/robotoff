@@ -535,7 +535,7 @@ paths:
                       type: object
                   count:
                     type: integer
-                    description: The total number of results with the provided filters
+                    description: The total number of results with the provided filters. The count is limited to 1000 for performance.
 
   /images/logos:
     get:

@@ -370,6 +370,9 @@ def get_image_predictions(
         query = query.offset(offset)
 
     if count:
+        # Limit the count to 1000, otherwise the query could
+        # time out
+        query = query.limit(1000)
         return query.count()
     else:
         return query.iterator()
