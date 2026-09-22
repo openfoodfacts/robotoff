@@ -316,7 +316,7 @@ def get_predictions(
 
 def get_image_predictions(
     server_type: ServerType,
-    with_logo: bool | None = False,
+    with_logo: bool | None = None,
     barcode: str | None = None,
     type: str | None = None,
     model_name: str | None = None,
