@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.85.12](https://github.com/openfoodfacts/robotoff/compare/v1.85.11...v1.85.12) (2026-09-22)
+
+
+### Bug Fixes
+
+* disable API route to predict category ([#1952](https://github.com/openfoodfacts/robotoff/issues/1952)) ([813ef09](https://github.com/openfoodfacts/robotoff/commit/813ef09c12a5194513c383733663b4934ee73568))
+* limit count to 1000 in /image_predictions route ([#1955](https://github.com/openfoodfacts/robotoff/issues/1955)) ([fbc4586](https://github.com/openfoodfacts/robotoff/commit/fbc45865e5e92b9e089689740a6a3b8f051a60ee))
+
+
+### Technical
+
+* **deps:** bump cryptography from 48.0.1 to 50.0.0 ([#1920](https://github.com/openfoodfacts/robotoff/issues/1920)) ([e72c5fd](https://github.com/openfoodfacts/robotoff/commit/e72c5fd9b2ea360963e926a0db94bac4f5ff59b1))
+* fix PostgreSQL error due to missing shared memory ([#1954](https://github.com/openfoodfacts/robotoff/issues/1954)) ([dbcf42b](https://github.com/openfoodfacts/robotoff/commit/dbcf42b70af6948d57bf57d6027a5a6e888b7e32))
+
 ## [1.85.11](https://github.com/openfoodfacts/robotoff/compare/v1.85.10...v1.85.11) (2026-08-10)
 
 
