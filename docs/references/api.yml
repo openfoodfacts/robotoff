@@ -602,7 +602,7 @@ paths:
         schema:
           type: string
       - name: taxonomy_value
-        description: Filter by taxonomy value, i.e. the canonical value present is the associated taxonomy. This parameter is mutually exclusive with `value`, and should be used for `label` type.
+        description: Filter by the stored taxonomy value. For brands, a language-prefixed tag also matches the unprefixed annotation value tag, including annotations with legacy display-name taxonomy values. Labels and categories use exact matching. This parameter is mutually exclusive with `value` and requires `type`. It does not resolve taxonomy aliases.
         in: query
         example: en:organic
         schema:
