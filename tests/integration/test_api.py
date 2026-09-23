@@ -689,15 +689,19 @@ def test_image_collection(client, peewee_db):
 
 
 @pytest.mark.parametrize(
-    "brand,query",
+    "brand,query,expected_tag",
     [
-        ("cora", "en:cora"),
-        ("carrefour-bio", "xx:carrefour-bio"),
-        ("etorki", "en:etorki"),
+        ("cora", "en:cora", "cora"),
+        ("carrefour-bio", "xx:carrefour-bio", "carrefour-bio"),
+        ("etorki", "en:etorki", "etorki"),
+        ("Søstrene Grene", "en:søstrene-grene", "sostrene-grene"),
+        ("Søstrene Grene", "xx:søstrene-grene", "sostrene-grene"),
+        ("Søstrene Grene", "xx:sostrene-grene", "sostrene-grene"),
+        ("Nøgne Ø", "en:nøgne-ø", "nogne-o"),
     ],
 )
 def test_logo_search_matches_legacy_brand_annotation(
-    client, peewee_db, monkeypatch, brand, query
+    client, peewee_db, monkeypatch, brand, query, expected_tag
 ):
     # Use the checked-in taxonomy and the real annotation writer/resolver.
     brand_taxonomy = taxonomy.get_taxonomy("brand", offline=True)
@@ -712,7 +716,9 @@ def test_logo_search_matches_legacy_brand_annotation(
             "test-user",
             datetime.datetime.now(datetime.UTC),
         )
-        assert expected.taxonomy_value is not None
+        # Some Unicode taxonomy IDs do not resolve after annotation normalizes
+        # the brand. The stored annotation tag must still be searchable.
+        assert expected.annotation_value_tag == expected_tag
         assert expected.taxonomy_value != query
         LogoAnnotationFactory(
             annotation_type="brand",
@@ -721,16 +727,18 @@ def test_logo_search_matches_legacy_brand_annotation(
             taxonomy_value="Carrefour",
         )
         LogoAnnotationFactory(
-            annotation_type="label", annotation_value_tag=brand, taxonomy_value=query
+            annotation_type="label",
+            annotation_value_tag=expected_tag,
+            taxonomy_value=query,
         )
         LogoAnnotationFactory(
             annotation_type="brand",
-            annotation_value_tag=brand,
+            annotation_value_tag=expected_tag,
             image_prediction__image__deleted=True,
         )
         LogoAnnotationFactory(
             annotation_type="brand",
-            annotation_value_tag=brand,
+            annotation_value_tag=expected_tag,
             image_prediction__image__server_type="obf",
         )
 

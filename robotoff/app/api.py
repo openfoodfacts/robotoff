@@ -994,8 +994,8 @@ class ImageLogoSearchResource:
                 # Brand annotations also store the unprefixed tag. Use that
                 # indexed field for legacy display-name taxonomy values,
                 # without loading a taxonomy on the search request path.
-                taxonomy_filter |= (
-                    LogoAnnotation.annotation_value_tag == taxonomy_value[3:]
+                taxonomy_filter |= LogoAnnotation.annotation_value_tag == get_tag(
+                    taxonomy_value[3:]
                 )
             where_clauses.append(taxonomy_filter)
 
