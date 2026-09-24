@@ -5,6 +5,9 @@ on:
       - model-deploy-net*
       - model-deploy-org*
 
+permissions:
+  contents: read
+
 jobs:
   ml-models-sync:
     name: Sync ML models
