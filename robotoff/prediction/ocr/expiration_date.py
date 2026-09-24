@@ -16,6 +16,39 @@ from robotoff.types import JSONType, Prediction, PredictionType
 # want old predictions to be removed in DB and replaced by newer ones
 PREDICTOR_VERSION = "1"
 
+# A detected date is only kept as an expiration date if its year falls within a
+# plausible window around the current date. Best-before / expiration dates are
+# usually in the future, but can be slightly in the past for products still on
+# shelves, so we allow a small margin on both sides. Dates far outside this
+# window are almost always OCR noise or an unrelated date (e.g. a manufacturing
+# lot number misread as a date).
+#
+# The window is computed relative to the current date (see
+# `is_plausible_expiration_date`) rather than hardcoded, so it never becomes
+# stale: a previous hardcoded upper bound silently dropped every date from the
+# then-future once that year arrived.
+MAX_YEARS_IN_PAST = 5
+MAX_YEARS_IN_FUTURE = 15
+
+
+def is_plausible_expiration_date(
+    date: datetime.date, today: datetime.date | None = None
+) -> bool:
+    """Return True if `date` is a plausible expiration date, i.e. its year is
+    within `MAX_YEARS_IN_PAST` years before and `MAX_YEARS_IN_FUTURE` years
+    after the current year.
+
+    :param date: the candidate expiration date
+    :param today: the reference date, defaults to `datetime.date.today()`
+        (mainly useful for testing)
+    """
+    if today is None:
+        today = datetime.date.today()
+
+    return (
+        today.year - MAX_YEARS_IN_PAST <= date.year <= today.year + MAX_YEARS_IN_FUTURE
+    )
+
 
 def process_full_digits_expiration_date(match, short: bool) -> datetime.date | None:
     day, month, year = match.group(1, 2, 3)
@@ -73,7 +106,7 @@ def find_expiration_date(content: OCRResult | str) -> list[Prediction]:
             if date is None:
                 continue
 
-            if date.year > 2025 or date.year < 2015:
+            if not is_plausible_expiration_date(date):
                 continue
 
             # Format dates according to ISO 8601
