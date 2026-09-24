@@ -26,6 +26,10 @@ from robotoff.types import JSONType
             "acides gras saturés 3.8g waarvan verzadigde",
             {"saturated_fat": [{"languages": ["fr"]}, {"languages": ["nl"]}]},
         ),
+        (
+            "Glucides: 25 g",
+            {"carbohydrate": [{"raw": "Glucides", "languages": ["fr"]}]},
+        ),
     ],
 )
 def test_find_nutrient_mentions(text: str, nutrients: dict[str, list[JSONType]]):
@@ -41,3 +45,17 @@ def test_find_nutrient_mentions(text: str, nutrients: dict[str, list[JSONType]])
             for k, v in ref.items():
                 assert k in current
                 assert current[k] == v
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "basalt",
+        "unsalted",
+        "wholesale",
+        "selon la recette",
+        "fibreglass",
+    ],
+)
+def test_find_nutrient_mentions_no_partial_word_match(text: str):
+    assert find_nutrient_mentions(text) == []
