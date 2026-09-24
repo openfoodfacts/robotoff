@@ -12,7 +12,7 @@ from robotoff.types import JSONType, Prediction, PredictionType
 
 # Increase version ID when introducing breaking change: changes for which we
 # want old predictions to be removed in DB and replaced by newer ones
-PREDICTOR_VERSION = "1"
+PREDICTOR_VERSION = "2"
 
 
 NutrientMentionType = tuple[str, list[str]]
@@ -55,6 +55,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("vetten", ["nl"]),
         ("fett", ["de"]),
         ("grasas", ["es"]),
+        ("gorduras?", ["pt"]),
         ("grassi", ["it"]),
         ("l[íi]pidos", ["es", "pt"]),
         ("fedt", ["da"]),
@@ -67,6 +68,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("suikers?", ["nl"]),
         ("zucker", ["de"]),
         ("az[úu]cares", ["es"]),
+        ("a[çc][úu]cares", ["pt"]),
         ("sukkerarter", ["da"]),
         ("amelyb[őö]l? cukrok", ["hu"]),
     ],
@@ -105,7 +107,9 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
         ("fibres? alimentaires?", ["fr"]),
         ("(?:voedings)?vezels?", ["nl"]),
         ("ballaststoffe", ["de"]),
-        ("fibra(?: alimentaria)?", ["es"]),
+        ("fibra alimentar", ["pt"]),
+        ("fibra alimentaria", ["es"]),
+        ("fibra", ["es", "pt"]),
         ("kostfibre", ["da"]),
         ("rost", ["hu"]),
     ],
@@ -157,7 +161,7 @@ def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
     )
-    return re.compile(rf"(?<!\w){sub_re}(?!\w)", re.I)
+    return re.compile(rf"(?<!\w)(?:{sub_re})(?!\w)", re.I)
 
 
 NUTRIENT_VALUES_REGEX = {
