@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.85.13](https://github.com/openfoodfacts/robotoff/compare/v1.85.12...v1.85.13) (2026-10-19)
+
+
+### Bug Fixes
+
+* disable metrics computation from Product Opener ([#1973](https://github.com/openfoodfacts/robotoff/issues/1973)) ([4feb234](https://github.com/openfoodfacts/robotoff/commit/4feb2348d9c9533e8ee1356a37b759298f8b7b63))
+* don't return duplicate image predictions ([#1970](https://github.com/openfoodfacts/robotoff/issues/1970)) ([b1ea0d1](https://github.com/openfoodfacts/robotoff/commit/b1ea0d1c38b4fa4b6fd863bcded38d1634b10c06))
+* honor param with_logo ([#1956](https://github.com/openfoodfacts/robotoff/issues/1956)) ([14dc48b](https://github.com/openfoodfacts/robotoff/commit/14dc48b0e17e0995ce3ceee813215c8a71aaf9d0))
+* merge consecutive dashes in get_tag ([#1968](https://github.com/openfoodfacts/robotoff/issues/1968)) ([a3ed58b](https://github.com/openfoodfacts/robotoff/commit/a3ed58b9f1d625de39dee96ecaacf7ee26b90033))
+* workflow permissions for: .github/workflows/models-deploy.yml ([#1948](https://github.com/openfoodfacts/robotoff/issues/1948)) ([b97433e](https://github.com/openfoodfacts/robotoff/commit/b97433e57fa51c3cd60ab7bc0754c499bcfbaad6))
+* workflow permissions for: .github/workflows/quality_check.yml ([#1939](https://github.com/openfoodfacts/robotoff/issues/1939)) ([6843fc0](https://github.com/openfoodfacts/robotoff/commit/6843fc0b319d79c1af2f6fd9bd018bb46ee8215b))
+* workflow permissions for: .github/workflows/top-issues.yml ([#1941](https://github.com/openfoodfacts/robotoff/issues/1941)) ([11d6a90](https://github.com/openfoodfacts/robotoff/commit/11d6a905041546597706464f6b73a638f1801942))
+
 ## [1.85.12](https://github.com/openfoodfacts/robotoff/compare/v1.85.11...v1.85.12) (2026-09-22)
 
 
