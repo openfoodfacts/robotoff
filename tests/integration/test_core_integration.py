@@ -8,6 +8,7 @@ from robotoff.app.core import (
     get_logo_annotation,
     get_predictions,
 )
+from robotoff.models import ImagePrediction
 from robotoff.types import ServerType
 
 from .models_utils import (
@@ -32,53 +33,75 @@ def _set_up_and_tear_down(peewee_db):
         clean_db()
 
 
-def prediction_ids(data):
+def prediction_ids(data: list[ImagePrediction]) -> set[int]:
     return {prediction.id for prediction in data}
 
 
 def test_get_image_predictions():
-    logo_annotation1 = LogoAnnotationFactory(image_prediction__image__barcode="123")
-    image_prediction1 = logo_annotation1.image_prediction
-    logo_annotation2 = LogoAnnotationFactory(
+    logo_annotation_1 = LogoAnnotationFactory(image_prediction__image__barcode="123")
+    image_prediction_1 = logo_annotation_1.image_prediction
+    logo_annotation_2 = LogoAnnotationFactory(
         image_prediction__image__barcode="456", image_prediction__type="label"
     )
-    image_prediction2 = logo_annotation2.image_prediction
-    image_prediction3 = ImagePredictionFactory(image__barcode="123", type="label")
-    image_prediction4 = ImagePredictionFactory(image__barcode="123", type="category")
+    image_prediction_2 = logo_annotation_2.image_prediction
+    image_prediction_3 = ImagePredictionFactory(image__barcode="123", type="label")
+    image_prediction_4 = ImagePredictionFactory(image__barcode="123", type="category")
 
     # test with "barcode" filter
-    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, barcode="123"))
-    assert len(data) == 2
-    assert prediction_ids(data) == {image_prediction3.id, image_prediction4.id}
+    data = list(
+        get_image_predictions(DEFAULT_SERVER_TYPE, barcode="123", with_logo=None)
+    )
+    assert len(data) == 3
+    assert prediction_ids(data) == {
+        image_prediction_1.id,
+        image_prediction_3.id,
+        image_prediction_4.id,
+    }
 
     # test filter with "barcode" and "with_logo=True"
     data = list(
         get_image_predictions(DEFAULT_SERVER_TYPE, barcode="123", with_logo=True)
     )
-    assert len(data) == 3
-    assert prediction_ids(data) == {
-        image_prediction1.id,
-        image_prediction3.id,
-        image_prediction4.id,
-    }
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction_1.id}
 
     # test filter with "with_logo=True"
     data = list(get_image_predictions(DEFAULT_SERVER_TYPE, with_logo=True))
-    assert len(data) == 4  # we have them all
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction_1.id, image_prediction_2.id}
 
     # test filter with "type=label" and "with_logo=True"
     data = list(
         get_image_predictions(DEFAULT_SERVER_TYPE, type="label", with_logo=True)
     )
-    assert len(data) == 2
-    assert prediction_ids(data) == {image_prediction2.id, image_prediction3.id}
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction_2.id}
 
     # test filter with "type=label" and "with_logo=False"
     data = list(
         get_image_predictions(DEFAULT_SERVER_TYPE, type="label", with_logo=False)
     )
     assert len(data) == 1
-    assert prediction_ids(data) == {image_prediction3.id}
+    assert prediction_ids(data) == {image_prediction_3.id}
+
+
+def test_get_image_predictions_multiple_logo_annotations():
+    logo_annotation_1 = LogoAnnotationFactory(image_prediction__image__barcode="123")
+    image_prediction_1 = logo_annotation_1.image_prediction
+    LogoAnnotationFactory(image_prediction=image_prediction_1, index=1)
+    image_prediction_2 = ImagePredictionFactory(image__barcode="234")
+
+    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, with_logo=True))
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction_1.id}
+
+    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, with_logo=False))
+    assert len(data) == 1
+    assert prediction_ids(data) == {image_prediction_2.id}
+
+    data = list(get_image_predictions(DEFAULT_SERVER_TYPE, with_logo=None))
+    assert len(data) == 2
+    assert prediction_ids(data) == {image_prediction_1.id, image_prediction_2.id}
 
 
 def test_get_predictions():
