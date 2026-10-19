@@ -1049,9 +1049,23 @@ def test_image_prediction_collection(client, peewee_db):
     assert result.status_code == 200
     data = result.json
     data["image_predictions"].sort(key=lambda d: d["id"])
-    assert data["count"] == 2
+    assert data["count"] == 1
     assert data["image_predictions"][0]["id"] == prediction_label_789.id
-    assert data["image_predictions"][1]["id"] == prediction_label_789_no_logo.id
+
+    # test with "type=label" and "with_logo=False"
+    result = client.simulate_get(
+        "/api/v1/image_predictions",
+        params={
+            "type": "label",
+            "with_logo": 0,
+        },
+    )
+
+    assert result.status_code == 200
+    data = result.json
+    data["image_predictions"].sort(key=lambda d: d["id"])
+    assert data["count"] == 1
+    assert data["image_predictions"][0]["id"] == prediction_label_789_no_logo.id
 
     # test with "barcode=456" and "with_logo=True"
     result = client.simulate_get(
@@ -1067,7 +1081,7 @@ def test_image_prediction_collection(client, peewee_db):
     assert data["count"] == 0
     assert data["image_predictions"] == []
 
-    # test with "type=label" and "with_logo=False"
+    # test with "type=label" and "with_logo=null" (all image predictions)
     result = client.simulate_get(
         "/api/v1/image_predictions",
         params={
@@ -1077,8 +1091,10 @@ def test_image_prediction_collection(client, peewee_db):
 
     assert result.status_code == 200
     data = result.json
-    assert data["count"] == 1
-    assert data["image_predictions"][0]["id"] == prediction_label_789_no_logo.id
+    data["image_predictions"].sort(key=lambda d: d["id"])
+    assert data["count"] == 2
+    assert data["image_predictions"][0]["id"] == prediction_label_789.id
+    assert data["image_predictions"][1]["id"] == prediction_label_789_no_logo.id
 
 
 def test_logo_annotation_collection_empty(client):
