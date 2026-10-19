@@ -1,70 +1,14 @@
 import datetime
 import logging
-from urllib.parse import urlparse
 
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
 from peewee import fn
-from requests.exceptions import ConnectionError as RequestConnectionError
-from requests.exceptions import JSONDecodeError, SSLError, Timeout
 
 from robotoff import settings
 from robotoff.models import ProductInsight, with_db
-from robotoff.types import ServerType
-from robotoff.utils import http_session
 
 logger = logging.getLogger(__name__)
-
-URL_PATHS: list[str] = [
-    "/facets/ingredients-analysis?json=1",
-    "/facets/data-quality?json=1",
-    "/facets/ingredients?stats=1&json=1",
-    "/facets/states?json=1",
-    "/facets/misc?json=1",
-]
-
-COUNTRY_TAGS = [
-    "world",
-    "us",
-    "uk",
-    "fr",
-    "es",
-    "it",
-    "be",
-    "nl",
-    "de",
-    "ch",
-    "be",
-    "ca",
-    "au",
-    "mx",
-    "at",
-    "ie",
-    "pl",
-    "pt",
-    "se",
-    "ru",
-    "th",
-    "ma",
-    "lu",
-    "re",
-    "ro",
-    "bg",
-    "hu",
-    "dz",
-    "dk",
-    "br",
-    "cz",
-    "sg",
-    "fi",
-    "ar",
-    "gd",
-    "jp",
-    "no",
-    "in",
-    "tn",
-    "dk",
-]
 
 
 def get_influx_client() -> InfluxDBClient | None:
@@ -95,138 +39,6 @@ def ensure_influx_database():
         except Exception:
             # better be fail safe, our job is not that important !
             logger.exception("Error on ensure_influx_database")
-
-
-def get_product_count(server_type: ServerType, country_tag: str) -> int:
-    """Return the number of products in Product Opener for a specific country.
-
-    :param country_tag: ISO 2-letter country code
-    :return: the number of products currently in Product Opener
-    """
-    r = http_session.get(
-        settings.BaseURLProvider.country(server_type, country_tag)
-        + "/3.json?fields=null",
-        auth=settings._off_request_auth,
-    ).json()
-    return int(r["count"])
-
-
-def save_facet_metrics():
-    # Only support for off for now
-    server_type = ServerType.off
-    inserts = []
-    target_datetime = datetime.datetime.now()
-
-    for country_tag in COUNTRY_TAGS:
-        try:
-            count = get_product_count(server_type, country_tag)
-        except Exception:
-            logger.exception("Error during product count retrieval for %s", country_tag)
-            count = None
-
-        for url_path in URL_PATHS:
-            try:
-                inserts += generate_metrics_from_path(
-                    server_type, country_tag, url_path, target_datetime, count
-                )
-            except Exception:
-                logger.exception()
-
-        try:
-            inserts += generate_metrics_from_path(
-                server_type,
-                country_tag,
-                "/facets/entry-date/{}/contributors?json=1".format(
-                    # get contribution metrics for the previous day
-                    (target_datetime - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-                ),
-                target_datetime,
-                facet="contributors",
-            )
-        except Exception:
-            logger.exception()
-
-    try:
-        inserts += generate_metrics_from_path(
-            server_type, "world", "/facets/countries?json=1", target_datetime
-        )
-    except Exception:
-        logger.exception()
-    client = get_influx_client()
-    if client is not None:
-        write_client = client.write_api(write_options=SYNCHRONOUS)
-        write_client.write(bucket=settings.INFLUXDB_BUCKET, record=inserts)
-
-
-def get_facet_name(url: str) -> str:
-    path = urlparse(url)[2].strip("/")
-    # facet pages now live under a common "/facets/" prefix (ex:
-    # "/facets/states"), so only the last path segment is the facet name
-    return path.rsplit("/", 1)[-1].replace("-", "_")
-
-
-def generate_metrics_from_path(
-    server_type: ServerType,
-    country_tag: str,
-    path: str,
-    target_datetime: datetime.datetime,
-    count: int | None = None,
-    facet: str | None = None,
-) -> list[dict]:
-    inserts: list[dict] = []
-    url = settings.BaseURLProvider.country(server_type, country_tag + "-en") + path
-
-    if facet is None:
-        facet = get_facet_name(url)
-
-    try:
-        r = http_session.get(url, timeout=60, auth=settings._off_request_auth)
-    except (RequestConnectionError, SSLError, Timeout) as e:
-        logger.info("Error during metrics retrieval: url=%s", url, exc_info=e)
-        return inserts
-
-    if not r.ok:
-        logger.log(
-            logging.INFO if r.status_code < 500 else logging.WARNING,
-            "HTTPError during metrics retrieval: url=%s, %s",
-            url,
-            r.status_code,
-        )
-        return inserts
-
-    try:
-        data = r.json()
-    except JSONDecodeError as e:
-        logger.info("Error during OFF request JSON decoding:\n%s", e)
-        return inserts
-
-    for tag in data["tags"]:
-        name = tag["name"]
-        products = tag["products"]
-        fields = {"products": products}
-
-        if "percent" in tag:
-            fields["percent"] = float(tag["percent"])
-
-        elif count is not None:
-            fields["percent"] = products * 100 / count
-
-        tag_id = tag["id"]
-
-        inserts.append(
-            {
-                "measurement": "facets",
-                "tags": {
-                    "tag_name": name,
-                    "tag_id": tag_id,
-                    "country": country_tag,
-                    "facet": facet,
-                },
-                "time": target_datetime.isoformat(),
-                "fields": fields,
-            }
-        )
-    return inserts
 
 
 def save_insight_metrics():

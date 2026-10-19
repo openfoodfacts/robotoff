@@ -18,11 +18,7 @@ from sentry_sdk import capture_exception
 from robotoff import settings
 from robotoff.insights.annotate import annotate
 from robotoff.insights.importer import BrandInsightImporter, is_valid_insight_image
-from robotoff.metrics import (
-    ensure_influx_database,
-    save_facet_metrics,
-    save_insight_metrics,
-)
+from robotoff.metrics import ensure_influx_database, save_insight_metrics
 from robotoff.models import Prediction, ProductInsight, db
 from robotoff.products import (
     Product,
@@ -366,7 +362,6 @@ def run():
 
     scheduler.add_job(clean_tmp_files, "cron", day="*", hour=0, max_instances=1)
     # This job exports daily product metrics for monitoring.
-    scheduler.add_job(save_facet_metrics, "cron", day="*", hour=1, max_instances=1)
     scheduler.add_job(save_insight_metrics, "cron", day="*", hour=1, max_instances=1)
 
     # This job refreshes data needed to generate insights.
