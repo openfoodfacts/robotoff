@@ -8,6 +8,7 @@ from .fold_to_ascii import fold, fold_without_deletion, fold_without_insertion_d
 logger = logging.getLogger(__name__)
 
 CONSECUTIVE_SPACES_REGEX = re.compile(r" {2,}")
+CONSECUTIVE_DASHES_REGEX = re.compile(r"-{2,}")
 
 
 def strip_accents_v1(s: str) -> str:
@@ -59,6 +60,7 @@ def get_tag(text: str) -> str:
     - accent removal
     - replacement of punctuation by either a comma ("-") or nothing, depending
     on the punctuation
+    - merging of consecutive dashes into a single one
     """
     text = fold_without_deletion(text)
     text = (
@@ -70,4 +72,4 @@ def get_tag(text: str) -> str:
         .replace("!", "")
         .replace("?", "")
     )
-    return strip_consecutive_spaces(text).strip("-")
+    return CONSECUTIVE_DASHES_REGEX.sub("-", text).strip("-")
