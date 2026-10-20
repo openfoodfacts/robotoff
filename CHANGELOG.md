@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.85.14](https://github.com/openfoodfacts/robotoff/compare/v1.85.13...v1.85.14) (2026-10-20)
+
+
+### Technical
+
+* **deps:** bump fsspec from 2026.2.0 to 2026.6.0 ([#1972](https://github.com/openfoodfacts/robotoff/issues/1972)) ([c1904f9](https://github.com/openfoodfacts/robotoff/commit/c1904f9b6c15d52cae4ae15f8fb1df4026059bfa))
+* **deps:** bump pymongo from 4.6.3 to 4.18.2 ([#1971](https://github.com/openfoodfacts/robotoff/issues/1971)) ([3eca3f4](https://github.com/openfoodfacts/robotoff/commit/3eca3f487cf54128d702fe6acf70f68daf1f19fc))
+* **deps:** bump virtualenv from 20.38.0 to 21.7.13 ([#1965](https://github.com/openfoodfacts/robotoff/issues/1965)) ([dfe24c0](https://github.com/openfoodfacts/robotoff/commit/dfe24c08ccb66f690b6a001622ec38ce2a21d900))
+* **deps:** bump werkzeug from 3.1.6 to 3.1.9 ([#1966](https://github.com/openfoodfacts/robotoff/issues/1966)) ([8c2aa64](https://github.com/openfoodfacts/robotoff/commit/8c2aa64cdef2393af6b36b69577bb944efeafabe))
+
 ## [1.85.13](https://github.com/openfoodfacts/robotoff/compare/v1.85.12...v1.85.13) (2026-10-19)
 
 
