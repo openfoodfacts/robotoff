@@ -1,6 +1,14 @@
 import pytest
 
+from robotoff import settings
 from robotoff.taxonomy import TaxonomyType, match_taxonomized_value
+
+
+def test_nova_group_taxonomy_url():
+    assert "nova_group" in settings.TAXONOMY_URLS
+    assert settings.TAXONOMY_URLS["nova_group"].endswith(
+        "/data/taxonomies/nova_groups.full.json"
+    )
 
 
 @pytest.mark.parametrize(
