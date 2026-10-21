@@ -576,6 +576,8 @@ class DBProductStore(ProductStore):
     ) -> JSONType | None:
         """Fetch a product from the MongoDB.
 
+        Search regular products first, then obsolete products if not found.
+
         :param product_id: identifier of the product to fetch
         :param projection: list of fields to retrieve, if not provided all fields
             are queried
@@ -589,6 +591,10 @@ class DBProductStore(ProductStore):
         # barcode for pro platform, which is also the case for
         # `product_id.barcode`
         product = self.collection.find_one({"_id": product_id.barcode}, projection)
+        if product is None:
+            product = self.db.products_obsolete.find_one(
+                {"_id": product_id.barcode}, projection
+            )
 
         # Convert the `images` field to the legacy schema, until the migration
         # is done. Once it's done, we can upgrade all Robotoff code to use the new
