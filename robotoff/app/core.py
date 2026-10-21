@@ -11,6 +11,7 @@ from openfoodfacts.types import COUNTRY_CODE_TO_NAME, Country
 from peewee import JOIN, SQL, fn
 from pydantic import BaseModel, ValidationError
 
+from robotoff.brands import normalize_brand_tag
 from robotoff.insights.annotate import (
     ALREADY_ANNOTATED_RESULT,
     SAVED_ANNOTATION_VOTE_RESULT,
@@ -30,7 +31,7 @@ from robotoff.models import (
 )
 from robotoff.off import OFFAuthentication
 from robotoff.taxonomy import match_taxonomized_value
-from robotoff.types import InsightAnnotation, JSONType, ServerType
+from robotoff.types import InsightAnnotation, InsightType, JSONType, ServerType
 from robotoff.utils.text import get_tag
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,21 @@ def _add_vote_exclusion_clause(exclusion: SkipVotedOn) -> peewee.Expression:
 
     return ProductInsight.id.not_in(
         AnnotationVote.select(AnnotationVote.insight_id).where(criteria)
+    )
+
+
+def _value_tag_clause(
+    model: type[ProductInsight] | type[Prediction], value_tag: str
+) -> peewee.Expression:
+    """Accept legacy brand filters against canonical stored tags.
+
+    Other prediction and insight types retain exact matching.
+    """
+    brand_tag = normalize_brand_tag(value_tag)
+    if brand_tag == value_tag:
+        return model.value_tag == value_tag
+    return ((model.type == InsightType.brand.name) & (model.value_tag == brand_tag)) | (
+        (model.type != InsightType.brand.name) & (model.value_tag == value_tag)
     )
 
 
@@ -110,7 +126,8 @@ def get_insights(
         (popularity), by number of votes on this insight (n_votes), by
         decreasing confidence score (confidence) or don't order results
         (None), defaults to None
-    :param value_tag: only keep insights with this value_tag, defaults to None
+    :param value_tag: only keep insights with this value_tag, defaults to None.
+        For brand insights, accept both legacy tags and their `xx:`-prefixed form.
     :param reserved_barcode: only keep insights with reserved barcodes (True)
         or without reserved barcode (False), defaults to None
     :param as_dict: if True, return results as dict instead of ProductInsight
@@ -163,7 +180,7 @@ def get_insights(
         where_clauses.append(ProductInsight.barcode == barcode)
 
     if value_tag:
-        where_clauses.append(ProductInsight.value_tag == value_tag)
+        where_clauses.append(_value_tag_clause(ProductInsight, value_tag))
 
     if keep_types is not None:
         where_clauses.append(ProductInsight.type.in_(keep_types))
@@ -292,7 +309,7 @@ def get_predictions(
         where_clauses.append(Prediction.barcode == barcode)
 
     if value_tag:
-        where_clauses.append(Prediction.value_tag == value_tag)
+        where_clauses.append(_value_tag_clause(Prediction, value_tag))
 
     if keep_types:
         where_clauses.append(Prediction.type.in_(keep_types))
