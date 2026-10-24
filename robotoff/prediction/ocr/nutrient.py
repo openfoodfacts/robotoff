@@ -72,8 +72,7 @@ NUTRIENT_MENTION: dict[str, list[NutrientMentionType]] = {
     ],
     "carbohydrate": [
         ("total carbohydrate", ["en"]),
-        ("glucids?", ["fr"]),
-        ("glucides?", ["en"]),
+        ("glucides?", ["fr"]),
         ("carboidrati", ["it"]),
         ("koolhydraten", ["nl"]),
         ("koolhydraat", ["nl"]),
@@ -157,7 +156,7 @@ def generate_nutrient_mention_regex(nutrient_mentions: list[NutrientMentionType]
         r"(?P<{}>{})".format("{}_{}".format("_".join(lang), i), name)
         for i, (name, lang) in enumerate(nutrient_mentions)
     )
-    return re.compile(rf"(?<!\w){sub_re}(?!\w)", re.I)
+    return re.compile(rf"(?<!\w)(?:{sub_re})(?!\w)", re.I)
 
 
 NUTRIENT_VALUES_REGEX = {
