@@ -1,5 +1,6 @@
 """Interacting with OFF server to eg. update products or get infos"""
 
+from openfoodfacts import API, APIVersion
 import logging
 import re
 from pathlib import Path
@@ -89,7 +90,7 @@ def get_source_from_url(url: str) -> str:
         url_path = url_path[len("/images/products") :]
 
     if url_path.endswith(".json"):
-        url_path = str(Path(url_path).with_suffix(".jpg"))
+        url_path = str(Path(url_path).with_suffix(".jpg")).replace("\\", "/")
 
     return url_path
 
@@ -171,30 +172,25 @@ def get_product(
     fields: list[str] | None = None,
     timeout: int | None = 10,
 ) -> dict | None:
-    fields = fields or []
+    # User Agent setting ko is tarah update karein:
+    api = API(
+        user_agent=settings.ROBOTOFF_USER_AGENT,
+        version=APIVersion.v2,
+        flavor=product_id.server_type,
+    )
 
-    # V2 of API is required to have proper ingredient nesting
-    # for product categorization
-    base_url = settings.BaseURLProvider.world(product_id.server_type)
-    url = f"{base_url}/api/v2/product/{product_id.barcode}"
+    try:
+        # SDK supports field filtering directly
+        res = api.product.get(
+            barcode=product_id.barcode,
+            fields=fields or None,
+        )
+        if res and res.get("status_verbose") == "product found":
+            return res.get("product")
+    except Exception as e:
+        logger.warning(f"Failed to fetch product {product_id.barcode} via SDK: {e}")
 
-    if fields:
-        # requests escape comma in URLs, as expected, but openfoodfacts server
-        # does not recognize escaped commas.
-        # See https://github.com/openfoodfacts/openfoodfacts-server/issues/1607
-        url += "?fields={}".format(",".join(fields))
-
-    r = http_session.get(url, timeout=timeout, auth=settings._off_request_auth)
-
-    if r.status_code != 200:
-        return None
-
-    data = r.json()
-
-    if data["status_verbose"] != "product found":
-        return None
-
-    return data["product"]
+    return None
 
 
 def generate_edit_comment(
@@ -549,45 +545,34 @@ def update_product_v3(
     auth: OFFAuthentication | None = None,
     timeout: int | None = 15,
 ):
-    base_url = settings.BaseURLProvider.world(server_type)
-    url = f"{base_url}/api/v3/product/{barcode}"
+    # Initialize SDK client for target environment/server
+    api = API(
+        user_agent=settings.ROBOTOFF_USER_AGENT,
+        version=APIVersion.v3,
+        flavor=server_type,
+    )
 
-    cookies = None
+    # Auth configuration setup
+    username = auth.username if auth else settings.OFF_USERNAME
+    password = auth.password if auth else settings.OFF_PASSWORD
 
-    if auth is not None:
-        if auth.session_cookie:
-            cookies = {
-                "session": auth.session_cookie,
-            }
-        elif auth.username:
-            body["user_id"] = auth.username
-            body["password"] = auth.password
-    else:
-        body.update(off_credentials())
-
-    if cookies is None and not body.get("password"):
+    if not password and not (auth and auth.session_cookie):
         raise ValueError(
             "a password or a session cookie is required to update a product"
         )
-    r = http_session.patch(
-        url,
-        json=body,
-        auth=settings._off_request_auth,
-        cookies=cookies,
-        timeout=timeout,
+
+    # Perform update using SDK wrapper
+    result = api.product.update(
+        barcode=barcode,
+        data=body,
+        username=username,
+        password=password,
     )
 
-    r.raise_for_status()
-    try:
-        json = r.json()
-    except JSONDecodeError as e:
-        logger.info(
-            "Error during OFF update request JSON decoding, text response: '%s'", r.text
-        )
-        raise e
+    if result.get("errors"):
+        raise ValueError(f"Errors during product update: {result['errors']}")
 
-    if json.get("errors"):
-        raise ValueError("Errors during product update: %s", str(json["errors"]))
+    return result
 
 
 def move_to(
@@ -927,68 +912,58 @@ def parse_ingredients(text: str, lang: str, timeout: int = 10) -> list[JSONType]
 
     return response_data["product"].get("ingredients", [])
 
-
 def get_product_type(
     product_id: ProductIdentifier, timeout: int = 5
 ) -> ProductTypeLiteral | None:
-    """Retrieve the product type for a given product identifier.
-
-    The function will return the product type if found or None if the product does not
-    exist.
-
-    We send a request to the Product Opener API on the server associated with the
-    product identifier's server type (ex: world.openfoodfacts.org for food,
-    world.openbeautyfacts.org for beauty, etc.).
-
-    If the product type matches the server type associated with the product identifier,
-    Product Opener returns the product as expected.
-    Otherwise, it returns an HTTP 404 error, with the product type in the
-    `errors` list of the response. This feature is only available on the v3 of the API.
-
-    If the product was not found (irrespective of the product type), the API returns a
-    404 status code with no `errors` field. This allows us to know if the product still
-    exists and what is the real product type of the product using the v3 API.
-
-    :param product_id: the product identifier
-    :param timeout: the request timeout in seconds, defaults to 5s
-    :raises RuntimeError: if the request fails or returns an unexpected status code
-    :return: the product type if found, otherwise None
-    """
+    # Get the proper base URL for the server type
     base_url = settings.BaseURLProvider.world(product_id.server_type)
-    url = f"{base_url}/api/v3.4/product/{product_id.barcode}?fields=product_type"
+    url = f"{base_url}/api/v3.4/product/{product_id.barcode}"
+
     try:
-        r = http_session.get(
+        response = requests.get(
             url,
-            auth=settings._off_request_auth,
+            params={"fields": "product_type"},
+            headers={"User-Agent": settings.ROBOTOFF_USER_AGENT},
             timeout=timeout,
         )
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.SSLError,
-        requests.exceptions.Timeout,
-    ) as e:
+        response.raise_for_status()
+
+        response_data = response.json()
+        product_data = response_data.get("product", response_data)
+        if product_data and "product_type" in product_data:
+            return product_data["product_type"]
+
+    except requests.exceptions.HTTPError as err:
+        response = err.response
+        if response is not None and response.status_code == 404:
+            try:
+                response_data = response.json()
+                for error in response_data.get("errors", []):
+                    if error.get("field", {}).get("id") == "product_type":
+                        return error["field"]["value"]
+            except Exception:
+                pass
+            return None
+
+        if response is not None:
+            raise RuntimeError(
+                f"Unable to get product type (non-200/404 status code): "
+                f"{response.status_code}, {response.text}"
+            ) from err
+
         raise RuntimeError(
-            f"Unable to get product type: error during HTTP request: {e}"
-        ) from e
+            f"Unable to get product type: error during HTTP request: {err}"
+        ) from err
 
-    if r.status_code not in (200, 404):
+    except requests.exceptions.RequestException as err:
         raise RuntimeError(
-            f"Unable to get product type (non-200/404 status code): {r.status_code}, {r.text}"
-        )
-    response_data = r.json()
+            f"Unable to get product type: error during HTTP request: {err}"
+        ) from err
 
-    if response_data.get("status") == "success":
-        return response_data["product"]["product_type"]
-
-    errors = [
-        e for e in response_data.get("errors", []) if e["field"]["id"] == "product_type"
-    ]
-    if errors:
-        error = errors[0]
-        return error["field"]["value"]
+    except Exception as err:
+        raise RuntimeError(f"Unable to get product type via SDK: {err}") from err
 
     return None
-
 
 def normalize_tag(value, lowercase=True):
     """Given a value normalize it to a tag (as in taxonomies).
