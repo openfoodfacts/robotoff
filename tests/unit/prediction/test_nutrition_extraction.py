@@ -394,6 +394,8 @@ class TestAggregateEntities:
         ("O g", "salt_100g", ("0", "g", True)),
         ("o mg", "sodium_100g", ("0", "mg", True)),
         ("O", "salt_100g", ("0", None, True)),
+        ("<O g", "salt_100g", ("< 0", "g", True)),
+        ("< o mg", "sodium_100g", ("< 0", "mg", True)),
         # Missing unit and value ends with '9' or '8'
         ("0.19", "saturated_fat_100g", ("0.1", "g", True)),
         ("0,18", "saturated_fat_100g", ("0.1", "g", True)),
