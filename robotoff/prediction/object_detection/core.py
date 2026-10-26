@@ -94,6 +94,15 @@ MODELS_CONFIG = {
         label_names=["price-tag"],
         default_threshold=0.25,
     ),
+    ObjectDetectionModel.price_tag_detection: ModelConfig(
+        model_name=ObjectDetectionModel.price_tag_detection.name,
+        model_version="price-tag-detection-2.0",
+        triton_version="2",
+        triton_model_name="price_tag_detection",
+        image_size=960,
+        label_names=["price-tag"],
+        default_threshold=0.25,
+    ),
 }
 
 
