@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.85.15](https://github.com/openfoodfacts/robotoff/compare/v1.85.14...v1.85.15) (2026-10-26)
+
+
+### Bug Fixes
+
+* **triton:** fix load-model command ([#1979](https://github.com/openfoodfacts/robotoff/issues/1979)) ([d404c04](https://github.com/openfoodfacts/robotoff/commit/d404c040a7096408d297ad698dd4afc8c41a1f2c))
+
 ## [1.85.14](https://github.com/openfoodfacts/robotoff/compare/v1.85.13...v1.85.14) (2026-10-20)
 
 
