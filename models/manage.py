@@ -333,7 +333,9 @@ def _load_model(
         logger.info("First load of model")
     else:
         logger.info("Previous model already loaded")
-        model_config = client.get_model_config(model_name, model_version=model_version)
+        model_config = client.get_model_config(
+            model_name, model_version=model_version or ""
+        )
         if model_version:
             logger.info(
                 f"Model version specified, only loading that version ({model_version})"
@@ -343,18 +345,17 @@ def _load_model(
             logger.info("No model version specified, loading 2 latest version")
             version_policy = {"latest": {"num_versions": 2}}
 
-        config = json.dumps(
-            {
-                "input": model_config["input"],
-                "output": model_config["output"],
-                "versionPolicy": version_policy,
-                "max_batch_size": model_config["maxBatchSize"],
-                "backend": model_config["backend"],
-                "platform": model_config["platform"],
-            }
-        )
+        config = {
+            "input": model_config["input"],
+            "output": model_config["output"],
+            "versionPolicy": version_policy,
+            "backend": model_config["backend"],
+            "platform": model_config["platform"],
+        }
+        if "maxBatchSize" in model_config:
+            config["max_batch_size"] = model_config["maxBatchSize"]
 
-    client.load_model(model_name, config=config)
+    client.load_model(model_name, config=json.dumps(config))
 
 
 @app.command()
