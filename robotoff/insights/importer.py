@@ -1,4 +1,5 @@
 import abc
+import dataclasses
 import datetime
 import functools
 import itertools
@@ -16,7 +17,12 @@ from peewee import SQL
 from playhouse.shortcuts import model_to_dict
 
 from robotoff import settings
-from robotoff.brands import get_brand_blacklist, get_brand_prefix, in_barcode_range
+from robotoff.brands import (
+    get_brand_blacklist,
+    get_brand_prefix,
+    in_barcode_range,
+    normalize_brand_tag,
+)
 from robotoff.insights.normalize import normalize_emb_code
 from robotoff.models import ImageModel, ImagePrediction, ProductInsight, batch_insert
 from robotoff.models import Prediction as PredictionModel
@@ -937,7 +943,9 @@ class BrandInsightImporter(InsightImporter):
     def is_conflicting_insight(
         cls, candidate: ProductInsight, reference: ProductInsight
     ) -> bool:
-        return candidate.value_tag == reference.value_tag
+        return normalize_brand_tag(candidate.value_tag) == normalize_brand_tag(
+            reference.value_tag
+        )
 
     @staticmethod
     def is_in_barcode_range(barcode: str, tag: str) -> bool:
@@ -961,7 +969,13 @@ class BrandInsightImporter(InsightImporter):
         """
         if item.predictor in ("taxonomy", "curated-list"):
             brand_blacklist = get_brand_blacklist()
-            if item.value_tag in brand_blacklist:
+            tag = item.value_tag
+            if not tag:
+                return False
+            if (
+                tag.removeprefix("xx:") in brand_blacklist
+                or normalize_brand_tag(tag) in brand_blacklist
+            ):
                 return False
 
             return BrandInsightImporter.is_in_barcode_range(
@@ -989,6 +1003,7 @@ class BrandInsightImporter(InsightImporter):
             if not cls.is_prediction_valid(prediction):
                 continue
             insight = ProductInsight(**prediction.to_dict())
+            insight.value_tag = normalize_brand_tag(insight.value_tag)
             if insight.automatic_processing is None:
                 # Validation is needed if the weight was extracted from the
                 # product name (not as trustworthy as OCR)
@@ -2198,6 +2213,17 @@ def import_product_predictions(
     """
     timestamp = datetime.datetime.now(datetime.UTC)
 
+    # Normalize before duplicate detection as well as insertion. Keep callers'
+    # prediction objects unchanged (they may still be used by OCR processing).
+    product_predictions = [
+        dataclasses.replace(
+            prediction, value_tag=normalize_brand_tag(prediction.value_tag)
+        )
+        if prediction.type == PredictionType.brand
+        else prediction
+        for prediction in product_predictions
+    ]
+
     deleted = 0
     if delete_previous_versions:
         sorted_predictions = sorted(
@@ -2270,10 +2296,9 @@ def import_product_predictions(
         )
         .tuples()
     )
-    to_import = (
-        create_prediction_model(prediction, timestamp)
-        for prediction in product_predictions
-        if (
+    to_import = []
+    for prediction in product_predictions:
+        key = (
             prediction.type,
             prediction.server_type.name,
             prediction.source_image,
@@ -2282,8 +2307,10 @@ def import_product_predictions(
             prediction.predictor,
             prediction.automatic_processing,
         )
-        not in existing_predictions
-    )
+        if key not in existing_predictions:
+            to_import.append(create_prediction_model(prediction, timestamp))
+            if prediction.type == PredictionType.brand:
+                existing_predictions.add(key)
     return batch_insert(PredictionModel, to_import, 50), deleted
 
 
