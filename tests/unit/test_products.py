@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from unittest.mock import MagicMock
 
 import pytest
@@ -266,6 +267,7 @@ IMAGES_WITH_NEW_SCHEMA = {
 
 
 class TestDBProductStore:
+    @pytest.mark.parametrize("collection", ["products", "products_obsolete"])
     @pytest.mark.parametrize(
         "barcode,projection,db_output,expected_output",
         [
@@ -319,10 +321,16 @@ class TestDBProductStore:
             ),
         ],
     )
-    def test_get_product(self, barcode, projection, db_output, expected_output):
+    def test_get_product(
+        self, barcode, projection, db_output, expected_output, collection
+    ):
         server_type = ServerType.off
         client = {server_type: MagicMock()}
-        client[server_type].products.find_one.return_value = db_output
+        client[server_type].products.find_one.return_value = None
+        client[server_type].products_obsolete.find_one.return_value = None
+        getattr(client[server_type], collection).find_one.return_value = deepcopy(
+            db_output
+        )
         db = DBProductStore(server_type, client)
 
         product = db.get_product(
@@ -331,11 +339,56 @@ class TestDBProductStore:
         )
         assert product == expected_output
 
-        if projection:
-            assert client[server_type].products.find_one.call_count == 1
-            assert client[server_type].products.find_one.call_args[0][1] == [
-                "product_name"
-            ]
+        client[server_type].products.find_one.assert_called_once_with(
+            {"_id": barcode}, projection
+        )
+        if collection == "products_obsolete":
+            client[server_type].products_obsolete.find_one.assert_called_once_with(
+                {"_id": barcode}, projection
+            )
+        else:
+            client[server_type].products_obsolete.find_one.assert_not_called()
+
+    def test_get_product_not_found(self):
+        database = MagicMock()
+        database.products.find_one.return_value = None
+        database.products_obsolete.find_one.return_value = None
+        db = DBProductStore(ServerType.off, {"off": database})
+        product_id = ProductIdentifier("1234567890", ServerType.off)
+
+        assert db.get_product(product_id) is None
+
+        database.products.find_one.assert_called_once_with({"_id": "1234567890"}, None)
+        database.products_obsolete.find_one.assert_called_once_with(
+            {"_id": "1234567890"}, None
+        )
+
+    def test_get_product_mongodb_disabled(self, mocker):
+        mocker.patch("robotoff.settings.ENABLE_MONGODB_ACCESS", False)
+        database = MagicMock()
+        db = DBProductStore(ServerType.off, {"off": database})
+        product_id = ProductIdentifier("1234567890", ServerType.off)
+
+        assert db.get_product(product_id) is None
+
+        database.products.find_one.assert_not_called()
+        database.products_obsolete.find_one.assert_not_called()
+
+    def test_get_product_obsolete_pro_product(self):
+        database = MagicMock()
+        barcode = "org-lea-nature/3307130803004"
+        product_data = {"_id": barcode, "code": "3307130803004"}
+        database.products.find_one.return_value = None
+        database.products_obsolete.find_one.return_value = product_data
+        db = DBProductStore(ServerType.off_pro, {"off-pro": database})
+        product_id = ProductIdentifier(barcode, ServerType.off_pro)
+
+        assert db.get_product(product_id, projection=["code"]) == product_data
+
+        database.products.find_one.assert_called_once_with({"_id": barcode}, ["code"])
+        database.products_obsolete.find_one.assert_called_once_with(
+            {"_id": barcode}, ["code"]
+        )
 
 
 class TestProduct:
