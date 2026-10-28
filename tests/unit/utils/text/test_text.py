@@ -8,6 +8,10 @@ from robotoff.utils.text import get_tag
     [
         ("Reflets de France", "reflets-de-france"),
         ("écrasé", "ecrase"),
+        ("Søstrene Grene", "sostrene-grene"),
+        ("søstrene-grene", "sostrene-grene"),
+        ("Nøgne Ø", "nogne-o"),
+        ("nøgne-ø", "nogne-o"),
         ("œufs de plein air", "oeufs-de-plein-air"),
         ("dr.oetker", "dr-oetker"),
         ("mat & lou", "mat-lou"),
