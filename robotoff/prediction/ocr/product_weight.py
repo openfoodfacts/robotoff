@@ -46,11 +46,12 @@ def normalize_weight(value: str, unit: str) -> tuple[float, str]:
     else:
         raise ValueError(f"unknown unit: {quantity.u}")
 
-    # Rounding errors due to float may occur with Pint,
-    # round normalized value to floor if there is no significant difference
+    # Pint conversions can land just above or below an integer.
+    # Remove floating-point noise without rounding genuine fractional quantities.
     normalized_value = normalized_quantity.magnitude
-    if math.isclose(math.floor(normalized_value), normalized_value):
-        normalized_value = math.floor(normalized_value)
+    nearest_integer = round(normalized_value)
+    if math.isclose(nearest_integer, normalized_value):
+        normalized_value = nearest_integer
 
     return normalized_value, normalized_unit
 
