@@ -5,6 +5,9 @@ on:
     #paths:
     #  - 'i18n/robotoff.pot'
     branches: [ 'crowdin-trigger' ]
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   synchronize-with-crowdin:
     runs-on: ubuntu-latest
