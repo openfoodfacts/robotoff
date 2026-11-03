@@ -1,5 +1,7 @@
 name: Add bugs and PRs to the relevant GitHub Projects
 
+permissions: {}
+
 on:
   issues:
     types:
