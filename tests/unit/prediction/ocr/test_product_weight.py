@@ -62,10 +62,25 @@ def test_product_weight_with_ending_mention_regex(input_str: str, is_match: bool
         ("-15", False),
         ("12,5", False),
         ("12.5", False),
+        # too large to be converted to an integer
+        ("9" * 400, False),
     ],
 )
 def test_is_valid_weight(value: str, is_valid: bool):
     assert is_valid_weight(value) is is_valid
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "poids net " + "9" * 400 + " g",
+        "9" * 400 + " g net",
+        "2 x " + "9" * 400 + " g",
+        "9" * 400 + "mle",
+    ],
+)
+def test_find_product_weight_huge_value(text: str):
+    assert find_product_weight(text) == []
 
 
 @pytest.mark.parametrize(
