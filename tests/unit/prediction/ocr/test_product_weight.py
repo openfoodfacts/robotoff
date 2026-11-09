@@ -84,6 +84,18 @@ def test_find_product_weight_huge_value(text: str):
 
 
 @pytest.mark.parametrize(
+    "text",
+    [
+        "poids net " + "9" * 400 + " g\nPoids net: 150 g",
+        "Poids net: 150 g\npoids net " + "9" * 400 + " g",
+    ],
+)
+def test_find_product_weight_huge_and_valid_value(text: str):
+    # The value that is too large must not hide the valid one
+    assert [prediction.value for prediction in find_product_weight(text)] == ["150 g"]
+
+
+@pytest.mark.parametrize(
     "value,unit,count,expected",
     [
         (10000, "g", None, True),
