@@ -3,8 +3,33 @@ import re
 import pytest
 import requests
 
-from robotoff.off import get_product_type, get_source_from_url
+from robotoff.off import get_product_type, get_source_from_url, normalize_tag
 from robotoff.types import ProductIdentifier, ServerType
+
+
+@pytest.mark.parametrize(
+    "value,lowercase,expected",
+    [
+        ("Côtes du Rhône", True, "cotes-du-rhone"),
+        ("CÔTES DU RHÔNE", True, "cotes-du-rhone"),
+        ("Saint-Émilion", True, "saint-emilion"),
+        ("saint-émilion", True, "saint-emilion"),
+        ("Châteauneuf-du-Pape", True, "chateauneuf-du-pape"),
+        ("éèàù", True, "eeau"),
+        ("ÉÈÀÙ", True, "eeau"),
+        ("ôâêîç", True, "oaeic"),
+        ("ÔÂÊÎÇ", True, "oaeic"),
+        ("Saint-Émilion", False, "Saint-Emilion"),
+        ("CÔTES DU RHÔNE", False, "COTES-DU-RHONE"),
+        ("東京", True, "東京"),
+        (" -- Crème & chocolat -- ", True, "creme-chocolat"),
+        ("a¹b²c³d", True, "a-b-c-d"),
+        ("a&copy;b", True, "a-b"),
+        ("", True, ""),
+    ],
+)
+def test_normalize_tag(value: str, lowercase: bool, expected: str) -> None:
+    assert normalize_tag(value, lowercase=lowercase) == expected
 
 
 @pytest.mark.parametrize(
