@@ -79,7 +79,11 @@ def extract_USDA_code(processor: KeywordProcessor, text: str) -> str | None:
 PACKAGER_CODE = {
     "fr_emb": [
         OCRRegex(
-            re.compile(r"emb ?(\d ?\d ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I),
+            # The 5-character city code is the INSEE code of the commune: Corsican
+            # communes start with "2A" or "2B" instead of 2 digits (ex: EMB 2A004)
+            re.compile(
+                r"emb ?((?:\d ?\d|2 ?[ab]) ?\d ?\d ?\d) ?([a-z])?(?![a-z0-9])", re.I
+            ),
             field=OCRField.full_text,
             processing_func=process_fr_emb_match,
         ),
