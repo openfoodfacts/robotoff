@@ -5,7 +5,7 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/api-lint.yml':
         - 'actions/checkout@v7.0.1'
-        - 'stoplightio/spectral-action@latest'
+        - 'stoplightio/spectral-action@v0.8.13'
     '.github/workflows/auto-assign-pr.yml':
         - 'toshimaru/auto-author-assign@v1.6.0'
     '.github/workflows/container-build.yml':
@@ -15,7 +15,7 @@ workflows:
         - 'docker/metadata-action@v6.2.0'
         - 'docker/setup-buildx-action@v4.4.1'
     '.github/workflows/container-deploy.yml':
-        - 'appleboy/ssh-action@master'
+        - 'appleboy/ssh-action@v1.2.5'
         - 'lewagon/wait-on-check-action@v1.8.0'
     '.github/workflows/crowdin.yml':
         - 'actions/checkout@v7.0.1'
@@ -32,7 +32,7 @@ workflows:
         - 'actions/labeler@v6.2.0'
     '.github/workflows/models-deploy.yml':
         - 'actions/checkout@v7.0.1'
-        - 'appleboy/ssh-action@master'
+        - 'appleboy/ssh-action@v1.2.5'
     '.github/workflows/quality_check.yml':
         - 'actions/checkout@v7.0.1'
         - 'codecov/codecov-action@v7.0.0'
@@ -78,9 +78,9 @@ dependencies:
         commit: 'sha1-c5e23b7e584519ee15caa684cf60d056aa9f035f'
         owner_id: 4038316
         repo_id: 220418983
-    'appleboy/ssh-action@master':
-        ref: 'master'
-        commit: 'sha1-c4f70287fc37c43b14b30b407224bbbc8e8c6327'
+    'appleboy/ssh-action@v1.2.5':
+        ref: 'v1.2.5'
+        commit: 'sha1-0ff4204d59e8e51228ff73bce53f80d53301dee2'
         owner_id: 21979
         repo_id: 186202082
     'astral-sh/setup-uv@v7.6.0':
@@ -147,8 +147,8 @@ dependencies:
         commit: 'sha1-3ff19f5e2baf30647122352b96108b1fbe250c64'
         owner_id: 210414
         repo_id: 231208785
-    'stoplightio/spectral-action@latest':
-        ref: 'latest'
+    'stoplightio/spectral-action@v0.8.13':
+        ref: 'v0.8.13'
         commit: 'sha1-6416fd018ae38e60136775066eb3e98172143141'
         owner_id: 10767217
         repo_id: 170991023

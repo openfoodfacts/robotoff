@@ -21,7 +21,7 @@ jobs:
         
       - name: Lint OpenAPI specification with Spectral
         continue-on-error: true
-        uses: stoplightio/spectral-action@latest
+        uses: stoplightio/spectral-action@v0.8.13
         with:
           file_glob: 'docs/references/api.yml'
           spectral_ruleset: '.spectral.yml'

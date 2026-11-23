@@ -34,7 +34,7 @@ jobs:
           echo "SSH_HOST=10.1.0.201" >> $GITHUB_ENV
       - uses: actions/checkout@v7.0.1
       - name: Download
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USERNAME }}
