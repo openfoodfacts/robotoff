@@ -78,7 +78,14 @@ def is_valid_weight(weight_value: str) -> bool:
         logger.debug("Weight value is <= 0")
         return False
 
-    if float(int(weight_value_float)) != weight_value_float:
+    try:
+        is_integer = float(int(weight_value_float)) == weight_value_float
+    except OverflowError:
+        # The value is too large to be a float (inf), it can't be a weight
+        logger.debug("Weight value is too large: %s", weight_value[:20])
+        return False
+
+    if not is_integer:
         logger.info(
             "Weight value is not an integer (%s), returning non valid", weight_value
         )
