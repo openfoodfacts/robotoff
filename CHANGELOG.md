@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.85.15](https://github.com/openfoodfacts/robotoff/compare/v1.85.14...v1.85.15) (2026-11-25)
+
+
+### Bug Fixes
+
+* **ocr:** detect Corsican EMB packager codes (2A/2B) ([#1992](https://github.com/openfoodfacts/robotoff/issues/1992)) ([0667744](https://github.com/openfoodfacts/robotoff/commit/06677446f8a0c018e003739d72dae74f1d717eea))
+* **triton:** fix load-model command ([#1979](https://github.com/openfoodfacts/robotoff/issues/1979)) ([d404c04](https://github.com/openfoodfacts/robotoff/commit/d404c040a7096408d297ad698dd4afc8c41a1f2c))
+
 ## [1.85.14](https://github.com/openfoodfacts/robotoff/compare/v1.85.13...v1.85.14) (2026-10-20)
 
 
