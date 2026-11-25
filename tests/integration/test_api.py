@@ -97,6 +97,49 @@ def test_get_insights_filter_by_lc(client, mocker, peewee_db):
     assert len(data["insights"]) == 0
 
 
+@pytest.mark.parametrize("value_tag", ["nestle", "xx:nestle"])
+def test_questions_brand_value_tag(client, mocker, peewee_db, value_tag):
+    mocker.patch("robotoff.insights.question.get_product", return_value=None)
+    with peewee_db:
+        ProductInsightFactory(
+            barcode="1",
+            type=InsightType.brand.name,
+            value="Nestlé",
+            value_tag="xx:nestle",
+            unique_scans_n=20,
+        )
+        ProductInsightFactory(
+            barcode="2",
+            type="brand",
+            value="Nestlé",
+            value_tag="xx:nestle",
+            unique_scans_n=10,
+        )
+        ProductInsightFactory(
+            barcode="3",
+            type="label",
+            value_tag="xx:nestle",
+        )
+        ProductInsightFactory(
+            barcode="4",
+            type="brand",
+            value="Carrefour",
+            value_tag="carrefour",
+        )
+
+    params = {"insight_types": "brand", "value_tag": value_tag, "count": 1}
+    for page, barcode, stored_tag in [(1, "1", "xx:nestle"), (2, "2", "xx:nestle")]:
+        result = client.simulate_get(
+            "/api/v1/questions", params={**params, "page": page}
+        )
+        assert result.status_code == 200
+        assert result.json["count"] == 2
+        assert result.json["status"] == "found"
+        assert len(result.json["questions"]) == 1
+        assert result.json["questions"][0]["barcode"] == barcode
+        assert result.json["questions"][0]["value_tag"] == stored_tag
+
+
 def test_random_question(client, mocker):
     product = {
         "images": {

@@ -12,6 +12,17 @@ from robotoff.utils.cache import function_cache_register
 logger = logging.getLogger(__name__)
 
 
+def normalize_brand_tag(value_tag: str | None) -> str | None:
+    """Add the taxonomy prefix to a legacy brand tag.
+
+    Preserve missing values and explicit namespaces; this does not resolve
+    taxonomy synonyms or turn display names into tags.
+    """
+    if value_tag and ":" not in value_tag:
+        return f"xx:{value_tag}"
+    return value_tag
+
+
 @functools.cache
 def get_brand_prefix() -> set[tuple[str, str]]:
     """Get a set of brand prefix tuples found in Open Food Facts databases.
@@ -146,9 +157,10 @@ def in_barcode_range(
     """
     if len(barcode) == 13:
         barcode_prefix = generate_barcode_prefix(barcode)
-        key = (brand_tag, barcode_prefix)
-
-        if key not in brand_prefix:
+        # Resource files may come from either legacy or taxonomized dumps.
+        legacy_key = (brand_tag.removeprefix("xx:"), barcode_prefix)
+        canonical_key = (normalize_brand_tag(brand_tag), barcode_prefix)
+        if legacy_key not in brand_prefix and canonical_key not in brand_prefix:
             return False
 
     return True
