@@ -561,14 +561,15 @@ def match_nutrient_value(
     value = match.group(2).replace(",", ".")
     is_valid = True
 
-    if prefix is not None:
-        prefix = prefix.strip()
-        value = f"{prefix} {value}"
-
     if value in ("O", "o"):
         # The OCR engine failed to recognize correctly "0" (zero) and uses
         # "O" (letter O) instead
         value = "0"
+
+    if prefix is not None:
+        prefix = prefix.strip()
+        value = f"{prefix} {value}"
+
     unit = match.group(3)
     # Unit can be none if the OCR engine didn't detect the unit after the
     # value as a word
