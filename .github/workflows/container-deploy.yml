@@ -74,7 +74,7 @@ jobs:
         allowed-conclusions: success
 
     - name: Checkout git repository
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       with:
         host: ${{ env.SSH_HOST }}
         username: ${{ env.SSH_USERNAME }}
@@ -104,7 +104,7 @@ jobs:
           git lfs checkout
 
     - name: Set environment variables
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       with:
         host: ${{ env.SSH_HOST }}
         username: ${{ env.SSH_USERNAME }}
@@ -180,7 +180,7 @@ jobs:
           echo "INSIGHT_AUTOMATIC_PROCESSING_WAIT=0" >> .env
 
     - name: Create Docker volumes
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       with:
         host: ${{ env.SSH_HOST }}
         username: ${{ env.SSH_USERNAME }}
@@ -194,7 +194,7 @@ jobs:
           make create_external_volumes
 
     - name: Start services
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       env:
         DOCKER_CLIENT_TIMEOUT: 120
         COMPOSE_HTTP_TIMEOUT: 120
@@ -217,7 +217,7 @@ jobs:
           make up
 
     - name: Check services are up
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       id: livecheck
       if: ${{ always() }}
       with:
@@ -235,7 +235,7 @@ jobs:
           make livecheck
 
     - name: Run health tests
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       id: health
       if: ${{ always() }}
       env:
@@ -255,7 +255,7 @@ jobs:
           make health
 
     - name: Cleanup obsolete Docker objects
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v1.2.5
       if: ${{ always() }}
       with:
         host: ${{ env.SSH_HOST }}
