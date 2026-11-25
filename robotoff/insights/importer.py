@@ -2465,12 +2465,23 @@ def refresh_insights(
         for p in get_product_predictions([product_id.barcode], product_id.server_type)
     ]
     prediction_types = set(p.type for p in predictions)
+    # Insight types for which the product still has non-annotated insights.
+    # Even if no prediction of the required type remains, the corresponding
+    # importer must run so that insights that are no longer valid get deleted
+    # (e.g. a pending brand insight after the brand was filled on the product,
+    # #1349). Without this, such stale insights would linger forever, as the
+    # importer was previously skipped whenever its required predictions were
+    # absent.
+    existing_insight_types = get_product_insight_types(product_id)
 
     import_results = []
     for importer in IMPORTERS:
         required_prediction_types = importer.get_required_prediction_types()
         input_prediction_types = importer.get_input_prediction_types()
-        if prediction_types >= required_prediction_types:
+        if (
+            prediction_types >= required_prediction_types
+            or importer.get_type() in existing_insight_types
+        ):
             import_result = importer.import_insights(
                 product_id,
                 [p for p in predictions if p.type in input_prediction_types],
@@ -2478,6 +2489,25 @@ def refresh_insights(
             )
             import_results.append(import_result)
     return import_results
+
+
+def get_product_insight_types(product_id: ProductIdentifier) -> set[InsightType]:
+    """Return the set of insight types for which the product has at least one
+    non-annotated insight in DB.
+
+    :param product_id: identifier of the product
+    :return: a set of `InsightType`
+    """
+    return set(
+        InsightType[row.type]
+        for row in ProductInsight.select(ProductInsight.type)
+        .where(
+            ProductInsight.barcode == product_id.barcode,
+            ProductInsight.server_type == product_id.server_type.name,
+            ProductInsight.annotation.is_null(),
+        )
+        .distinct()
+    )
 
 
 def get_product_predictions(
