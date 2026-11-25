@@ -7,7 +7,9 @@ import pytest
 import requests
 from falcon import testing
 
+from robotoff import taxonomy
 from robotoff.app.api import api
+from robotoff.app.core import update_logo_annotations
 from robotoff.models import AnnotationVote, LogoAnnotation, ProductInsight
 from robotoff.off import OFFAuthentication
 from robotoff.prediction.langid import LanguagePrediction
@@ -684,6 +686,118 @@ def test_image_collection(client, peewee_db):
     assert result.status_code == 200
     assert data["count"] == 1
     assert data["images"][0]["barcode"] == "00000456"
+
+
+@pytest.mark.parametrize(
+    "brand,query,expected_tag",
+    [
+        ("cora", "en:cora", "cora"),
+        ("carrefour-bio", "xx:carrefour-bio", "carrefour-bio"),
+        ("etorki", "en:etorki", "etorki"),
+        ("Søstrene Grene", "en:søstrene-grene", "sostrene-grene"),
+        ("Søstrene Grene", "xx:søstrene-grene", "sostrene-grene"),
+        ("Søstrene Grene", "xx:sostrene-grene", "sostrene-grene"),
+        ("Nøgne Ø", "en:nøgne-ø", "nogne-o"),
+    ],
+)
+def test_logo_search_matches_legacy_brand_annotation(
+    client, peewee_db, monkeypatch, brand, query, expected_tag
+):
+    # Use the checked-in taxonomy and the real annotation writer/resolver.
+    brand_taxonomy = taxonomy.get_taxonomy("brand", offline=True)
+    monkeypatch.setattr(
+        taxonomy, "get_taxonomy", lambda *args, **kwargs: brand_taxonomy
+    )
+    taxonomy.get_taxonomy_mapping.cache_clear()
+    with peewee_db:
+        expected = LogoAnnotationFactory(annotation_type=None)
+        update_logo_annotations(
+            [("brand", brand, expected)],
+            "test-user",
+            datetime.datetime.now(datetime.UTC),
+        )
+        # Some Unicode taxonomy IDs do not resolve after annotation normalizes
+        # the brand. The stored annotation tag must still be searchable.
+        assert expected.annotation_value_tag == expected_tag
+        assert expected.taxonomy_value != query
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value="carrefour",
+            annotation_value_tag="carrefour",
+            taxonomy_value="Carrefour",
+        )
+        LogoAnnotationFactory(
+            annotation_type="label",
+            annotation_value_tag=expected_tag,
+            taxonomy_value=query,
+        )
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value_tag=expected_tag,
+            image_prediction__image__deleted=True,
+        )
+        LogoAnnotationFactory(
+            annotation_type="brand",
+            annotation_value_tag=expected_tag,
+            image_prediction__image__server_type="obf",
+        )
+
+    def forbid_taxonomy_load(*args, **kwargs):
+        pytest.fail("Logo search must not load taxonomies")
+
+    monkeypatch.setattr(taxonomy, "get_taxonomy", forbid_taxonomy_load)
+
+    result = client.simulate_get(
+        "/api/v1/images/logos/search",
+        params={"type": "brand", "taxonomy_value": query},
+    )
+
+    assert result.status_code == 200
+    assert result.json["count"] == 1
+    assert [logo["id"] for logo in result.json["logos"]] == [expected.id]
+
+
+@pytest.mark.parametrize(
+    "type_,value",
+    [
+        ("brand", "unknown-taxonomy-value"),
+        ("brand", "xx:cora"),
+        ("label", "en:eu-organic"),
+        ("category", "en:beverages"),
+    ],
+)
+def test_logo_search_preserves_exact_taxonomy_matching(
+    client, peewee_db, monkeypatch, type_, value
+):
+    with peewee_db:
+        expected = LogoAnnotationFactory(
+            annotation_type=type_,
+            taxonomy_value=value,
+        )
+        # An unprefixed tag must not broaden label/category searches.
+        if type_ != "brand":
+            LogoAnnotationFactory(
+                annotation_type=type_,
+                annotation_value_tag=value.split(":")[-1],
+                taxonomy_value="different",
+            )
+
+    def forbid_taxonomy_load(*args, **kwargs):
+        pytest.fail("Logo search must not load taxonomies")
+
+    monkeypatch.setattr(taxonomy, "get_taxonomy", forbid_taxonomy_load)
+
+    result = client.simulate_get(
+        "/api/v1/images/logos/search",
+        params={
+            "type": type_,
+            "taxonomy_value": value,
+        },
+    )
+
+    assert result.status_code == 200
+    assert result.json["count"] == 1
+    assert [logo["id"] for logo in result.json["logos"]] == [expected.id]
 
 
 def test_annotate_category_with_user_input(client, mocker, peewee_db):
