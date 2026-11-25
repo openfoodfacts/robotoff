@@ -8,6 +8,10 @@ on:
     tags:
       - v*.*.*
 
+permissions:
+  contents: read
+  checks: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
