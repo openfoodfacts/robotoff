@@ -13,7 +13,7 @@ jobs:
     name: Sync ML models
     runs-on: ubuntu-latest
     environment: ${{ matrix.env }}
-    concurrency: ${{ matrix.env }}-${{ matrix.asset_name }}
+    concurrency: ${{ matrix.env }}
     strategy:
       matrix:
         env:
